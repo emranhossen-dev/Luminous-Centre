@@ -1,26 +1,62 @@
 @import "tailwindcss";
 
+/* --- 1. FONTS & BASE --- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Using a standard, clean Bengali font stack for maximum readability */
+  --font-bangla: 'Hind Siliguri', 'Segoe UI', Tahoma, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@layer base {
+  html {
+    font-family: var(--font-bangla);
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-[#0b0c17] text-white antialiased min-h-screen overflow-x-hidden;
+  }
+
+  /* Professional Minimal Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: #0b0c17; }
+  ::-webkit-scrollbar-thumb { background: #1b1d4d; border-radius: 10px; }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* --- 2. CORE UTILITIES --- */
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .text-gradient {
+    background: linear-gradient(to right, #2e31e1, #60a5fa, #ffffff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* --- 3. ANIMATIONS --- */
+
+/* Clean Floating Animation for Icons */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+/* Entrance Fade */
+.animate-in {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
