@@ -4,19 +4,8 @@ import React from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { 
-  MoveRight, 
-  Zap, 
-  Video, 
-  MonitorPlay, 
-  Users, 
-  BookOpenCheck, 
-  Clock3, 
-  LayoutGrid, 
-  BookOpen,
-  CodeXml,
-  Megaphone,
-  Layers,
-  Calculator
+  MoveRight, Zap, Video, MonitorPlay, Users, BookOpenCheck, 
+  Clock3, LayoutGrid, BookOpen, CodeXml, Megaphone, Layers, Calculator 
 } from 'lucide-react';
 
 const Banner = () => {
@@ -28,11 +17,10 @@ const Banner = () => {
   ];
 
   return (
-    <section className="relative min-h-[100vh] lg:min-h-[90vh] w-full flex items-center justify-center overflow-hidden bg-[#080616] border-b border-white/5 pt-28 lg:pt-20">
+    <section className="relative min-h-[90vh] w-full flex items-center justify-center overflow-hidden bg-[#080616] pt-28 lg:pt-20">
       
-      {/* Background Neon Blobs */}
-      <div className="absolute top-10 -left-20 w-80 h-80 bg-[#2F2FE4] rounded-full mix-blend-screen filter blur-[100px] opacity-20 animate-pulse"></div>
-      <div className="absolute bottom-10 -right-20 w-80 h-80 bg-[#162E93] rounded-full mix-blend-screen filter blur-[100px] opacity-20 animate-pulse delay-700"></div>
+      {/* GLOW 1: TOP LEFT */}
+      <div className="absolute -top-32 -left-32 w-[600px] h-[600px] bg-[#2F2FE4] rounded-full mix-blend-screen filter blur-[150px] opacity-20 animate-pulse"></div>
 
       <div className="container mx-auto px-6 py-12 lg:py-20 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         
@@ -52,7 +40,7 @@ const Banner = () => {
 
           <h1 className="text-3xl md:text-4xl xl:text-5xl font-bold text-white mb-5 leading-[1.2] tracking-tight">
             <span className="block text-gray-300 font-medium text-xl md:text-2xl mb-1">দক্ষতা বৃদ্ধি করুন,</span>
-            <span className="text-gradient-blue drop-shadow-[0_0_10px_rgba(47,47,228,0.3)]">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2F2FE4] to-[#60a5fa]">
               Luminous Skills Development <br className="hidden xl:block" /> Training Center
             </span>
             <span className="text-xl md:text-2xl font-normal text-gray-400"> - এর সাথে</span>
@@ -87,10 +75,8 @@ const Banner = () => {
           </div>
         </motion.div>
 
-        {/* RIGHT SIDE: Animated Visuals & Extra Floating Icons */}
+        {/* RIGHT SIDE: Floating Visuals */}
         <div className="relative flex justify-center items-center h-full mb-16 lg:mb-0">
-          
-          {/* Floating Icon: Web Dev */}
           <motion.div 
             animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -99,7 +85,6 @@ const Banner = () => {
             <CodeXml className="w-6 h-6 text-blue-400" />
           </motion.div>
 
-          {/* Floating Icon: Digital Marketing */}
           <motion.div 
             animate={{ y: [0, 15, 0], x: [0, 10, 0] }}
             transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
@@ -108,7 +93,6 @@ const Banner = () => {
             <Megaphone className="w-6 h-6 text-green-400" />
           </motion.div>
 
-          {/* Floating Icon: Graphics Design */}
           <motion.div 
             animate={{ scale: [1, 1.1, 1], rotate: [0, -5, 0] }}
             transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
@@ -117,7 +101,6 @@ const Banner = () => {
             <Layers className="w-6 h-6 text-purple-400" />
           </motion.div>
 
-          {/* Floating Icon: Accounting */}
           <motion.div 
             animate={{ y: [0, -20, 0] }}
             transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
@@ -126,7 +109,6 @@ const Banner = () => {
             <Calculator className="w-6 h-6 text-amber-400" />
           </motion.div>
 
-          {/* Main Floating Card Container */}
           <motion.div 
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
@@ -169,7 +151,7 @@ const Banner = () => {
               ].map((feature, idx) => {
                 const Icon = feature.icon;
                 return (
-                  <div key={idx} className="flex items-center gap-3 bg-transparent">
+                  <div key={idx} className="flex items-center gap-3">
                     <Icon className="w-5 h-5 text-blue-400 shrink-0" />
                     <span className="text-gray-300 text-sm font-medium leading-tight">
                       {feature.text}
@@ -178,11 +160,8 @@ const Banner = () => {
                 );
               })}
             </div>
-            
-            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-[#2F2FE4] rounded-full blur-[80px] opacity-20"></div>
           </motion.div>
         </div>
-
       </div>
     </section>
   );
