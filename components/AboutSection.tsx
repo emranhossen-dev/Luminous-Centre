@@ -1,84 +1,95 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Users, GraduationCap, Award, CheckCircle2 } from "lucide-react";
+import React from 'react';
+import { motion } from 'framer-motion';
 
 const STATS = [
-  { label: "সফল শিক্ষার্থী", value: "৮০,০০০+", icon: Users },
-  { label: "মেন্টর সংখ্যা", value: "৬০+", icon: GraduationCap },
-  { label: "সন্তুষ্টির হার", value: "৯০%", icon: CheckCircle2 },
-  { label: "পুরস্কার", value: "১৫+", icon: Award },
+  { label: "Available Courses", value: "12+", color: "text-[#eab308]" },
+  { label: "Total Students", value: "1500+", color: "text-[#22c55e]" },
+  { label: "Learning Materials", value: "150+", color: "text-[#a855f7]" },
+  { label: "Satisfaction Rate", value: "93%", color: "text-[#2F2FE4]" },
 ];
 
-export default function AboutSection() {
+const AboutSection = () => {
   return (
-    <section className="py-24 bg-[#0b0c17] relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 relative z-10">
+    <section className="relative w-full flex items-center justify-center overflow-hidden bg-[#080616] py-16 lg:py-24">
+      
+      {/* GLOW 2: RIGHT MIDDLE - Tightened blur and lower opacity for a cleaner look */}
+      <div className="absolute top-1/2 -translate-y-1/2 -right-40 w-[500px] h-[500px] bg-[#162E93] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-pulse delay-700"></div>
+
+      <div className="container mx-auto px-6 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
         
-        <div className="grid lg:grid-cols-2 gap-12 items-stretch">
-          
-          {/* --- LEFT SIDE: Image & Stats --- */}
-          <div className="flex flex-col justify-between space-y-10">
-            {/* Institute Image */}
-            <div className="relative group flex-grow">
-              <div className="absolute -inset-1 bg-gradient-to-r from-[#2e31e1] to-[#60a5fa] rounded-[2.5rem] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-              <div className="relative h-full min-h-[300px] rounded-[2rem] overflow-hidden border border-white/10 bg-[#0b0c17]">
-                <img 
-                  src="https://i.ibb.co/sp2vGsP9/Gemini-Generated-Image-62pq3q62pq3q62pq.png" 
-                  alt="Our Institute"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
+        {/* LEFT SIDE: Image Container */}
+        <motion.div 
+          initial={{ opacity: 0, x: -50 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="relative group"
+        >
+          <div className="absolute -inset-1 bg-[#2F2FE4]/10 rounded-[2rem] blur opacity-20"></div>
+          <div className="relative aspect-[16/11] w-full rounded-[2rem] overflow-hidden border border-white/10 bg-[#0c0e1f] shadow-2xl">
+            <img 
+              src="https://i.ibb.co.com/tTr3XKDw/classroom.png" 
+              alt="Luminous Skills Classroom"
+              className="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#080616]/40 via-transparent to-transparent"></div>
+          </div>
+        </motion.div>
 
-            {/* Statistics below the image */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {STATS.map((stat, idx) => (
-                <div key={idx} className="glass p-5 rounded-2xl border-white/5 flex flex-col items-center text-center">
-                  <stat.icon className="text-[#60a5fa] mb-3" size={20} />
-                  <h4 className="text-xl font-black text-white mb-1">{stat.value}</h4>
-                  <p className="text-[10px] text-white/50 font-bold uppercase tracking-wider">{stat.label}</p>
-                </div>
-              ))}
+        {/* RIGHT SIDE: Content Section */}
+        <motion.div 
+          initial={{ opacity: 0, x: 50 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="flex flex-col space-y-8"
+        >
+          <div className="space-y-5 text-center lg:text-left">
+            <h2 className="text-3xl md:text-4xl xl:text-5xl font-bold text-white leading-[1.2] tracking-tight">
+              We Offer Both <br className="hidden xl:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2F2FE4] to-[#60a5fa]">
+                Online & Offline
+              </span> Courses
+            </h2>
+            <p className="max-w-xl text-gray-400 text-sm md:text-base leading-relaxed mx-auto lg:mx-0">
+              বাংলাদেশের শীর্ষস্থানীয় আইটি কোর্সের মাধ্যমে আপনার ক্যারিয়ারকে এগিয়ে নিন। আমরা দক্ষ মেন্টরদের তত্ত্বাবধানে মানসম্মত শিক্ষা নিশ্চিত করি।
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4 w-full">
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-[#2F2FE4]/30 transition-all text-left">
+              <h5 className="text-white font-bold text-sm mb-1.5">অনলাইন কোর্স</h5>
+              <p className="text-[11px] text-gray-500 leading-relaxed">দেশের যেকোনো প্রান্ত থেকে ঘরে বসেই শিখুন আধুনিক সব প্রযুক্তি।</p>
+            </div>
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-[#2F2FE4]/30 transition-all text-left">
+              <h5 className="text-white font-bold text-sm mb-1.5">অফলাইন কোর্স</h5>
+              <p className="text-[11px] text-gray-500 leading-relaxed">আমাদের ল্যাবে সরাসরি বসে মেন্টরদের উপস্থিতিতে হাতে-কলমে শিখুন।</p>
             </div>
           </div>
 
-          {/* --- RIGHT SIDE: Content --- */}
-          <div className="flex flex-col justify-center space-y-8">
-            <div className="space-y-6">
-              {/* Smaller Heading to fit two lines */}
-              <h2 className="text-3xl md:text-5xl font-black text-white leading-[1.2] tracking-tight">
-                আমরা প্রদান করছি <br />
-                <span className="text-gradient">অনলাইন ও অফলাইন</span> কোর্স
-              </h2>
-              <p className="text-lg text-white/50 leading-relaxed max-w-xl font-medium">
-                বাংলাদেশের শীর্ষস্থানীয় আইটি কোর্সের মাধ্যমে আপনার ক্যারিয়ারকে এগিয়ে নিন। আমরা ফ্লেক্সিবল লার্নিং সিস্টেমের মাধ্যমে দক্ষ মেন্টরদের তত্ত্বাবধানে মানসম্মত শিক্ষা নিশ্চিত করি।
-              </p>
-            </div>
-
-            {/* Course Cards - Icons Removed */}
-            <div className="grid sm:grid-cols-2 gap-5">
-              <div className="p-8 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-[#2e31e1]/30 transition-all group">
-                <h5 className="text-xl font-black text-white mb-3">অনলাইন কোর্স</h5>
-                <p className="text-sm text-white/40 leading-relaxed font-medium">
-                  দেশের যেকোনো প্রান্ত থেকে ঘরে বসেই শিখুন আধুনিক সব প্রযুক্তি।
-                </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 bg-[#0c0e1f] border border-white/10 rounded-2xl overflow-hidden shadow-xl">
+            {STATS.map((stat, idx) => (
+              <div 
+                key={idx} 
+                className={`p-5 flex flex-col items-center justify-center text-center hover:bg-white/[0.03] transition-colors
+                  ${idx !== STATS.length - 1 ? "border-r border-white/5" : ""} 
+                  ${idx % 2 === 0 ? "border-r md:border-r-0 lg:border-r" : ""}`}
+              >
+                <span className={`text-xl md:text-2xl font-black mb-1 tracking-tight ${stat.color}`}>
+                  {stat.value}
+                </span>
+                <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest leading-tight">
+                  {stat.label}
+                </span>
               </div>
-
-              <div className="p-8 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-[#2e31e1]/30 transition-all group">
-                <h5 className="text-xl font-black text-white mb-3">অফলাইন কোর্স</h5>
-                <p className="text-sm text-white/40 leading-relaxed font-medium">
-                  আমাদের ল্যাবে সরাসরি বসে মেন্টরদের উপস্থিতিতে হাতে-কলমে শিখুন।
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
-
-        </div>
+        </motion.div>
       </div>
-
-      {/* Background Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#2e31e1]/5 blur-[150px] rounded-full -z-10"></div>
     </section>
   );
-}
+};
+
+export default AboutSection;
