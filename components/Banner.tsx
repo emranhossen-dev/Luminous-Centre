@@ -134,7 +134,7 @@ const Banner = () => {
           >
             <div className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden mb-8 border border-white/5">
               <Image 
-                src="https://i.ibb.co.com/DPYXYY4w/dashboard.png" 
+                src="https://i.ibb.co.com/35332p83/preview.png" 
                 alt="Dashboard Preview"
                 fill
                 className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-700"
