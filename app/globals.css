@@ -1,9 +1,18 @@
 @import "tailwindcss";
 
-/* --- 1. FONTS & BASE --- */
+/* 
+  =========================================
+  1. CONFIGURATION & FONTS
+  =========================================
+*/
 :root {
-  /* Using a standard, clean Bengali font stack for maximum readability */
+  /* Clean Bengali font stack for Luminous Skills */
   --font-bangla: 'Hind Siliguri', 'Segoe UI', Tahoma, sans-serif;
+  
+  /* Brand Colors (For easy editing later) */
+  --brand-primary: #2F2FE4;
+  --brand-dark: #080616;
+  --brand-accent: #60a5fa;
 }
 
 @layer base {
@@ -13,6 +22,7 @@
   }
   
   body {
+    /* bg-[#0b0c17] matches your previous background preference */
     @apply bg-[#0b0c17] text-white antialiased min-h-screen overflow-x-hidden;
   }
 
@@ -22,8 +32,13 @@
   ::-webkit-scrollbar-thumb { background: #1b1d4d; border-radius: 10px; }
 }
 
-/* --- 2. CORE UTILITIES --- */
+/* 
+  =========================================
+  2. CUSTOM UI UTILITIES (Glass & Glows)
+  =========================================
+*/
 @layer utilities {
+  /* Standard Glassmorphism */
   .glass {
     background: rgba(255, 255, 255, 0.03);
     backdrop-filter: blur(20px);
@@ -31,58 +46,64 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
-  .text-gradient {
-    background: linear-gradient(to right, #2e31e1, #60a5fa, #ffffff);
+  /* High-Contrast Neon Text Glow */
+  .neon-blue-glow {
+    filter: drop-shadow(0 0 10px rgba(47, 47, 228, 0.6));
+  }
+
+  /* Main Animated Text Gradient */
+  .text-gradient-blue {
+    background: linear-gradient(to right, #60a5fa, #2F2FE4, #06b6d4);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
+
+  /* Utility for staggered animation timing */
+  .animation-delay-2000 { animation-delay: 2s; }
+  .animation-delay-4000 { animation-delay: 4s; }
 }
 
-/* --- 3. ANIMATIONS --- */
+/* 
+  =========================================
+  3. ANIMATION ENGINE
+  =========================================
+*/
 
-/* Clean Floating Animation for Icons */
+/* Floating Effect for Cards/Icons */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-15px); }
 }
-
 .animate-float {
-  animation: float 5s ease-in-out infinite;
+  animation: float 6s ease-in-out infinite;
 }
 
-/* Entrance Fade */
+/* Background "Energy Blob" Animation */
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+.animate-blob {
+  animation: blob 10s infinite ease-in-out;
+}
+
+/* Entrance Fade Up (For smooth page loading) */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .animate-in {
   animation: fadeIn 0.8s ease-out forwards;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+/* Pulse for "Live" indicators */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(34, 197, 94, 0.5); }
+  50% { box-shadow: 0 0 15px rgba(34, 197, 94, 1); }
 }
-
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
 }
-
-/* Glassmorphism utility if not already present */
-.glass {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* Your Brand Gradient */
-.text-gradient {
-  background: linear-gradient(to right, #2e31e1, #60a5fa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-
