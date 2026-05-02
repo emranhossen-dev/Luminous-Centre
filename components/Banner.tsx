@@ -1,5 +1,23 @@
+'use client';
+
 import React from 'react';
-import { MoveRight, Zap, Video, MonitorPlay, Users, BookOpenCheck } from 'lucide-react';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
+import { 
+  MoveRight, 
+  Zap, 
+  Video, 
+  MonitorPlay, 
+  Users, 
+  BookOpenCheck, 
+  Clock3, 
+  LayoutGrid, 
+  BookOpen,
+  CodeXml,
+  Megaphone,
+  Layers,
+  Calculator
+} from 'lucide-react';
 
 const Banner = () => {
   const completionTypes = [
@@ -10,22 +28,23 @@ const Banner = () => {
   ];
 
   return (
-    // pt-28 ensures space from the navbar on small devices
     <section className="relative min-h-[100vh] lg:min-h-[90vh] w-full flex items-center justify-center overflow-hidden bg-[#080616] border-b border-white/5 pt-28 lg:pt-20">
       
       {/* Background Neon Blobs */}
-      <div className="absolute top-10 -left-20 w-80 h-80 bg-[#2F2FE4] rounded-full mix-blend-screen filter blur-[100px] opacity-20 animate-blob"></div>
-      <div className="absolute bottom-10 -right-20 w-80 h-80 bg-[#162E93] rounded-full mix-blend-screen filter blur-[100px] opacity-20 animate-blob animation-delay-2000"></div>
+      <div className="absolute top-10 -left-20 w-80 h-80 bg-[#2F2FE4] rounded-full mix-blend-screen filter blur-[100px] opacity-20 animate-pulse"></div>
+      <div className="absolute bottom-10 -right-20 w-80 h-80 bg-[#162E93] rounded-full mix-blend-screen filter blur-[100px] opacity-20 animate-pulse delay-700"></div>
 
       <div className="container mx-auto px-6 py-12 lg:py-20 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         
-        {/* ==========================================
-            LEFT SIDE: CONTENT & TYPOGRAPHY
-            ========================================== */}
-        <div className="text-center lg:text-left animate-in flex flex-col items-center lg:items-start">
-          
+        {/* LEFT SIDE: Typography */}
+        <motion.div 
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center lg:text-left flex flex-col items-center lg:items-start"
+        >
           <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full border border-blue-500/20 bg-blue-500/5 backdrop-blur-xl">
-            <Zap className="w-3.5 h-3.5 text-blue-400 neon-blue-glow" />
+            <Zap className="w-3.5 h-3.5 text-blue-400" />
             <span className="text-blue-300 text-[10px] font-bold uppercase tracking-[0.2em]">
               Elevate Your Potential
             </span>
@@ -36,9 +55,7 @@ const Banner = () => {
             <span className="text-gradient-blue drop-shadow-[0_0_10px_rgba(47,47,228,0.3)]">
               Luminous Skills Development <br className="hidden xl:block" /> Training Center
             </span>
-            <span className="text-xl md:text-2xl font-normal text-gray-400">
-               - এর সাথে
-            </span>
+            <span className="text-xl md:text-2xl font-normal text-gray-400"> - এর সাথে</span>
           </h1>
 
           <p className="max-w-lg text-gray-500 text-base md:text-lg mb-10 leading-relaxed">
@@ -68,53 +85,104 @@ const Banner = () => {
               ফ্রি সেমিনার
             </button>
           </div>
-        </div>
+        </motion.div>
 
-        {/* ==========================================
-            RIGHT SIDE: VISUAL MOCKUP & DASHBOARD
-            ========================================== */}
-        {/* mb-16 added here to provide space at the bottom on mobile */}
-        <div className="relative flex justify-center items-center h-full mt-10 lg:mt-0 mb-16 lg:mb-0">
+        {/* RIGHT SIDE: Animated Visuals & Extra Floating Icons */}
+        <div className="relative flex justify-center items-center h-full mb-16 lg:mb-0">
           
-          <div className="relative w-full max-w-[560px] rounded-2xl border border-white/10 bg-[#0c0e1f] p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden animate-float">
-            
-            <div className="flex items-center justify-between h-8 px-4 border-b border-white/5 bg-white/5">
-              <div className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-red-500/40"></div>
-                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40"></div>
-                <div className="w-2.5 h-2.5 rounded-full bg-green-500/40"></div>
-              </div>
-              <div className="text-[10px] text-gray-600 font-mono tracking-widest uppercase">luminous-dev-tools</div>
-            </div>
-            
-            <div className="relative aspect-[16/10] w-full bg-[#080616] overflow-hidden">
-              <img 
+          {/* Floating Icon: Web Dev */}
+          <motion.div 
+            animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-10 -left-4 lg:-left-16 z-20 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 backdrop-blur-md hidden sm:block"
+          >
+            <CodeXml className="w-6 h-6 text-blue-400" />
+          </motion.div>
+
+          {/* Floating Icon: Digital Marketing */}
+          <motion.div 
+            animate={{ y: [0, 15, 0], x: [0, 10, 0] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
+            className="absolute -top-6 right-10 lg:right-0 z-20 p-3 rounded-xl bg-green-500/10 border border-green-500/20 backdrop-blur-md hidden sm:block"
+          >
+            <Megaphone className="w-6 h-6 text-green-400" />
+          </motion.div>
+
+          {/* Floating Icon: Graphics Design */}
+          <motion.div 
+            animate={{ scale: [1, 1.1, 1], rotate: [0, -5, 0] }}
+            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+            className="absolute bottom-1/2 -right-6 lg:-right-12 z-20 p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 backdrop-blur-md hidden sm:block"
+          >
+            <Layers className="w-6 h-6 text-purple-400" />
+          </motion.div>
+
+          {/* Floating Icon: Accounting */}
+          <motion.div 
+            animate={{ y: [0, -20, 0] }}
+            transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -bottom-8 left-12 lg:-left-4 z-20 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 backdrop-blur-md hidden sm:block"
+          >
+            <Calculator className="w-6 h-6 text-amber-400" />
+          </motion.div>
+
+          {/* Main Floating Card Container */}
+          <motion.div 
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            className="relative w-full max-w-[500px] rounded-[2rem] border border-white/10 bg-[#0c0e1f] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden group hover:border-blue-500/30 transition-all duration-500"
+          >
+            <div className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden mb-8 border border-white/5">
+              <Image 
                 src="https://i.ibb.co.com/DPYXYY4w/dashboard.png" 
-                alt="Web Development Dashboard"
-                className="w-full h-full object-cover opacity-90 transition-transform duration-700 hover:scale-105"
+                alt="Dashboard Preview"
+                fill
+                className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-700"
               />
-              <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-transparent pointer-events-none"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0c0e1f] via-transparent to-transparent"></div>
             </div>
-          </div>
 
-          <div className="absolute -bottom-6 -right-2 md:right-4 px-5 py-3 rounded-2xl border border-blue-500/30 bg-[#080616]/95 backdrop-blur-xl animate-float shadow-[0_10px_30px_rgba(47,47,228,0.2)]">
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-              <span className="text-blue-300 text-xs font-bold tracking-wider">Web Design & Development</span>
+            <div className="grid grid-cols-4 gap-3 mb-10">
+              {[
+                { name: "Digital Marketing", icon: "📢" },
+                { name: "Graphic Design", icon: "🎨" },
+                { name: "Web Design", icon: "💻" },
+                { name: "Accounting", icon: "📊" }
+              ].map((item, idx) => (
+                <div key={idx} className="flex flex-col items-center gap-2">
+                  <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-xl hover:bg-blue-500/20 transition-all">
+                    {item.icon}
+                  </div>
+                  <span className="text-[9px] text-gray-500 font-bold uppercase text-center tracking-tight">
+                    {item.name}
+                  </span>
+                </div>
+              ))}
             </div>
-          </div>
 
-          <div className="absolute -top-6 left-4 md:-left-4 px-4 py-2.5 rounded-xl border border-green-500/20 bg-[#080616]/90 backdrop-blur-lg animate-float animation-delay-2000 shadow-xl">
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-              </span>
-              <span className="text-green-400 text-[10px] font-bold uppercase tracking-widest">Live Mentoring</span>
+            <div className="grid grid-cols-2 gap-y-5 gap-x-4">
+              {[
+                { text: "24/7 Support", icon: Clock3 },
+                { text: "1:1 Mentor Support", icon: Users },
+                { text: "Project Based Curriculum", icon: LayoutGrid },
+                { text: "Govt. Certificate", icon: BookOpen }
+              ].map((feature, idx) => {
+                const Icon = feature.icon;
+                return (
+                  <div key={idx} className="flex items-center gap-3 bg-transparent">
+                    <Icon className="w-5 h-5 text-blue-400 shrink-0" />
+                    <span className="text-gray-300 text-sm font-medium leading-tight">
+                      {feature.text}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-          </div>
-
+            
+            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-[#2F2FE4] rounded-full blur-[80px] opacity-20"></div>
+          </motion.div>
         </div>
+
       </div>
     </section>
   );
