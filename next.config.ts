@@ -1,9 +1,18 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  transpilePackages: ["lucide-react"],
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
-    domains: ["i.ibb.co"],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'i.ibb.co.com', // Keep your existing one for the dashboard
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.ibb.co', // Add this one for the logo
+        pathname: '/**',
+      },
+    ],
   },
 };
 
