@@ -4,17 +4,18 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { GoogleOAuth } from '@/lib/google-oauth';
 import { Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginPageContent() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   // Clear error when typing
   useEffect(() => {
@@ -25,10 +26,9 @@ export default function LoginPage() {
     setIsGoogleLoading(true);
     setError('');
 
-    // Store redirect parameters in session storage
     const redirect = searchParams.get('redirect');
     const course = searchParams.get('course');
-    
+
     if (redirect) sessionStorage.setItem('auth_redirect', redirect);
     if (course) sessionStorage.setItem('auth_course', course);
 
@@ -254,6 +254,14 @@ export default function LoginPage() {
           <div className="w-48 h-48 border-2 border-indigo-500/20 rounded-full"></div>
         </div>
       </div>
-    </div>
+        </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginPageContent />
+    </Suspense>
   );
 }
