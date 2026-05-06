@@ -12,6 +12,16 @@ const nextConfig = {
         hostname: 'i.ibb.co', // Add this one for the logo
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'i.pravatar.cc',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'loop-media.co',
+        pathname: '/**',
+      },
     ],
   },
 };

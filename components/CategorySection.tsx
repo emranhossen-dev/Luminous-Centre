@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { 
   Video, Users, MonitorPlay, MapPin, Landmark, 
   Calendar, Clock, ArrowRight, PlayCircle 
@@ -18,6 +19,7 @@ const CATEGORIES = [
     icon: Video,
     color: "#2F2FE4",
     isGovt: false,
+    route: "/courses/recorded",
   },
   {
     title: "Online Batches",
@@ -30,6 +32,7 @@ const CATEGORIES = [
     icon: MonitorPlay,
     color: "#60a5fa",
     isGovt: false,
+    route: "/courses/online",
   },
   {
     title: "Offline Batches",
@@ -42,6 +45,7 @@ const CATEGORIES = [
     icon: MapPin,
     color: "#006a4e",
     isGovt: false,
+    route: "/courses/offline",
   },
   {
     title: "Govt Projects",
@@ -54,15 +58,26 @@ const CATEGORIES = [
     icon: Landmark,
     color: "#f42a41",
     isGovt: true,
+    route: "/courses/govt",
   }
 ];
 
 export default function CategorySection() {
   return (
-    <section className="relative w-full overflow-hidden bg-[#080616] py-16 lg:py-24">
+    <section className="relative w-full overflow-hidden py-16 lg:py-24">
       
-      {/* GLOW 3: LEFT MIDDLE - Alternating position for visual flow */}
-      <div className="absolute top-1/2 -translate-y-1/2 -left-40 w-[500px] h-[500px] bg-[#2F2FE4] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-pulse"></div>
+      {/* Mixed Gradient Background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0b0c17] via-[#080616] to-[#05060f] z-0"></div>
+      
+      {/* Middle Glow Effects */}
+      <div className="absolute top-1/2 left-0 w-full h-full overflow-hidden z-0 pointer-events-none -translate-y-1/2">
+        {/* Middle Left Glow */}
+        <div className="absolute top-1/2 left-[-5%] w-[30%] h-[30%] bg-blue-600/12 rounded-full blur-[100px] animate-blob"></div>
+        {/* Middle Center Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-[25%] h-[25%] bg-purple-600/10 rounded-full blur-[90px] animate-blob animation-delay-2000"></div>
+        {/* Middle Right Glow */}
+        <div className="absolute top-1/2 right-[-5%] w-[30%] h-[30%] bg-indigo-600/12 rounded-full blur-[100px] animate-blob animation-delay-4000"></div>
+      </div>
 
       <div className="container mx-auto px-6 relative z-10">
         
@@ -115,14 +130,15 @@ export default function CategorySection() {
                 {item.videos} Video Lessons
               </div>
 
-              <button 
-                className={`w-full py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 
+              <Link 
+                href={item.route}
+                className={`w-full py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-center
                 ${item.isGovt 
                   ? "bg-[#f42a41] text-white hover:bg-[#d9263a] shadow-[0_10px_20px_rgba(244,42,65,0.2)]" 
                   : "border border-white/10 bg-white/5 text-white hover:bg-white/10"}`}
               >
                 {item.isGovt ? "Apply Now" : "View Details"} <ArrowRight size={18} />
-              </button>
+              </Link>
             </div>
           ))}
         </div>

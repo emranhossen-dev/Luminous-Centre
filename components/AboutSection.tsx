@@ -12,10 +12,19 @@ const STATS = [
 
 const AboutSection = () => {
   return (
-    <section className="relative w-full flex items-center justify-center overflow-hidden bg-[#080616] py-16 lg:py-24">
+    <section className="relative w-full flex items-center justify-center overflow-hidden py-16 lg:py-24">
+      {/* Gradient overlay for smooth transition from Banner */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#05060f] via-[#080616] to-[#0b0c17] z-0"></div>
       
-      {/* GLOW 2: RIGHT MIDDLE - Tightened blur and lower opacity for a cleaner look */}
-      <div className="absolute top-1/2 -translate-y-1/2 -right-40 w-[500px] h-[500px] bg-[#162E93] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-pulse delay-700"></div>
+      {/* Middle Glow Effects */}
+      <div className="absolute top-1/2 left-0 w-full h-full overflow-hidden z-0 pointer-events-none -translate-y-1/2">
+        {/* Middle Left Glow */}
+        <div className="absolute top-1/2 left-[-5%] w-[30%] h-[30%] bg-blue-600/12 rounded-full blur-[100px] animate-blob"></div>
+        {/* Middle Center Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-[25%] h-[25%] bg-purple-600/10 rounded-full blur-[90px] animate-blob animation-delay-2000"></div>
+        {/* Middle Right Glow */}
+        <div className="absolute top-1/2 right-[-5%] w-[30%] h-[30%] bg-indigo-600/12 rounded-full blur-[100px] animate-blob animation-delay-4000"></div>
+      </div>
 
       <div className="container mx-auto px-6 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
         

@@ -7,8 +7,26 @@ import {
   MoveRight, Zap, Video, MonitorPlay, Users, BookOpenCheck, 
   Clock3, LayoutGrid, BookOpen, CodeXml, Megaphone, Layers, Calculator 
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Banner = () => {
+  const { user, openModal } = useAuth();
+
+  const handleEnrollmentClick = () => {
+    console.log('Banner enrollment button clicked!');
+    
+    if (!user) {
+      console.log('Redirecting to login page...');
+      // Redirect to login page
+      window.location.href = '/auth/login?redirect=enroll';
+      return;
+    }
+    
+    console.log('Redirecting to courses...');
+    // If authenticated, redirect to courses page
+    window.location.href = '/courses';
+  };
+
   const completionTypes = [
     { name: "প্রি-রেকর্ডেড", icon: Video },
     { name: "অনলাইন লাইভ", icon: MonitorPlay },
@@ -17,10 +35,17 @@ const Banner = () => {
   ];
 
   return (
-    <section className="relative min-h-[90vh] w-full flex items-center justify-center overflow-hidden bg-[#080616] pt-28 lg:pt-20">
+    <section className="relative min-h-[90vh] w-full flex items-center justify-center overflow-hidden bg-[#05060f] pt-28 lg:pt-20">
       
-      {/* GLOW 1: TOP LEFT */}
-      <div className="absolute -top-32 -left-32 w-[600px] h-[600px] bg-[#2F2FE4] rounded-full mix-blend-screen filter blur-[150px] opacity-20 animate-pulse"></div>
+      {/* Background Animated Blobs */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        {/* Top Left Glow */}
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px] animate-blob"></div>
+        {/* Top Right Glow */}
+        <div className="absolute top-[10%] right-[-5%] w-[35%] h-[35%] bg-indigo-600/15 rounded-full blur-[100px] animate-blob animation-delay-2000"></div>
+        {/* Middle Smaller Glow */}
+        <div className="absolute top-[40%] left-1/2 -translate-x-1/2 w-[20%] h-[20%] bg-purple-600/10 rounded-full blur-[80px] animate-blob animation-delay-4000"></div>
+      </div>
 
       <div className="container mx-auto px-6 py-12 lg:py-20 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         
@@ -65,11 +90,17 @@ const Banner = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-            <button className="group flex items-center gap-2 w-full sm:w-auto px-8 py-3.5 bg-[#2F2FE4] text-white rounded-xl text-sm font-bold hover:bg-[#162E93] transition-all transform hover:-translate-y-0.5 active:scale-95">
+            <button 
+              onClick={handleEnrollmentClick}
+              className="group flex items-center gap-2 w-full sm:w-auto px-8 py-3.5 bg-[#2F2FE4] text-white rounded-xl text-sm font-bold hover:bg-[#162E93] transition-all transform hover:-translate-y-0.5 active:scale-95"
+            >
               কোর্সগুলো দেখুন
               <MoveRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
-            <button className="w-full sm:w-auto px-8 py-3.5 border border-white/10 text-white rounded-xl text-sm font-bold bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all">
+            <button 
+              onClick={handleEnrollmentClick}
+              className="w-full sm:w-auto px-8 py-3.5 border border-white/10 text-white rounded-xl text-sm font-bold bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all"
+            >
               ফ্রি সেমিনার
             </button>
           </div>
