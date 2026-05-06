@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
-import { withAuth } from '@/lib/middleware';
+import { verifyToken, getUserById } from '@/lib/auth';
 import { logActivity } from '@/lib/auth';
 
 import { getUserFromRequest } from '@/lib/middleware';
@@ -108,8 +108,20 @@ export async function GET(req: NextRequest, context: any) {
 }
 
 // POST /api/courses - Create new course
-const createCourse = withAuth(async (req: NextRequest, context: any, user: any) => {
+export async function POST(req: NextRequest, context: { params: Promise<{}> }) {
   try {
+    // Authentication
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    const token = authHeader.substring(7);
+    const payload = verifyToken(token);
+    const user = await getUserById(payload.userId);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 401 });
+    }
     const courseData = await req.json();
     const {
       title,
@@ -189,6 +201,4 @@ const createCourse = withAuth(async (req: NextRequest, context: any, user: any) 
       { status: 500 }
     );
   }
-}, { permissions: ['courses.create'] });
-
-export const POST = createCourse;
+}

@@ -1,18 +1,29 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { 
+  BookOpen, 
+  Layout, 
+  LogOut, 
+  Users, 
+  PlayCircle, 
+  Clock, 
+  ChevronRight,
+  Search
+} from 'lucide-react';
 
+// --- Types ---
 interface Course {
   id: number;
   title: string;
   slug: string;
-  category: string;
-  progress: number;
+  category: 'online' | 'offline' | 'recorded' | 'project';
   thumbnailUrl?: string;
   instructor: string;
   description?: string;
+  price?: number;
 }
 
 interface Enrollment {
@@ -39,30 +50,25 @@ export default function StudentDashboard() {
 
   const fetchStudentData = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
       
-      // Fetch enrolled courses
-      const enrolledResponse = await fetch('/api/student/enrollments', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const [enrolledRes, availableRes] = await Promise.all([
+        fetch('/api/student/enrollments', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
+        fetch('/api/courses?status=published', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        })
+      ]);
 
-      if (enrolledResponse.ok) {
-        const enrolledData = await enrolledResponse.json();
-        setEnrolledCourses(enrolledData.enrollments);
+      if (enrolledRes.ok) {
+        const data = await enrolledRes.json();
+        setEnrolledCourses(data.enrollments || []);
       }
 
-      // Fetch available courses
-      const availableResponse = await fetch('/api/courses?status=published', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (availableResponse.ok) {
-        const availableData = await availableResponse.json();
-        setAvailableCourses(availableData.courses);
+      if (availableRes.ok) {
+        const data = await availableRes.json();
+        setAvailableCourses(data.courses || []);
       }
     } catch (error) {
       console.error('Failed to fetch student data:', error);
@@ -84,262 +90,198 @@ export default function StudentDashboard() {
       });
 
       if (response.ok) {
-        fetchStudentData(); // Refresh data
+        fetchStudentData();
+        setActiveTab('enrolled');
       } else {
         const error = await response.json();
         alert(error.error || 'Enrollment failed');
       }
     } catch (error) {
       console.error('Enrollment error:', error);
-      alert('Network error. Please try again.');
     }
   };
 
-  const getCategoryColor = (category: string) => {
+  const getCategoryStyles = (category: string) => {
     switch (category) {
-      case 'recorded': return 'bg-blue-100 text-blue-800';
-      case 'online': return 'bg-purple-100 text-purple-800';
-      case 'offline': return 'bg-green-100 text-green-800';
-      case 'govt': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'recorded': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+      case 'online': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
+      case 'offline': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+      case 'project': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
+      default: return 'bg-slate-500/10 text-slate-500 border-slate-500/20';
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">Student Dashboard</h1>
+    <div className="min-h-screen bg-[#0a0f18] text-slate-200">
+      {/* Navigation */}
+      <nav className="sticky top-0 z-50 bg-[#0a0f18]/80 backdrop-blur-md border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+              <BookOpen size={20} className="text-white" />
             </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/auth/login" className="text-gray-500 hover:text-gray-700">
-                Sign Out
-              </Link>
+            <span className="text-xl font-bold tracking-tight text-white">Luminous Dashboard</span>
+          </div>
+          
+          <Link 
+            href="/auth/login" 
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 border border-white/5 hover:bg-red-500/10 hover:text-red-500 transition-all text-sm font-medium"
+          >
+            <LogOut size={16} />
+            Sign Out
+          </Link>
+        </div>
+      </nav>
+
+      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          
+          {/* Sidebar Stats */}
+          <div className="lg:col-span-1 space-y-6">
+            <div className="bg-slate-900/50 rounded-3xl p-6 border border-white/5">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 bg-emerald-500/20 rounded-2xl">
+                  <Layout className="text-emerald-500" size={24} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-slate-400">Total Progress</h3>
+                  <p className="text-2xl font-bold text-white">{enrolledCourses.length} Courses</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">Quick Actions</p>
+                <button 
+                  onClick={() => setActiveTab('available')}
+                  className="w-full flex items-center justify-between p-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all group"
+                >
+                  <span className="text-sm font-bold">Browse Catalog</span>
+                  <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Stats Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="lg:col-span-1"
-          >
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-6">
-                <div className="flex items-center">
-                  <div className="p-3 bg-blue-500 rounded-full">
-                    <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.35a4 4 0 100 8 4 4 0 000-8zm0 4a8 8 0 100 16 8 8 0 000-16z" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-medium text-gray-900">My Learning</h3>
-                    <p className="text-2xl font-bold text-blue-600">{enrolledCourses.length}</p>
-                    <p className="text-sm text-gray-600">Enrolled Courses</p>
-                  </div>
-                </div>
-              </div>
+          {/* Main Content Area */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Tabs */}
+            <div className="flex items-center justify-between bg-slate-900/50 p-1.5 rounded-2xl border border-white/5 w-fit">
+              <button
+                onClick={() => setActiveTab('enrolled')}
+                className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+                  activeTab === 'enrolled' 
+                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                My Learning
+              </button>
+              <button
+                onClick={() => setActiveTab('available')}
+                className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+                  activeTab === 'available' 
+                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Explore Courses
+              </button>
             </div>
-          </motion.div>
 
-          {/* Available Courses */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="lg:col-span-2"
-          >
-            <div className="bg-white shadow rounded-lg">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">Available Courses</h3>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => setActiveTab('enrolled')}
-                      className={`px-3 py-1 rounded-md text-sm font-medium ${
-                        activeTab === 'enrolled'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 text-gray-700'
-                      }`}
-                    >
-                      My Courses
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('available')}
-                      className={`px-3 py-1 rounded-md text-sm font-medium ${
-                        activeTab === 'available'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 text-gray-700'
-                      }`}
-                    >
-                      Browse Courses
-                    </button>
-                  </div>
-                </div>
-
-                {/* Course List */}
-                {loading ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-2 text-gray-600">Loading courses...</p>
-                  </div>
-                ) : activeTab === 'enrolled' ? (
-                  <div className="space-y-4">
-                    {enrolledCourses.map((enrollment) => (
-                      <motion.div
-                        key={enrollment.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center">
-                              <img
-                                src={enrollment.thumbnailUrl || '/placeholder-course.jpg'}
-                                alt={enrollment.courseTitle}
-                                className="w-16 h-16 rounded-lg object-cover"
-                              />
-                              <div className="ml-4">
-                                <h4 className="text-lg font-medium text-gray-900">{enrollment.courseTitle}</h4>
-                                <div className="mt-1 flex items-center space-x-4">
-                                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getCategoryColor(enrollment.category)}`}>
-                                    {enrollment.category}
-                                  </span>
-                                  <span className="text-sm text-gray-500">by {enrollment.instructor}</span>
-                                </div>
-                                <p className="text-sm text-gray-600 mt-2">Enrolled: {new Date(enrollment.enrolledAt).toLocaleDateString()}</p>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="ml-4">
-                            <div className="flex items-center">
-                              <div className="text-sm text-gray-500">Progress:</div>
-                              <div className="ml-2 w-24 bg-gray-200 rounded-full h-2">
-                                <div
-                                  className="bg-blue-600 h-2 rounded-full"
-                                  style={{ width: `${enrollment.progress}%` }}
-                                ></div>
-                              </div>
-                              <span className="text-sm font-medium text-gray-900">{enrollment.progress}%</span>
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                ) : (
-                  activeTab === 'enrolled' ? (
-                    enrolledCourses.length === 0 ? (
-                      <div className="text-center py-12">
-                        <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-                          <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                          </svg>
-                        </div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No courses enrolled yet</h3>
-                        <p className="text-gray-600 mb-6">Start your learning journey by enrolling in a course below</p>
-                        <button
-                          onClick={() => setActiveTab('available')}
-                          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                          Browse Courses
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {enrolledCourses.map((enrollment) => (
-                          <motion.div
-                            key={enrollment.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md"
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center">
-                                  <img
-                                    src={enrollment.thumbnailUrl || '/placeholder-course.jpg'}
-                                    alt={enrollment.courseTitle}
-                                    className="w-16 h-16 rounded-lg object-cover"
-                                  />
-                                  <div className="ml-4">
-                                    <h4 className="text-lg font-medium text-gray-900">{enrollment.courseTitle}</h4>
-                                    <div className="mt-1 flex items-center space-x-4">
-                                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getCategoryColor(enrollment.category)}`}>
-                                        {enrollment.category}
-                                      </span>
-                                      <span className="text-sm text-gray-500">by {enrollment.instructor}</span>
-                                    </div>
-                                    <p className="text-sm text-gray-600 mt-2">Enrolled: {new Date(enrollment.enrolledAt).toLocaleDateString()}</p>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="ml-4">
-                                <div className="flex items-center">
-                                  <div className="text-sm text-gray-500">Progress:</div>
-                                  <div className="ml-2 w-24 bg-gray-200 rounded-full h-2">
-                                    <div
-                                      className="bg-blue-600 h-2 rounded-full"
-                                      style={{ width: `${enrollment.progress}%` }}
-                                    ></div>
-                                  </div>
-                                  <span className="text-sm font-medium text-gray-900">{enrollment.progress}%</span>
-                                </div>
-                              </div>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
-                    )
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {availableCourses.map((course) => (
-                        <motion.div
-                          key={course.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md cursor-pointer"
-                          onClick={() => enrollInCourse(course.id)}
-                        >
-                          <div className="flex items-start">
-                            <img
-                              src={course.thumbnailUrl || '/placeholder-course.jpg'}
-                              alt={course.title}
-                              className="w-16 h-16 rounded-lg object-cover"
-                            />
-                            <div className="ml-4 flex-1">
-                              <h4 className="text-lg font-medium text-gray-900">{course.title}</h4>
-                              <div className="mt-1 flex items-center space-x-4">
-                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getCategoryColor(course.category)}`}>
-                                  {course.category}
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-600 mt-2 line-clamp-2">{course.description}</p>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
+            {/* List Rendering */}
+            <AnimatePresence mode="wait">
+              {loading ? (
+                <motion.div 
+                  key="loader"
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  className="flex flex-col items-center justify-center py-20"
+                >
+                  <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
+                </motion.div>
+              ) : activeTab === 'enrolled' ? (
+                <motion.div 
+                  key="enrolled"
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  className="space-y-4"
+                >
+                  {enrolledCourses.length === 0 ? (
+                    <div className="text-center py-20 bg-slate-900/30 rounded-3xl border-2 border-dashed border-white/5">
+                      <p className="text-slate-500">Your learning shelf is empty.</p>
                     </div>
-                  )
-                )}
-              </div>
-            </div>
-          </motion.div>
+                  ) : (
+                    enrolledCourses.map((item) => (
+                      <div key={item.id} className="group bg-slate-900/50 hover:bg-slate-900 p-4 rounded-3xl border border-white/5 hover:border-emerald-500/30 transition-all flex flex-col md:flex-row gap-6 items-center">
+                        <div className="relative w-full md:w-40 h-24 rounded-2xl overflow-hidden shrink-0">
+                          <img src={item.thumbnailUrl || '/placeholder.jpg'} className="w-full h-full object-cover" alt="" />
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                            <PlayCircle className="text-white" size={32} />
+                          </div>
+                        </div>
+                        <div className="flex-1 w-full space-y-2">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h4 className="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors">{item.courseTitle}</h4>
+                              <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
+                                <Clock size={12} /> Enrolled {new Date(item.enrolledAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${getCategoryStyles(item.category)}`}>
+                              {item.category}
+                            </span>
+                          </div>
+                          
+                          <div className="pt-2">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="text-[10px] font-bold text-slate-500">COURSE PROGRESS</span>
+                              <span className="text-xs font-black text-emerald-500">{item.progress}%</span>
+                            </div>
+                            <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                              <motion.div 
+                                initial={{ width: 0 }}
+                                animate={{ width: `${item.progress}%` }}
+                                className="bg-emerald-500 h-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="available"
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                >
+                  {availableCourses.map((course) => (
+                    <div key={course.id} className="bg-slate-900/50 rounded-3xl border border-white/5 overflow-hidden group hover:border-emerald-500/30 transition-all flex flex-col">
+                      <div className="aspect-video relative overflow-hidden">
+                        <img src={course.thumbnailUrl || '/placeholder.jpg'} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="" />
+                        <div className={`absolute top-4 left-4 px-3 py-1 rounded-lg text-[10px] font-black uppercase border backdrop-blur-md ${getCategoryStyles(course.category)}`}>
+                          {course.category}
+                        </div>
+                      </div>
+                      <div className="p-5 space-y-3 flex-1 flex flex-col">
+                        <h4 className="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-1">{course.title}</h4>
+                        <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed flex-1">{course.description}</p>
+                        <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                          <span className="text-emerald-500 font-bold">{course.price ? `${course.price} TK` : 'FREE'}</span>
+                          <button 
+                            onClick={() => enrollInCourse(course.id)}
+                            className="px-4 py-2 bg-slate-800 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl transition-all"
+                          >
+                            Enroll Now
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
-import { withAuth } from '@/lib/middleware';
+import { verifyToken, getUserById } from '@/lib/auth';
 import { logActivity } from '@/lib/auth';
 
 // GET /api/courses/[slug] - Get single course
-const getCourse = withAuth(async (req: NextRequest, context: any, user: any) => {
+export async function GET(req: NextRequest, context: { params: Promise<{ slug: string }> }) {
   try {
-    const { slug } = context.params;
+    const { slug } = await context.params;
 
     const courseQuery = `
       SELECT 
@@ -65,12 +65,25 @@ const getCourse = withAuth(async (req: NextRequest, context: any, user: any) => 
       { status: 500 }
     );
   }
-}, { permissions: ['courses.read'] });
+}
 
 // PUT /api/courses/[slug] - Update course
-const updateCourse = withAuth(async (req: NextRequest, context: any, user: any) => {
+export async function PUT(req: NextRequest, context: { params: Promise<{ slug: string }> }) {
   try {
-    const { slug } = context.params;
+    // Authentication
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    const token = authHeader.substring(7);
+    const payload = verifyToken(token);
+    const user = await getUserById(payload.userId);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 401 });
+    }
+
+    const { slug } = await context.params;
     const updateData = await req.json();
 
     // Check if course exists
@@ -144,12 +157,24 @@ const updateCourse = withAuth(async (req: NextRequest, context: any, user: any) 
       { status: 500 }
     );
   }
-}, { permissions: ['courses.update'] });
+}
 
 // DELETE /api/courses/[slug] - Delete course
-const deleteCourse = withAuth(async (req: NextRequest, context: any, user: any) => {
+export async function DELETE(req: NextRequest, context: { params: Promise<{ slug: string }> }) {
   try {
-    const { slug } = context.params;
+    // Authentication
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    const token = authHeader.substring(7);
+    const payload = verifyToken(token);
+    const user = await getUserById(payload.userId);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 401 });
+    }
+    const { slug } = await context.params;
 
     // Check if course exists
     const existingCourse = await query('SELECT id, title FROM courses WHERE slug = $1', [slug]);
@@ -201,8 +226,5 @@ const deleteCourse = withAuth(async (req: NextRequest, context: any, user: any) 
       { status: 500 }
     );
   }
-}, { permissions: ['courses.delete'] });
+}
 
-export const GET = getCourse;
-export const PUT = updateCourse;
-export const DELETE = deleteCourse;

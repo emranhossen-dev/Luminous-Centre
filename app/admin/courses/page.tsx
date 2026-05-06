@@ -111,7 +111,7 @@ export default function CoursesPage() {
               course={course} 
               onEdit={() => handleEdit(course.id)} 
               onDelete={() => handleDelete(course.id)} 
-              onStatusUpdate={handleStatusUpdate}
+              onStatusUpdate={(status) => handleStatusUpdate(course.id, status)}
             />
           ))
         )}

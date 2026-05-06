@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/middleware';
+import { verifyToken, getUserById } from '@/lib/auth';
 import { query } from '@/lib/database';
 import { logActivity } from '@/lib/auth';
 
 // POST /api/student/enroll - Enroll student in course
-const enrollInCourse = withAuth(async (req: NextRequest, context: any, user: any) => {
+export async function POST(req: NextRequest, context: { params: Promise<{}> }) {
   try {
+    // Authentication
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    const token = authHeader.substring(7);
+    const payload = verifyToken(token);
+    const user = await getUserById(payload.userId);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 401 });
+    }
     const { courseId } = await req.json();
 
     if (!courseId) {
@@ -49,17 +61,30 @@ const enrollInCourse = withAuth(async (req: NextRequest, context: any, user: any
     });
 
   } catch (error) {
-    console.error('Enrollment error:', error);
+    console.error('Enroll course error:', error);
     return NextResponse.json(
       { error: 'Failed to enroll in course' },
       { status: 500 }
     );
   }
-});
+}
 
-// GET /api/student/enrollments - Get student's enrollments
-const getStudentEnrollments = withAuth(async (req: NextRequest, context: any, user: any) => {
+// GET /api/student/enroll - Get student enrollments
+export async function GET(req: NextRequest, context: { params: Promise<{}> }) {
   try {
+    // Authentication
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    const token = authHeader.substring(7);
+    const payload = verifyToken(token);
+    const user = await getUserById(payload.userId);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -68,32 +93,38 @@ const getStudentEnrollments = withAuth(async (req: NextRequest, context: any, us
 
     const enrollmentsQuery = `
       SELECT 
-        e.id,
-        e.enrollment_date,
-        e.completion_percentage,
-        e.status,
+        e.*,
         c.title as course_title,
-        c.thumbnail_url
+        c.slug as course_slug,
+        c.thumbnail_url,
+        c.category,
+        c.price,
+        e.enrolled_at,
+        e.status as enrollment_status
       FROM enrollments e
       JOIN courses c ON e.course_id = c.id
       WHERE e.user_id = $1
-      ORDER BY e.enrollment_date DESC
+      ORDER BY e.enrolled_at DESC
       LIMIT $2 OFFSET $3
     `;
 
-    const result = await query(enrollmentsQuery, [user.id, limit, offset]);
+    const enrollmentsResult = await query(enrollmentsQuery, [user.id, limit, offset]);
 
-    const enrollments = result.rows.map(enrollment => ({
-      id: enrollment.id,
-      enrolledAt: enrollment.enrollment_date,
-      progress: enrollment.completion_percentage,
-      status: enrollment.status,
-      courseTitle: enrollment.course_title,
-      thumbnailUrl: enrollment.thumbnail_url
-    }));
+    // Get total count
+    const countResult = await query(
+      'SELECT COUNT(*) as total FROM enrollments WHERE user_id = $1',
+      [user.id]
+    );
+    const total = parseInt(countResult.rows[0].total);
 
     return NextResponse.json({
-      enrollments
+      enrollments: enrollmentsResult.rows,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
     });
 
   } catch (error) {
@@ -103,7 +134,4 @@ const getStudentEnrollments = withAuth(async (req: NextRequest, context: any, us
       { status: 500 }
     );
   }
-});
-
-export const POST = enrollInCourse;
-export const GET = getStudentEnrollments;
+}

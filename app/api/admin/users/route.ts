@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/middleware';
+import { verifyToken, getUserById } from '@/lib/auth';
 import { query } from '@/lib/database';
 import { logActivity } from '@/lib/auth';
 
 // GET /api/admin/users - Get all users with pagination
-const getUsers = withAuth(async (req: NextRequest, context: any, user: any) => {
+export async function GET(req: NextRequest, context: { params: Promise<{}> }) {
   try {
+    // Authentication
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    const token = authHeader.substring(7);
+    const payload = verifyToken(token);
+    const user = await getUserById(payload.userId);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 401 });
+    }
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -88,12 +100,25 @@ const getUsers = withAuth(async (req: NextRequest, context: any, user: any) => {
       { status: 500 }
     );
   }
-});
+}
 
 // PUT /api/admin/users/[id]/toggle-status - Toggle user active status
-const toggleUserStatus = withAuth(async (req: NextRequest, context: any, user: any) => {
+export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = context.params;
+    // Authentication
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    const token = authHeader.substring(7);
+    const payload = verifyToken(token);
+    const user = await getUserById(payload.userId);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 401 });
+    }
+
+    const { id } = await context.params;
     const { isActive } = await req.json();
 
     await query(
@@ -104,9 +129,9 @@ const toggleUserStatus = withAuth(async (req: NextRequest, context: any, user: a
     // Log activity
     await logActivity(
       user.id,
-      'admin.users.update',
+      'users.toggle_status',
       'user',
-      id,
+      parseInt(id),
       { isActive }
     );
 
@@ -117,16 +142,29 @@ const toggleUserStatus = withAuth(async (req: NextRequest, context: any, user: a
   } catch (error) {
     console.error('Toggle user status error:', error);
     return NextResponse.json(
-      { error: 'Failed to update user status' },
+      { error: 'Failed to toggle user status' },
       { status: 500 }
     );
   }
-});
+}
 
 // DELETE /api/admin/users/[id] - Delete user
-const deleteUser = withAuth(async (req: NextRequest, context: any, user: any) => {
+export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = context.params;
+    // Authentication
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    const token = authHeader.substring(7);
+    const payload = verifyToken(token);
+    const user = await getUserById(payload.userId);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 401 });
+    }
+
+    const { id } = await context.params;
 
     // Check if user exists
     const userResult = await query('SELECT id, email, first_name, last_name FROM users WHERE id = $1', [id]);
@@ -159,7 +197,7 @@ const deleteUser = withAuth(async (req: NextRequest, context: any, user: any) =>
       user.id,
       'admin.users.delete',
       'user',
-      id
+      parseInt(id)
     );
 
     return NextResponse.json({
@@ -173,8 +211,5 @@ const deleteUser = withAuth(async (req: NextRequest, context: any, user: any) =>
       { status: 500 }
     );
   }
-});
+}
 
-export const GET = getUsers;
-export const PUT = toggleUserStatus;
-export const DELETE = deleteUser;

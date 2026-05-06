@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/middleware';
+import { verifyToken, getUserById } from '@/lib/auth';
 import { query } from '@/lib/database';
 
 // GET /api/admin/stats - Get admin dashboard statistics
-const getStats = withAuth(async (req: NextRequest, context: any, user: any) => {
+export async function GET(req: NextRequest, context: { params: Promise<{}> }) {
   try {
+    // Authentication
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    const token = authHeader.substring(7);
+    const payload = verifyToken(token);
+    const user = await getUserById(payload.userId);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 401 });
+    }
     // Get total users
     const totalUsersResult = await query('SELECT COUNT(*) as count FROM users');
     const totalUsers = parseInt(totalUsersResult.rows[0].count);
@@ -68,12 +80,10 @@ const getStats = withAuth(async (req: NextRequest, context: any, user: any) => {
     });
 
   } catch (error) {
-    console.error('Get stats error:', error);
+    console.error('Stats error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch statistics' },
       { status: 500 }
     );
   }
-});
-
-export const GET = getStats;
+}
