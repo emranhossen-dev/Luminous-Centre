@@ -87,42 +87,60 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
       featured
     } = courseData;
 
-    if (!title || !slug || !category) {
-      return NextResponse.json(
-        { error: 'Title, slug, and category are required' },
-        { status: 400 }
-      );
+    // For status-only updates, only require status field
+    if (status === undefined) {
+      // If not a status update, require title, slug, and category for full updates
+      if (!title || !slug || !category) {
+        return NextResponse.json(
+          { error: 'Title, slug, and category are required' },
+          { status: 400 }
+        );
+      }
     }
 
-    // Check if slug already exists (excluding current course)
-    const existingCourse = await query(
-      'SELECT id FROM courses WHERE slug = $1 AND id != $2',
-      [slug, id]
-    );
-
-    if (existingCourse.rows.length > 0) {
-      return NextResponse.json(
-        { error: 'Course with this slug already exists' },
-        { status: 409 }
+    // Check if slug already exists (excluding current course) - only for full updates
+    if (status === undefined && slug) {
+      const existingCourse = await query(
+        'SELECT id FROM courses WHERE slug = $1 AND id != $2',
+        [slug, id]
       );
+
+      if (existingCourse.rows.length > 0) {
+        return NextResponse.json(
+          { error: 'Course with this slug already exists' },
+          { status: 409 }
+        );
+      }
     }
 
-    // Update course
-    const result = await query(`
-      UPDATE courses SET 
-        title = $1, slug = $2, description = $3, short_description = $4, category = $5,
-        price = $6, old_price = $7, language = $8, level = $9, duration_weeks = $10,
-        total_hours = $11, thumbnail_url = $12, preview_video_url = $13, 
-        promo_video_url = $14, access_type = $15, class_time = $16, batch = $17,
-        course_details = $18, status = $19, featured = $20, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $21
-      RETURNING *
-    `, [
-      title, slug, description, short_description, category,
-      price, old_price, language, level, duration_weeks, total_hours,
-      thumbnail_url, preview_video_url, promo_video_url, access_type,
-      class_time, batch, course_details, status, featured, id
-    ]);
+    // Update course - handle both status-only and full updates
+    let result;
+    if (status !== undefined && title === undefined && slug === undefined) {
+      // Status-only update
+      result = await query(`
+        UPDATE courses SET 
+          status = $1, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $2
+        RETURNING *
+      `, [status, id]);
+    } else {
+      // Full update
+      result = await query(`
+        UPDATE courses SET 
+          title = $1, slug = $2, description = $3, short_description = $4, category = $5,
+          price = $6, old_price = $7, language = $8, level = $9, duration_weeks = $10,
+          total_hours = $11, thumbnail_url = $12, preview_video_url = $13, 
+          promo_video_url = $14, access_type = $15, class_time = $16, batch = $17,
+          course_details = $18, status = $19, featured = $20, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $21
+        RETURNING *
+      `, [
+        title, slug, description, short_description, category,
+        price, old_price, language, level, duration_weeks, total_hours,
+        thumbnail_url, preview_video_url, promo_video_url, access_type,
+        class_time, batch, course_details, status, featured, id
+      ]);
+    }
 
     if (result.rows.length === 0) {
       return NextResponse.json(

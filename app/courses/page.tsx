@@ -1,4 +1,4 @@
-import PaginatedCourses from "@/components/PaginatedCourses";
+import DynamicCourses from "@/components/DynamicCourses";
 
 export default function AllCoursesPage() {
   return (
@@ -16,7 +16,7 @@ export default function AllCoursesPage() {
           </p>
         </div>
         
-        <PaginatedCourses />
+        <DynamicCourses />
       </div>
     </main>
   );

@@ -146,61 +146,30 @@ export async function POST(req: NextRequest, context: { params: Promise<{}> }) {
       );
     }
 
-    // Create course with new fields
-    let result;
-    try {
-      // Try to insert with new fields first
-      result = await query(`
-        INSERT INTO courses (
-          title, slug, description, category, price, old_price,
-          thumbnail_url, access_type, status, featured, batch,
-          enrollment_ends, class_starts, selected_days, created_by
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-        RETURNING *
-      `, [
-        title || 'Untitled Course',
-        slug || `course-${Date.now()}`,
-        description || '',
-        safeCategory,
-        parseFloat(price) || 0,
-        parseFloat(old_price) || 0,
-        thumbnail_url || '',
-        access_type || 'paid',
-        status || 'draft',
-        Boolean(featured) || false,
-        batch || '',
-        enrollment_ends || null,
-        class_starts || null,
-        JSON.stringify(selected_days || []),
-        user.id
-      ]);
-    } catch (newFieldError) {
-      console.log('New field insert failed, trying original fields:', newFieldError.message);
-      // Fallback to original fields
-      result = await query(`
-        INSERT INTO courses (
-          title, slug, description, category, 
-          price, old_price, thumbnail_url, access_type, 
-          class_time, batch, course_details, status, featured, created_by
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-        RETURNING *
-      `, [
-        title || 'Untitled Course',
-        slug || `course-${Date.now()}`,
-        description || '',
-        safeCategory,
-        parseFloat(price) || 0,
-        parseFloat(old_price) || 0,
-        thumbnail_url || '',
-        access_type || 'paid',
-        JSON.stringify(selected_days || []),
-        batch || '',
-        '{}',
-        status || 'draft',
-        Boolean(featured) || false,
-        user.id
-      ]);
-    }
+    // Create course with all fields including enrollment_ends and class_starts
+    const result = await query(`
+      INSERT INTO courses (
+        title, slug, description, category, price, old_price,
+        thumbnail_url, access_type, status, featured, batch,
+        enrollment_ends, class_starts, created_by
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      RETURNING *
+    `, [
+      title || 'Untitled Course',
+      slug || `course-${Date.now()}`,
+      description || '',
+      safeCategory,
+      parseFloat(price) || 0,
+      parseFloat(old_price) || 0,
+      thumbnail_url || '',
+      access_type || 'paid',
+      status || 'draft',
+      Boolean(featured) || false,
+      batch || '',
+      enrollment_ends || null,
+      class_starts || null,
+      user.id
+    ]);
 
     // Log activity
     await logActivity(

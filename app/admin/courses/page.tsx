@@ -33,10 +33,10 @@ export default function CoursesPage() {
     }
   };
 
-  const handleStatusUpdate = async (id: number, status: string) => {
+  const handleStatusUpdate = async (courseId: number, status: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/courses/${id}`, {
+      const response = await fetch(`/api/admin/courses/${courseId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -109,7 +109,6 @@ export default function CoursesPage() {
             <CourseCard 
               key={course.id} 
               course={course} 
-              onEdit={() => handleEdit(course.id)} 
               onDelete={() => handleDelete(course.id)} 
               onStatusUpdate={(status) => handleStatusUpdate(course.id, status)}
             />

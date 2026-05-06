@@ -21,6 +21,8 @@ interface UserCourseCardProps {
     featured?: boolean;
     batch?: string;
     created_at?: string;
+    enrollment_ends?: string;
+    class_starts?: string;
     description?: string;
     short_description?: string;
     language?: string;
@@ -48,11 +50,29 @@ export default function UserCourseCard({ course }: UserCourseCardProps) {
     return colors[category.toLowerCase()] || '#6b7280';
   };
 
-  // Calculate days until class starts (mock data for now)
-  const daysUntilClass = 3; // This would come from course start date
+  // Calculate days left until enrollment ends
+  const calculateDaysLeft = () => {
+    if (!course.enrollment_ends) return null;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to start of day for accurate calculation
+    
+    const enrollmentEndDate = new Date(course.enrollment_ends);
+    enrollmentEndDate.setHours(0, 0, 0, 0); // Set to start of day for accurate calculation
+    
+    const differenceInTime = enrollmentEndDate.getTime() - today.getTime();
+    const differenceInDays = Math.ceil(differenceInTime / (1000 * 3600 * 24));
+    
+    return differenceInDays >= 0 ? differenceInDays : 0;
+  };
+
+  const daysLeft = calculateDaysLeft();
 
   return (
-    <div className="w-[380px] bg-[#121821] rounded-[16px] overflow-hidden border border-[#1e293b] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.4)]">
+    <div 
+      className="w-[380px] bg-[#121821] rounded-[16px] overflow-hidden border border-[#1e293b] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.4)] cursor-pointer hover:border-[#00a651]/50 transition-all"
+      onClick={() => window.location.href = `/courses/${course.slug}`}
+    >
       
       {/* Course Image with Category Badge */}
       <div className="relative h-[200px] overflow-hidden">
@@ -88,11 +108,12 @@ export default function UserCourseCard({ course }: UserCourseCardProps) {
           </div>
         )}
 
-        <div className="ml-auto flex items-center gap-[5px] bg-[#f1f5f9] text-[#334155] py-[5px] px-[10px] rounded-[6px] text-[11px] font-semibold border border-[#e2e8f0]">
+        {/* Always show days left for testing */}
+        <div className="ml-auto flex items-center gap-[5px] bg-red-500 text-white py-[5px] px-[10px] rounded-[6px] text-[11px] font-bold border border-red-600">
           <svg className="w-[14px] h-[14px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
-          ৩ দিন বাকি
+          {daysLeft !== null ? (daysLeft === 0 ? 'আজই শেষ' : `${daysLeft} দিন বাকি`) : 'No Data'}
         </div>
       </div>
 
@@ -101,15 +122,39 @@ export default function UserCourseCard({ course }: UserCourseCardProps) {
         {course.title}
       </h2>
 
-      {/* Class Start Date */}
-      <div className="px-[15px] mb-[12px] text-[12px] text-[#94a3b8]">
-        <span className="text-[#00a651] font-bold uppercase tracking-wider mr-1">Class Starts:</span> 
-        {course.created_at ? new Date(course.created_at).toLocaleDateString('en-US', { 
-          month: 'long', 
-          day: 'numeric', 
-          year: 'numeric' 
-        }) : '20 May, 2026'}
-      </div>
+      {/* Enrollment Ends - New Section */}
+      {course.enrollment_ends && (
+        <div className="px-[15px] mb-[8px]">
+          <div className="flex justify-between items-center text-[12px] text-[#94a3b8]">
+            <span className="text-[#00a651] font-bold uppercase tracking-wider">Enrollment Ends:</span>
+            <span>
+              {(() => {
+                try {
+                  return new Date(course.enrollment_ends).toLocaleDateString('en-US', { 
+                    month: 'long', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                  });
+                } catch (error) {
+                  return 'Date not available';
+                }
+              })()}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Class Start Date Section - Only show when data exists */}
+      {course.class_starts && (
+        <div className="px-[15px] mb-[12px] text-[12px] text-[#94a3b8]">
+          <span className="text-[#00a651] font-bold uppercase tracking-wider mr-1">Class Starts:</span> 
+          {new Date(course.class_starts).toLocaleDateString('en-US', { 
+            month: 'long', 
+            day: 'numeric', 
+            year: 'numeric' 
+          })}
+        </div>
+      )}
 
       {/* Pricing Section */}
       <div className="flex justify-between items-center px-[15px] pb-[15px]">
@@ -127,7 +172,13 @@ export default function UserCourseCard({ course }: UserCourseCardProps) {
       </div>
 
       {/* Action Button */}
-      <button className="w-[calc(100%-30px)] mx-[15px] mb-[15px] bg-[#00a651] text-white py-[12px] rounded-[10px] font-bold text-[15px] hover:opacity-90 transition-opacity duration-200">
+      <button 
+        onClick={(e) => {
+          e.stopPropagation();
+          window.location.href = `/courses/${course.slug}`;
+        }}
+        className="w-[calc(100%-30px)] mx-[15px] mb-[15px] bg-[#00a651] text-white py-[12px] rounded-[10px] font-bold text-[15px] hover:opacity-90 transition-opacity duration-200"
+      >
         View Details
       </button>
     </div>

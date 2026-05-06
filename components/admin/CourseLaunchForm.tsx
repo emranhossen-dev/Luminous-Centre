@@ -165,8 +165,18 @@ export default function CourseLaunchForm({ onClose, onSuccess }: CourseLaunchFor
 
     if (!formData.enrollment_ends || !formData.class_starts) {
       toast.error('Enrollment end date and class start date are required');
+      console.log('Missing dates:', { enrollment_ends: formData.enrollment_ends, class_starts: formData.class_starts });
       return;
     }
+
+    // Log the form data before submission
+    console.log('Final form data before submission:', {
+      enrollment_ends: formData.enrollment_ends,
+      class_starts: formData.class_starts,
+      batch: formData.batch,
+      title: formData.title,
+      category: formData.category
+    });
 
     if (!formData.batch) {
       toast.error('Batch number is required');
@@ -215,7 +225,26 @@ export default function CourseLaunchForm({ onClose, onSuccess }: CourseLaunchFor
         if (data.details) {
           errorMessage += ': ' + data.details;
         }
-        console.log('Full error response:', data);
+        
+        // Comprehensive error logging
+        console.error('=== COURSE CREATION FAILED ===');
+        console.error('Error Message:', errorMessage);
+        console.error('Full API Response:', data);
+        console.error('Response Status:', response.status);
+        console.error('Response Headers:', Object.fromEntries(response.headers.entries()));
+        console.error('Submitted Data:', submissionData);
+        
+        // Show specific error details
+        if (data.details) {
+          toast.error(`Creation failed: ${data.details}`, {
+            position: 'top-right'
+          });
+        } else {
+          toast.error(errorMessage, {
+            position: 'top-right'
+          });
+        }
+        
         throw new Error(errorMessage);
       }
     } catch (error: any) {
