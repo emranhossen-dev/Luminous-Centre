@@ -1,6 +1,26 @@
-import { Facebook, Twitter, Instagram, Youtube, Globe, Mail, Link as LinkIcon } from "lucide-react";
+"use client";
+
+import React from 'react';
+import { 
+  Globe, 
+  Mail, 
+  Link as LinkIcon,
+  // Use these modern replacements for the deprecated brand icons
+  Video,     // For Youtube
+  Camera,    // For Instagram
+  MessageSquare // For Twitter/X (or use 'Bird' if your version still has it)
+} from "lucide-react";
 
 const Footer = () => {
+    const socialLinks = [
+        { icon: Globe, href: "#", label: "Website" },
+        { icon: Mail, href: "#", label: "Email" },
+        { icon: Camera, href: "#", label: "Instagram" }, // Replaced Instagram
+        { icon: MessageSquare, href: "#", label: "Twitter" }, // Replaced Twitter
+        { icon: Video, href: "#", label: "Youtube" }, // Replaced Youtube
+        { icon: LinkIcon, href: "#", label: "Links" }
+    ];
+
     return (
         <footer className="bg-[#080616] pt-24 pb-12 border-t border-white/5 relative overflow-hidden">
             {/* Background Glow */}
@@ -24,16 +44,12 @@ const Footer = () => {
                             The leading skill development training center dedicated to building the future of the digital workforce through practical, hands-on learning.
                         </p>
                         
-                        {/* Social Icons */}
                         <div className="flex gap-4">
-                            {[
-                                { icon: Globe, href: "#" },
-                                { icon: Mail, href: "#" },
-                                { icon: LinkIcon, href: "#" }
-                            ].map((item, i) => (
+                            {socialLinks.map((item, i) => (
                                 <a
                                     key={i}
                                     href={item.href}
+                                    aria-label={item.label}
                                     className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:bg-[#2F2FE4] hover:text-white hover:border-[#2F2FE4] transition-all transform hover:-translate-y-1"
                                 >
                                     <item.icon size={18} />
@@ -75,10 +91,6 @@ const Footer = () => {
                     <p className="text-gray-600 text-[10px] font-black uppercase tracking-[0.2em]">
                         © 2026 LUMINOUS SKILL DEVELOPMENT TRAINING CENTER. ALL RIGHTS RESERVED.
                     </p>
-                    <div className="flex gap-8">
-                        <span className="text-[10px] text-gray-700 font-bold uppercase tracking-widest hover:text-gray-500 cursor-pointer">Support</span>
-                        <span className="text-[10px] text-gray-700 font-bold uppercase tracking-widest hover:text-gray-500 cursor-pointer">Cookies</span>
-                    </div>
                 </div>
             </div>
         </footer>
