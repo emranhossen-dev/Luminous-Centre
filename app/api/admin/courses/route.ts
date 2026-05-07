@@ -121,6 +121,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{}> }) {
     // Debug logging to see what we're receiving
     console.log('Received course data:', courseData);
     console.log('Category value:', category, 'Type:', typeof category);
+    console.log('Selected days:', selected_days, 'Type:', typeof selected_days);
 
     // Ensure category is never null
     const safeCategory = category || 'online';
@@ -146,13 +147,13 @@ export async function POST(req: NextRequest, context: { params: Promise<{}> }) {
       );
     }
 
-    // Create course with all fields including enrollment_ends and class_starts
+    // Create course with all fields including enrollment_ends, class_starts, and selected_days
     const result = await query(`
       INSERT INTO courses (
         title, slug, description, category, price, old_price,
         thumbnail_url, access_type, status, featured, batch,
-        enrollment_ends, class_starts, created_by
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        enrollment_ends, class_starts, selected_days, created_by
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
       RETURNING *
     `, [
       title || 'Untitled Course',
@@ -168,6 +169,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{}> }) {
       batch || '',
       enrollment_ends || null,
       class_starts || null,
+      selected_days || [],
       user.id
     ]);
 
@@ -190,6 +192,176 @@ export async function POST(req: NextRequest, context: { params: Promise<{}> }) {
     return NextResponse.json(
       { 
         error: 'Failed to create course',
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT /api/admin/courses - Update course (for publish/unpublish)
+export async function PUT(req: NextRequest, context: { params: Promise<{}> }) {
+  try {
+    // Authentication
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    const token = authHeader.substring(7);
+    const payload = verifyToken(token);
+    const user = await getUserById(payload.userId);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 401 });
+    }
+
+    const { id, status, ...updateData } = await req.json();
+
+    if (!id) {
+      return NextResponse.json({ error: 'Course ID is required' }, { status: 400 });
+    }
+
+    // Build dynamic update query
+    const updateFields = [];
+    const updateValues = [];
+    let paramCount = 1;
+
+    if (status !== undefined) {
+      updateFields.push(`status = $${paramCount++}`);
+      updateValues.push(status);
+    }
+
+    // Add other fields that can be updated
+    const allowedFields = ['title', 'slug', 'description', 'category', 'price', 'old_price', 
+                          'thumbnail_url', 'access_type', 'featured', 'batch', 
+                          'enrollment_ends', 'class_starts', 'selected_days'];
+
+    for (const field of allowedFields) {
+      if (updateData[field] !== undefined) {
+        updateFields.push(`${field} = $${paramCount++}`);
+        if (field === 'selected_days') {
+          updateValues.push(JSON.stringify(updateData[field] || []));
+        } else if (field === 'price' || field === 'old_price') {
+          updateValues.push(parseFloat(updateData[field]) || 0);
+        } else {
+          updateValues.push(updateData[field]);
+        }
+      }
+    }
+
+    if (updateFields.length === 0) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+    }
+
+    // Add updated_at timestamp
+    updateFields.push(`updated_at = CURRENT_TIMESTAMP`);
+    
+    // Add course ID to values
+    updateValues.push(id);
+
+    const updateQuery = `
+      UPDATE courses 
+      SET ${updateFields.join(', ')}
+      WHERE id = $${paramCount}
+      RETURNING *
+    `;
+
+    const result = await query(updateQuery, updateValues);
+
+    if (result.rows.length === 0) {
+      return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+    }
+
+    // Log activity
+    await logActivity(
+      user.id,
+      'courses.update',
+      'course',
+      result.rows[0].id,
+      { updatedFields: updateFields, status }
+    );
+
+    return NextResponse.json({
+      message: 'Course updated successfully',
+      course: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error('Update course error:', error);
+    return NextResponse.json(
+      { 
+        error: 'Failed to update course',
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/admin/courses - Delete course
+export async function DELETE(req: NextRequest, context: { params: Promise<{}> }) {
+  try {
+    // Authentication
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    const token = authHeader.substring(7);
+    const payload = verifyToken(token);
+    const user = await getUserById(payload.userId);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const courseId = searchParams.get('id');
+
+    if (!courseId) {
+      return NextResponse.json({ error: 'Course ID is required' }, { status: 400 });
+    }
+
+    // Check if course exists
+    const existingCourse = await query('SELECT * FROM courses WHERE id = $1', [courseId]);
+    
+    if (existingCourse.rows.length === 0) {
+      return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+    }
+
+    // Check if course has enrollments
+    const enrollments = await query('SELECT COUNT(*) as count FROM enrollments WHERE course_id = $1', [courseId]);
+    
+    if (parseInt(enrollments.rows[0].count) > 0) {
+      return NextResponse.json({ 
+        error: 'Cannot delete course with active enrollments',
+        details: 'This course has students enrolled. Please remove enrollments first or archive the course instead.'
+      }, { status: 400 });
+    }
+
+    // Delete the course
+    await query('DELETE FROM courses WHERE id = $1', [courseId]);
+
+    // Log activity
+    await logActivity(
+      user.id,
+      'courses.delete',
+      'course',
+      parseInt(courseId),
+      { courseTitle: existingCourse.rows[0].title }
+    );
+
+    return NextResponse.json({
+      message: 'Course deleted successfully',
+      deletedCourse: existingCourse.rows[0]
+    });
+
+  } catch (error) {
+    console.error('Delete course error:', error);
+    return NextResponse.json(
+      { 
+        error: 'Failed to delete course',
         details: error.message,
         stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
       },
