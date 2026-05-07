@@ -1,7 +1,9 @@
 "use client";
 
-import React from 'react';
-import { Wifi, WifiOff, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Wifi, WifiOff, Trash2, Edit } from 'lucide-react';
+import CourseBannerUpdateForm from './CourseBannerUpdateForm';
+import { CourseData } from '@/types/course';
 
 interface AdminCourseCardProps {
   course: {
@@ -14,12 +16,41 @@ interface AdminCourseCardProps {
   };
   onDelete: () => void;
   onStatusUpdate: (id: number, status: string) => void;
+  onBannerUpdate?: () => void;
 }
 
-export default function AdminCourseCard({ course, onDelete, onStatusUpdate }: AdminCourseCardProps) {
+export default function AdminCourseCard({ course, onDelete, onStatusUpdate, onBannerUpdate }: AdminCourseCardProps) {
+  const [showBannerForm, setShowBannerForm] = useState(false);
+  const [bannerData, setBannerData] = useState<CourseData | undefined>();
+
   // Handle card click
   const handleCardClick = () => {
     window.location.href = `/courses/${course.slug}`;
+  };
+
+  // Handle banner update
+  const handleBannerUpdate = async () => {
+    try {
+      const response = await fetch(`/api/courses/${course.slug}`);
+      if (response.ok) {
+        const data = await response.json();
+        setBannerData(data);
+        setShowBannerForm(true);
+      }
+    } catch (error) {
+      console.error('Failed to fetch course data:', error);
+    }
+  };
+
+  const handleBannerFormClose = () => {
+    setShowBannerForm(false);
+    setBannerData(undefined);
+  };
+
+  const handleBannerFormSuccess = () => {
+    setShowBannerForm(false);
+    setBannerData(undefined);
+    onBannerUpdate?.();
   };
 
   return (
@@ -89,6 +120,16 @@ export default function AdminCourseCard({ course, onDelete, onStatusUpdate }: Ad
         <button 
           onClick={(e) => {
             e.stopPropagation();
+            handleBannerUpdate();
+          }}
+          className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors text-sm font-medium"
+        >
+          <Edit className="w-4 h-4" />
+          Banner
+        </button>
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
             onDelete();
           }}
           className="flex items-center justify-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-colors text-sm font-medium"
@@ -97,6 +138,16 @@ export default function AdminCourseCard({ course, onDelete, onStatusUpdate }: Ad
           Delete
         </button>
       </div>
+
+      {/* Banner Update Form Modal */}
+      {showBannerForm && (
+        <CourseBannerUpdateForm
+          courseSlug={course.slug}
+          initialData={bannerData}
+          onClose={handleBannerFormClose}
+          onSuccess={handleBannerFormSuccess}
+        />
+      )}
     </div>
   );
 }

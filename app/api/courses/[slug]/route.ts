@@ -13,11 +13,9 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slug: s
         c.*,
         u.first_name as "creatorFirstName",
         u.last_name as "creatorLastName",
-        COUNT(DISTINCT cm.id) as "moduleCount",
         COUNT(DISTINCT e.id) as "enrollmentCount"
       FROM courses c
       LEFT JOIN users u ON c.created_by = u.id
-      LEFT JOIN course_modules cm ON c.id = cm.course_id
       LEFT JOIN enrollments e ON c.id = e.course_id
       WHERE c.slug = $1
       GROUP BY c.id, u.first_name, u.last_name
@@ -34,24 +32,61 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slug: s
 
     const course = result.rows[0];
 
-    // Get course modules
-    const modulesQuery = `
-      SELECT * FROM course_modules 
-      WHERE course_id = $1 
-      ORDER BY order_index ASC
-    `;
-    const modulesResult = await query(modulesQuery, [course.id]);
+    // Get course modules (handle missing table gracefully)
+    let modulesResult = { rows: [] };
+    try {
+      const modulesQuery = `
+        SELECT * FROM course_modules 
+        WHERE course_id = $1 
+        ORDER BY order_index ASC
+      `;
+      modulesResult = await query(modulesQuery, [course.id]);
+    } catch (error) {
+      console.log('Course modules table not found, using empty array');
+    }
 
-    // Get course projects
-    const projectsQuery = `
-      SELECT * FROM course_projects 
-      WHERE course_id = $1 
-      ORDER BY order_index ASC
-    `;
-    const projectsResult = await query(projectsQuery, [course.id]);
+    // Get course projects (handle missing table gracefully)
+    let projectsResult = { rows: [] };
+    try {
+      const projectsQuery = `
+        SELECT * FROM course_projects 
+        WHERE course_id = $1 
+        ORDER BY order_index ASC
+      `;
+      projectsResult = await query(projectsQuery, [course.id]);
+    } catch (error) {
+      console.log('Course projects table not found, using empty array');
+    }
+
+    // Transform course data to match CourseData structure for banner
+    const courseData = {
+      id: course.id.toString(),
+      badge: course.category === 'online' ? 'Online Course' : 
+             course.category === 'offline' ? 'Offline Course' : 
+             course.category === 'recorded' ? 'Recorded Course' : 'Course',
+      title: course.title,
+      description: course.description || course.short_description || '',
+      current_price: parseFloat(course.price) || 0,
+      regular_price: parseFloat(course.old_price) || 0,
+      currency: 'TK',
+      classes_count: course.total_hours ? `${course.total_hours}+` : '60+',
+      projects_count: '12+',
+      enrollment_deadline: course.enrollment_ends || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      class_start_date: course.class_starts || new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+      thumbnail_url: course.thumbnail_url || '',
+      video_url: course.preview_video_url || '',
+      learning_outcomes: [
+        { title: 'প্রফেশনাল স্কিল', subtitle: 'ইন্ডাস্ট্রি স্ট্যান্ডার্ড', icon: 'TrendingUp' },
+        { title: 'রিয়েল প্রোজেক্ট', subtitle: '12+ প্রোজেক্ট তৈরি', icon: 'CheckSquare' },
+        { title: 'এক্সপার্ট গাইড', subtitle: 'বিগিনার টু এডভান্সড', icon: 'Users' },
+        { title: 'সার্টিফিকেট', subtitle: 'কমপ্লিশন সার্টিফিকেট', icon: 'Award' }
+      ]
+    };
 
     return NextResponse.json({
-      course: {
+      ...courseData,
+      // Also include original course data for admin editing
+      originalCourse: {
         ...course,
         modules: modulesResult.rows,
         projects: projectsResult.rows

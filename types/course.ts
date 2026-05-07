@@ -46,3 +46,44 @@ export interface Course {
   enrollmentCount?: number;
   createdBy?: string;
 }
+
+// Course details page API structure
+export interface CourseData {
+  id?: string;
+  badge: string;
+  title: string;
+  description: string;
+  current_price: number;
+  regular_price: number;
+  currency: string;
+  classes_count: string;
+  projects_count: string;
+  enrollment_deadline: string;
+  class_start_date: string;
+  thumbnail_url: string;
+  video_url: string;
+  learning_outcomes: LearningOutcome[];
+}
+
+export interface LearningOutcome {
+  title: string;
+  subtitle: string;
+  icon: string;
+}
+
+// Course details update form data
+export interface CourseDetailsFormData {
+  badge: string;
+  title: string;
+  description: string;
+  current_price: number;
+  regular_price: number;
+  currency: string;
+  classes_count: string;
+  projects_count: string;
+  enrollment_deadline: string;
+  class_start_date: string;
+  thumbnail_url: string;
+  video_url: string;
+  learning_outcomes: LearningOutcome[];
+}
