@@ -22,6 +22,11 @@ const nextConfig = {
         hostname: 'loop-media.co',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.debatuwikilehaj.ca',
+        pathname: '/**',
+      },
     ],
   },
 };

@@ -136,16 +136,28 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ slug: s
     let paramIndex = 1;
 
     const allowedFields = [
-      'title', 'description', 'shortDescription', 'category', 
-      'price', 'oldPrice', 'language', 'level', 'durationWeeks',
-      'totalHours', 'thumbnailUrl', 'previewVideoUrl', 'status'
+      'title', 'description', 'short_description', 'category', 
+      'price', 'old_price', 'language', 'level', 'duration_weeks',
+      'total_hours', 'thumbnail_url', 'preview_video_url', 'status',
+      // Course details specific fields
+      'badge', 'current_price', 'regular_price', 'currency',
+      'classes_count', 'projects_count', 'enrollment_deadline',
+      'class_start_date', 'video_url', 'learning_outcomes'
     ];
 
     for (const field of allowedFields) {
       if (updateData[field] !== undefined) {
         const dbField = field.replace(/([A-Z])/g, '_$1').toLowerCase();
-        updateFields.push(`${dbField} = $${paramIndex++}`);
-        updateValues.push(updateData[field]);
+        
+        if (field === 'learning_outcomes') {
+          // Handle JSON field separately
+          updateFields.push(`${dbField} = $${paramIndex}::jsonb`);
+          updateValues.push(JSON.stringify(updateData[field]));
+          paramIndex++;
+        } else {
+          updateFields.push(`${dbField} = $${paramIndex++}`);
+          updateValues.push(updateData[field]);
+        }
       }
     }
 

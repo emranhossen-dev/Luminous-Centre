@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Wifi, WifiOff, Trash2, Edit } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Wifi, WifiOff, Trash2, Edit, BookOpen } from 'lucide-react';
 import CourseBannerUpdateForm from './CourseBannerUpdateForm';
 import { CourseData } from '@/types/course';
 
@@ -95,14 +96,14 @@ export default function AdminCourseCard({ course, onDelete, onStatusUpdate, onBa
       </h3>
 
       {/* Action Buttons */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {course.status === 'draft' ? (
           <button 
             onClick={(e) => {
               e.stopPropagation();
               onStatusUpdate(course.id, 'published');
             }}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors text-sm font-medium"
+            className="flex items-center justify-center gap-2 px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors text-sm font-medium"
           >
             Publish
           </button>
@@ -112,7 +113,7 @@ export default function AdminCourseCard({ course, onDelete, onStatusUpdate, onBa
               e.stopPropagation();
               onStatusUpdate(course.id, 'draft');
             }}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-500 transition-colors text-sm font-medium"
+            className="flex items-center justify-center gap-2 px-3 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-500 transition-colors text-sm font-medium"
           >
             Unpublish
           </button>
@@ -126,6 +127,16 @@ export default function AdminCourseCard({ course, onDelete, onStatusUpdate, onBa
         >
           <Edit className="w-4 h-4" />
           Banner
+        </button>
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            window.location.href = `/admin/courses/${course.slug}/update`;
+          }}
+          className="flex items-center justify-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-500 transition-colors text-sm font-medium"
+        >
+          <Edit className="w-4 h-4" />
+          Edit
         </button>
         <button 
           onClick={(e) => {
@@ -148,6 +159,7 @@ export default function AdminCourseCard({ course, onDelete, onStatusUpdate, onBa
           onSuccess={handleBannerFormSuccess}
         />
       )}
-    </div>
+
+      </div>
   );
 }
