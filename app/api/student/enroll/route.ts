@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, getUserById } from '@/lib/auth';
 import { query } from '@/lib/database';
 import { logActivity } from '@/lib/auth';
+import { detectEnrollmentUserColumn } from '@/lib/enrollment';
 
 // POST /api/student/enroll - Enroll student in course
 export async function POST(req: NextRequest, context: { params: Promise<{}> }) {
@@ -27,9 +28,11 @@ export async function POST(req: NextRequest, context: { params: Promise<{}> }) {
       );
     }
 
+    const userColumn = await detectEnrollmentUserColumn();
+
     // Check if already enrolled
     const existingEnrollment = await query(
-      'SELECT id FROM enrollments WHERE user_id = $1 AND course_id = $2',
+      `SELECT id FROM enrollments WHERE ${userColumn} = $1 AND course_id = $2`,
       [user.id, courseId]
     );
 
@@ -42,7 +45,8 @@ export async function POST(req: NextRequest, context: { params: Promise<{}> }) {
 
     // Create enrollment
     const result = await query(
-      'INSERT INTO enrollments (user_id, course_id, enrollment_date, status, completion_percentage) VALUES ($1, $2, CURRENT_TIMESTAMP, $3, $4) RETURNING id',
+      `INSERT INTO enrollments (${userColumn}, course_id, enrollment_date, status, completion_percentage)
+       VALUES ($1, $2, CURRENT_TIMESTAMP, $3, $4) RETURNING id`,
       [user.id, courseId, 'active', 0]
     );
 
@@ -91,6 +95,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{}> }) {
 
     const offset = (page - 1) * limit;
 
+    const userColumn = await detectEnrollmentUserColumn();
     const enrollmentsQuery = `
       SELECT 
         e.*,
@@ -99,12 +104,12 @@ export async function GET(req: NextRequest, context: { params: Promise<{}> }) {
         c.thumbnail_url,
         c.category,
         c.price,
-        e.enrolled_at,
+        e.enrollment_date,
         e.status as enrollment_status
       FROM enrollments e
       JOIN courses c ON e.course_id = c.id
-      WHERE e.user_id = $1
-      ORDER BY e.enrolled_at DESC
+      WHERE e.${userColumn} = $1
+      ORDER BY e.enrollment_date DESC
       LIMIT $2 OFFSET $3
     `;
 
@@ -112,7 +117,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{}> }) {
 
     // Get total count
     const countResult = await query(
-      'SELECT COUNT(*) as total FROM enrollments WHERE user_id = $1',
+      `SELECT COUNT(*) as total FROM enrollments WHERE ${userColumn} = $1`,
       [user.id]
     );
     const total = parseInt(countResult.rows[0].total);

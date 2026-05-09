@@ -50,6 +50,7 @@ export interface Course {
 // Course details page API structure
 export interface CourseData {
   id?: string;
+  slug?: string;
   badge: string;
   title: string;
   description: string;

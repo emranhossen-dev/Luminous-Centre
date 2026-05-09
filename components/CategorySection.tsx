@@ -131,7 +131,9 @@ export default function CategorySection() {
               </div>
 
               <Link 
-                href={item.route}
+                href={item.isGovt ? "https://www.luminouscentree.com/apply" : item.route}
+                target={item.isGovt ? "_blank" : "_self"}
+                rel={item.isGovt ? "noopener noreferrer" : ""}
                 className={`w-full py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-center
                 ${item.isGovt 
                   ? "bg-[#f42a41] text-white hover:bg-[#d9263a] shadow-[0_10px_20px_rgba(244,42,65,0.2)]" 

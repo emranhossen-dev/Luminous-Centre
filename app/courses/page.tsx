@@ -16,7 +16,7 @@ export default function AllCoursesPage() {
           </p>
         </div>
         
-        <DynamicCourses />
+        <DynamicCourses category="all" />
       </div>
     </main>
   );

@@ -22,6 +22,18 @@ pool.on('error', (err) => {
   console.error('Database connection error:', err);
 });
 
+/** Returns true when `public.tableName` exists (avoids noisy errors from optional tables). */
+export async function tableExists(tableName: string): Promise<boolean> {
+  const res = await pool.query(
+    `SELECT EXISTS (
+      SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = $1
+    ) AS exists`,
+    [tableName]
+  );
+  return Boolean(res.rows[0]?.exists);
+}
+
 // Helper function to execute queries
 export async function query(text: string, params?: any[]) {
   const start = Date.now();

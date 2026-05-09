@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -10,6 +11,7 @@ import {
   TrendingUp,
   UserCheck
 } from 'lucide-react';
+import EnrollmentRequestDetails from '../components/EnrollmentRequestDetails';
 
 interface Stats {
   totalUsers: number;
@@ -18,6 +20,28 @@ interface Stats {
   totalRevenue: number;
   activeUsers: number;
   newUsers: number;
+}
+
+interface EnrollmentRequest {
+  id: number;
+  user_id: number;
+  course_id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  course_title: string;
+  payment_method: string;
+  payment_status: string;
+  enrollment_status: string;
+  amount: number;
+  currency: string;
+  payer_name?: string;
+  payer_mobile?: string;
+  payment_mobile?: string;
+  payment_mobile_last3?: string;
+  transaction_id?: string;
+  created_at: string;
 }
 
 export default function AdminDashboard() {
@@ -30,6 +54,9 @@ export default function AdminDashboard() {
     activeUsers: 0,
     newUsers: 0
   });
+  const [requests, setRequests] = useState<EnrollmentRequest[]>([]);
+  const [selectedRequest, setSelectedRequest] = useState<EnrollmentRequest | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -47,6 +74,15 @@ export default function AdminDashboard() {
         const statsData = await statsRes.json();
         setStats(statsData.stats);
       }
+
+      const reqRes = await fetch('/api/admin/enrollment-requests?status=pending', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (reqRes.ok) {
+        const reqData = await reqRes.json();
+        setRequests(reqData.requests || []);
+      }
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
@@ -59,6 +95,29 @@ export default function AdminDashboard() {
     { label: 'Total Courses', value: stats.totalCourses, icon: BookOpen, color: 'emerald', trend: '+4.3%' },
     { label: 'Total Enrollments', value: stats.totalEnrollments, icon: GraduationCap, color: 'violet', trend: '+18.2%' },
   ];
+
+  const updateRequest = async (id: number, action: 'approve' | 'reject') => {
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/admin/enrollment-requests/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ action })
+      });
+
+      if (res.ok) {
+        setRequests((prev) => prev.filter((item) => item.id !== id));
+      }
+    } catch (error) {
+      console.error('Failed to update request:', error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-10">
@@ -141,6 +200,71 @@ export default function AdminDashboard() {
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
         </div>
       </div>
+
+      <div className="bg-white rounded-[40px] p-8 border border-gray-100 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-gray-900">Pending Enrollment Requests</h3>
+          <div className="flex items-center gap-4">
+            <Link href="/admin/students" className="text-sm font-bold text-blue-600 hover:underline">
+              View enrolled students
+            </Link>
+            <span className="text-sm font-bold text-gray-500">{requests.length} pending</span>
+          </div>
+        </div>
+
+        {requests.length === 0 ? (
+          <p className="text-gray-500 text-sm">No pending payment approval requests right now.</p>
+        ) : (
+          <div className="space-y-3">
+            {requests.map((request) => (
+              <div key={request.id} className="border border-gray-200 rounded-2xl p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <button
+                      onClick={() => setSelectedRequest(request)}
+                      className="text-sm font-bold text-gray-900 hover:text-blue-600 transition-colors text-left"
+                    >
+                      {request.first_name} {request.last_name}
+                    </button>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {request.course_title} | {request.payment_method.toUpperCase()} | {request.email}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Txn: {request.transaction_id || 'N/A'} | {new Date(request.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex gap-2 ml-4">
+                    <button
+                      onClick={() => updateRequest(request.id, 'approve')}
+                      disabled={actionLoading}
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white rounded-lg text-xs font-bold transition-colors"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => updateRequest(request.id, 'reject')}
+                      disabled={actionLoading}
+                      className="px-3 py-1.5 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded-lg text-xs font-bold transition-colors"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Enrollment Request Details Modal */}
+      {selectedRequest && (
+        <EnrollmentRequestDetails
+          request={selectedRequest}
+          onClose={() => setSelectedRequest(null)}
+          onUpdate={updateRequest}
+          loading={actionLoading}
+        />
+      )}
     </div>
   );
 }

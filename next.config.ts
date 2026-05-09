@@ -27,6 +27,11 @@ const nextConfig = {
         hostname: 'www.debatuwikilehaj.ca',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'iidmc.org',
+        pathname: '/**',
+      },
     ],
   },
 };

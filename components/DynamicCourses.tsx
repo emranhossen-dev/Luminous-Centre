@@ -28,20 +28,39 @@ interface Course {
   selected_days?: string[];
 }
 
-export default function DynamicCourses() {
+interface DynamicCoursesProps {
+  category?: string;
+}
+
+export default function DynamicCourses({ category }: DynamicCoursesProps) {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchCourses();
-  }, []);
+  }, [category]);
 
   const fetchCourses = async () => {
     try {
-      const response = await fetch('/api/courses');
+      let url = '/api/courses?limit=50';
+      if (category && category !== 'all') {
+        url += `&category=${category}`;
+      }
+      
+      const response = await fetch(url);
       
       if (response.ok) {
         const data = await response.json();
+        console.log('DynamicCourses - Fetched courses:', {
+          category,
+          url,
+          count: data.courses?.length || 0,
+          courses: data.courses?.slice(0, 2).map(c => ({
+            id: c.id,
+            title: c.title,
+            category: c.category
+          }))
+        });
         setCourses(data.courses || []);
       } else {
         console.error('Failed to fetch courses');

@@ -51,6 +51,16 @@ export default function CategoryCourses({ category }: CategoryCoursesProps) {
         const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
+          console.log('CategoryCourses - Fetched courses:', {
+            category,
+            url,
+            count: data.courses?.length || 0,
+            courses: data.courses?.slice(0, 2).map(c => ({
+              id: c.id,
+              title: c.title,
+              category: c.category
+            }))
+          });
           setCourses(data.courses);
         }
       } catch (error) {

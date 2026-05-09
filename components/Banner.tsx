@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
+
 const Banner = () => {
   const { user, openModal } = useAuth();
 
@@ -59,7 +60,7 @@ const Banner = () => {
           <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full border border-blue-500/20 bg-blue-500/5 backdrop-blur-xl">
             <Zap className="w-3.5 h-3.5 text-blue-400" />
             <span className="text-blue-300 text-[10px] font-bold uppercase tracking-[0.2em]">
-              Elevate Your Potential
+              Build Your Future
             </span>
           </div>
 
@@ -96,12 +97,6 @@ const Banner = () => {
             >
               কোর্সগুলো দেখুন
               <MoveRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button 
-              onClick={handleEnrollmentClick}
-              className="w-full sm:w-auto px-8 py-3.5 border border-white/10 text-white rounded-xl text-sm font-bold bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all"
-            >
-              ফ্রি সেমিনার
             </button>
           </div>
         </motion.div>

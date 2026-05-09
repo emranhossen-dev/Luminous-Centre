@@ -45,17 +45,6 @@ export async function GET(req: NextRequest, context: any) {
       queryParams.push(`%${search}%`, `%${search}%`);
     }
 
-    // Add filters
-    if (category) {
-      whereClause += ` AND c.category = $${paramIndex++}`;
-      queryParams.push(category);
-    }
-
-    if (status) {
-      whereClause += ` AND c.status = $${paramIndex++}`;
-      queryParams.push(status);
-    }
-
     // Different permissions for different roles removed as handled above by status check
 
     // Get total count
@@ -87,6 +76,16 @@ export async function GET(req: NextRequest, context: any) {
 
     queryParams.push(limit, offset);
     const coursesResult = await query(coursesQuery, queryParams);
+
+    // Debug: Log course categories
+    console.log('Total courses found:', total);
+    console.log('Requested category:', category);
+    console.log('Sample courses with categories:', coursesResult.rows.slice(0, 3).map(c => ({
+      id: c.id,
+      title: c.title,
+      category: c.category,
+      status: c.status
+    })));
 
     return NextResponse.json({
       courses: coursesResult.rows,

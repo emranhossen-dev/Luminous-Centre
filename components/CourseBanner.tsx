@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
+import Link from 'next/link';
 import { Play, Layers, Clock, CheckCircle, Award, TrendingUp, CheckSquare, Users, LucideIcon } from 'lucide-react';
 import { CourseData } from '@/types/course';
 
@@ -40,9 +40,12 @@ export default function CourseBanner({ course }: { course: CourseData }) {
           </p>
 
           <div className="flex flex-wrap items-center gap-8 pt-4">
-            <button className="bg-blue-600 hover:bg-blue-500 text-white px-10 py-4 rounded-2xl font-black text-lg transition-all hover:shadow-[0_0_30px_rgba(37,99,235,0.4)] active:scale-95 flex items-center gap-3">
+            <Link
+              href={`/courses/${course.slug}/enroll`}
+              className="bg-blue-600 hover:bg-blue-500 text-white px-10 py-4 rounded-2xl font-black text-lg transition-all hover:shadow-[0_0_30px_rgba(37,99,235,0.4)] active:scale-95 flex items-center gap-3"
+            >
               Enroll Course <span>→</span>
-            </button>
+            </Link>
             
             <div className="flex flex-col">
               <span className="text-4xl font-black italic text-white tracking-tighter">
@@ -67,11 +70,11 @@ export default function CourseBanner({ course }: { course: CourseData }) {
           
           {/* Video Placeholder */}
           <div className="relative aspect-video group cursor-pointer overflow-hidden border-b border-white/5">
-            <Image 
-              src={course.thumbnail_url} 
-              alt="Thumbnail" 
-              fill 
-              className="object-cover opacity-50 group-hover:scale-105 transition-transform duration-700"
+            {/* Native img: course thumbnails may be any external URL without next.config churn */}
+            <img
+              src={course.thumbnail_url || '/file.svg'}
+              alt="Course thumbnail"
+              className="absolute inset-0 h-full w-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-700"
             />
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <div className="bg-blue-600 p-5 rounded-full shadow-2xl group-hover:scale-110 transition-transform duration-300">

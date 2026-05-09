@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database';
+import { query, tableExists } from '@/lib/database';
 import { verifyToken, getUserById } from '@/lib/auth';
 import { logActivity } from '@/lib/auth';
 
@@ -32,35 +32,31 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slug: s
 
     const course = result.rows[0];
 
-    // Get course modules (handle missing table gracefully)
-    let modulesResult = { rows: [] };
-    try {
+    // Optional tables: only query when present (no failed queries / error logs)
+    let modulesResult = { rows: [] as any[] };
+    if (await tableExists('course_modules')) {
       const modulesQuery = `
         SELECT * FROM course_modules 
         WHERE course_id = $1 
         ORDER BY order_index ASC
       `;
       modulesResult = await query(modulesQuery, [course.id]);
-    } catch (error) {
-      console.log('Course modules table not found, using empty array');
     }
 
-    // Get course projects (handle missing table gracefully)
-    let projectsResult = { rows: [] };
-    try {
+    let projectsResult = { rows: [] as any[] };
+    if (await tableExists('course_projects')) {
       const projectsQuery = `
         SELECT * FROM course_projects 
         WHERE course_id = $1 
         ORDER BY order_index ASC
       `;
       projectsResult = await query(projectsQuery, [course.id]);
-    } catch (error) {
-      console.log('Course projects table not found, using empty array');
     }
 
     // Transform course data to match CourseData structure for banner
     const courseData = {
       id: course.id.toString(),
+      slug: course.slug,
       badge: course.category === 'online' ? 'Online Course' : 
              course.category === 'offline' ? 'Offline Course' : 
              course.category === 'recorded' ? 'Recorded Course' : 'Course',
