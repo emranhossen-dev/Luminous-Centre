@@ -63,10 +63,42 @@ export default function CoursesPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this course?')) return;
-
     try {
       const token = localStorage.getItem('token');
+      
+      // First check if course has enrollments
+      const enrollmentsResponse = await fetch(`/api/admin/courses/${id}/enrollments`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (enrollmentsResponse.ok) {
+        const enrollmentsData = await enrollmentsResponse.json();
+        
+        if (enrollmentsData.count > 0) {
+          // Course has enrollments, show options
+          const action = confirm(
+            `This course has ${enrollmentsData.count} enrolled students.\n\n` +
+            `Click OK to remove all enrollments and delete the course.\n` +
+            `Click CANCEL to keep the course and enrollments.`
+          );
+          
+          if (!action) return;
+          
+          // Remove enrollments first
+          const deleteEnrollmentsResponse = await fetch(`/api/admin/courses/${id}/enrollments`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          if (!deleteEnrollmentsResponse.ok) {
+            const error = await deleteEnrollmentsResponse.json();
+            alert('Failed to remove enrollments: ' + (error.error || 'Unknown error'));
+            return;
+          }
+        }
+      }
+      
+      // Now delete the course
       const response = await fetch(`/api/admin/courses/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }

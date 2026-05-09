@@ -14,6 +14,7 @@ export interface CourseFormData {
   enrollment_ends: string;
   class_starts: string;
   selected_days: string[]; // e.g., ["Sat", "Mon", "Wed"]
+  course_outline_url: string;
 }
 
 // Clean version sent to Database
@@ -22,6 +23,7 @@ export interface CourseSubmission extends Omit<CourseFormData, 'batch' | 'price'
   price: number;
   old_price: number;
   selected_days: string[]; // Formatted as ["Sat", "Mon"]
+  course_outline_url: string; // PDF outline URL
 }
 
 // Course display interface
@@ -49,8 +51,8 @@ export interface Course {
 
 // Course details page API structure
 export interface CourseData {
-  id?: string;
-  slug?: string;
+  id: string;
+  slug: string;
   badge: string;
   title: string;
   description: string;
@@ -63,7 +65,14 @@ export interface CourseData {
   class_start_date: string;
   thumbnail_url: string;
   video_url: string;
-  learning_outcomes: LearningOutcome[];
+  course_outline_url?: string;
+  category: 'online' | 'offline' | 'recorded' | 'project';
+  batch?: string;
+  learning_outcomes: Array<{
+    title: string;
+    subtitle: string;
+    icon: string;
+  }>;
 }
 
 export interface LearningOutcome {

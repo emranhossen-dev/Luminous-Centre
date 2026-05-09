@@ -115,7 +115,8 @@ export async function POST(req: NextRequest, context: { params: Promise<{}> }) {
       batch,
       enrollment_ends,
       class_starts,
-      selected_days
+      selected_days,
+      course_outline_url
     } = courseData;
 
     // Debug logging to see what we're receiving
@@ -147,13 +148,13 @@ export async function POST(req: NextRequest, context: { params: Promise<{}> }) {
       );
     }
 
-    // Create course with all fields including enrollment_ends, class_starts, and selected_days
+    // Create course with all fields including enrollment_ends, class_starts, selected_days, and course_outline_url
     const result = await query(`
       INSERT INTO courses (
         title, slug, description, category, price, old_price,
         thumbnail_url, access_type, status, featured, batch,
-        enrollment_ends, class_starts, selected_days, created_by
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        enrollment_ends, class_starts, selected_days, course_outline_url, created_by
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       RETURNING *
     `, [
       title || 'Untitled Course',
@@ -170,6 +171,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{}> }) {
       enrollment_ends || null,
       class_starts || null,
       selected_days || [],
+      course_outline_url || null,
       user.id
     ]);
 
@@ -300,73 +302,4 @@ export async function PUT(req: NextRequest, context: { params: Promise<{}> }) {
   }
 }
 
-// DELETE /api/admin/courses - Delete course
-export async function DELETE(req: NextRequest, context: { params: Promise<{}> }) {
-  try {
-    // Authentication
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-    }
-    
-    const token = authHeader.substring(7);
-    const payload = verifyToken(token);
-    const user = await getUserById(payload.userId);
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 401 });
-    }
-
-    const { searchParams } = new URL(req.url);
-    const courseId = searchParams.get('id');
-
-    if (!courseId) {
-      return NextResponse.json({ error: 'Course ID is required' }, { status: 400 });
-    }
-
-    // Check if course exists
-    const existingCourse = await query('SELECT * FROM courses WHERE id = $1', [courseId]);
-    
-    if (existingCourse.rows.length === 0) {
-      return NextResponse.json({ error: 'Course not found' }, { status: 404 });
-    }
-
-    // Check if course has enrollments
-    const enrollments = await query('SELECT COUNT(*) as count FROM enrollments WHERE course_id = $1', [courseId]);
-    
-    if (parseInt(enrollments.rows[0].count) > 0) {
-      return NextResponse.json({ 
-        error: 'Cannot delete course with active enrollments',
-        details: 'This course has students enrolled. Please remove enrollments first or archive the course instead.'
-      }, { status: 400 });
-    }
-
-    // Delete the course
-    await query('DELETE FROM courses WHERE id = $1', [courseId]);
-
-    // Log activity
-    await logActivity(
-      user.id,
-      'courses.delete',
-      'course',
-      parseInt(courseId),
-      { courseTitle: existingCourse.rows[0].title }
-    );
-
-    return NextResponse.json({
-      message: 'Course deleted successfully',
-      deletedCourse: existingCourse.rows[0]
-    });
-
-  } catch (error) {
-    console.error('Delete course error:', error);
-    return NextResponse.json(
-      { 
-        error: 'Failed to delete course',
-        details: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-      },
-      { status: 500 }
-    );
-  }
-}
 

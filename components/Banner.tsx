@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
-
 const Banner = () => {
   const { user, openModal } = useAuth();
 
@@ -60,7 +59,7 @@ const Banner = () => {
           <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full border border-blue-500/20 bg-blue-500/5 backdrop-blur-xl">
             <Zap className="w-3.5 h-3.5 text-blue-400" />
             <span className="text-blue-300 text-[10px] font-bold uppercase tracking-[0.2em]">
-              Build Your Future
+              Elevate Your Potential
             </span>
           </div>
 

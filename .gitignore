@@ -49,3 +49,21 @@ next-env.d.ts
 
 # OS
 Thumbs.db
+
+# Logs
+logs
+*.log
+lerna-debug.log*
+
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

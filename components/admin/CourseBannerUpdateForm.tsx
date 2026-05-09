@@ -20,6 +20,8 @@ export default function CourseBannerUpdateForm({
 }: CourseBannerUpdateFormProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<CourseData>({
+    id: '',
+    slug: '',
     badge: 'Online Course',
     title: '',
     description: '',
@@ -32,6 +34,7 @@ export default function CourseBannerUpdateForm({
     class_start_date: '',
     thumbnail_url: '',
     video_url: '',
+    category: 'online',
     learning_outcomes: [
       { title: 'প্রফেশনাল স্কিল', subtitle: 'ইন্ডাস্ট্রি স্ট্যান্ডার্ড', icon: 'TrendingUp' },
       { title: 'রিয়েল প্রোজেক্ট', subtitle: '12+ প্রোজেক্ট তৈরি', icon: 'CheckSquare' }

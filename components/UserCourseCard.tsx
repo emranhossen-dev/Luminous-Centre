@@ -27,6 +27,7 @@ interface UserCourseCardProps {
     short_description?: string;
     language?: string;
     access_type?: string;
+    course_outline_url?: string;
   };
 }
 
@@ -70,7 +71,7 @@ export default function UserCourseCard({ course }: UserCourseCardProps) {
 
   return (
     <div 
-      className="w-[380px] bg-[#121821] rounded-[16px] overflow-hidden border border-[#1e293b] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.4)] cursor-pointer hover:border-[#00a651]/50 transition-all"
+      className="w-full bg-[#121821] rounded-[16px] overflow-hidden border border-[#1e293b] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.4)] cursor-pointer hover:border-[#00a651]/50 transition-all hover:transform hover:scale-[1.02] hover:-translate-y-1"
       onClick={() => window.location.href = `/courses/${course.slug}`}
     >
       
@@ -103,7 +104,7 @@ export default function UserCourseCard({ course }: UserCourseCardProps) {
       <div className="flex items-center pt-[15px] pb-[5px] pr-[15px] gap-[10px]">
         {course.batch && (
           <div className="relative bg-[#00a651] text-white py-[4px] pl-[12px] pr-[12px] font-bold text-[12px] rounded-r-[2px]">
-            Batch {course.batch}
+            {course.batch}
             <div className="absolute top-0 -right-[10px] w-0 h-0 border-t-[13px] border-t-transparent border-b-[13px] border-b-transparent border-l-[10px] border-l-[#00a651]"></div>
           </div>
         )}
@@ -146,7 +147,7 @@ export default function UserCourseCard({ course }: UserCourseCardProps) {
 
       {/* Class Start Date Section - Only show when data exists */}
       {course.class_starts && (
-        <div className="px-[15px] mb-[12px] text-[12px] text-[#94a3b8]">
+        <div className="flex justify-between items-center px-[15px] mb-[12px] text-[12px] text-[#94a3b8]">
           <span className="text-[#00a651] font-bold uppercase tracking-wider mr-1">Class Starts:</span> 
           {new Date(course.class_starts).toLocaleDateString('en-US', { 
             month: 'long', 
@@ -172,15 +173,17 @@ export default function UserCourseCard({ course }: UserCourseCardProps) {
       </div>
 
       {/* Action Button */}
-      <button 
-        onClick={(e) => {
-          e.stopPropagation();
-          window.location.href = `/courses/${course.slug}`;
-        }}
-        className="w-[calc(100%-30px)] mx-[15px] mb-[15px] bg-[#00a651] text-white py-[12px] rounded-[10px] font-bold text-[15px] hover:opacity-90 transition-opacity duration-200"
-      >
-        View Details
-      </button>
+      <div className="px-[15px] pb-[15px]">
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            window.location.href = `/courses/${course.slug}`;
+          }}
+          className="w-full bg-[#00a651] text-white py-[12px] rounded-[10px] font-bold text-[15px] hover:opacity-90 transition-opacity duration-200"
+        >
+          View Details
+        </button>
+      </div>
     </div>
   );
 }

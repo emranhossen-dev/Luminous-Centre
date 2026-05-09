@@ -26,6 +26,7 @@ interface Course {
   language?: string;
   access_type?: string;
   selected_days?: string[];
+  course_outline_url?: string;
 }
 
 interface DynamicCoursesProps {
@@ -42,7 +43,7 @@ export default function DynamicCourses({ category }: DynamicCoursesProps) {
 
   const fetchCourses = async () => {
     try {
-      let url = '/api/courses?limit=50';
+      let url = '/api/courses?limit=100';
       if (category && category !== 'all') {
         url += `&category=${category}`;
       }
@@ -55,15 +56,17 @@ export default function DynamicCourses({ category }: DynamicCoursesProps) {
           category,
           url,
           count: data.courses?.length || 0,
-          courses: data.courses?.slice(0, 2).map(c => ({
+          total: data.pagination?.total || 0,
+          courses: data.courses?.slice(0, 5).map(c => ({
             id: c.id,
             title: c.title,
-            category: c.category
+            category: c.category,
+            status: c.status
           }))
         });
         setCourses(data.courses || []);
       } else {
-        console.error('Failed to fetch courses');
+        console.error('Failed to fetch courses:', response.status);
       }
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -90,9 +93,8 @@ export default function DynamicCourses({ category }: DynamicCoursesProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 lg:gap-10">
       {courses
-        .filter(course => course.status === 'published') // Only show published courses
         .map((course) => (
           <UserCourseCard 
             key={course.id} 

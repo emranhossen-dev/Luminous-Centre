@@ -71,6 +71,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slug: s
       class_start_date: course.class_starts || new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
       thumbnail_url: course.thumbnail_url || '',
       video_url: course.preview_video_url || '',
+      course_outline_url: course.course_outline_url || '',
       learning_outcomes: [
         { title: 'প্রফেশনাল স্কিল', subtitle: 'ইন্ডাস্ট্রি স্ট্যান্ডার্ড', icon: 'TrendingUp' },
         { title: 'রিয়েল প্রোজেক্ট', subtitle: '12+ প্রোজেক্ট তৈরি', icon: 'CheckSquare' },

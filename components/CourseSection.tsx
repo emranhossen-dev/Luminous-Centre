@@ -27,6 +27,7 @@ interface Course {
   short_description?: string;
   language?: string;
   access_type?: string;
+  course_outline_url?: string;
 }
 
 interface CourseSectionProps {
@@ -99,7 +100,7 @@ const CourseSection = ({ initialCourses = [] }: CourseSectionProps) => {
         </div>
 
         {/* Courses Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mb-16 px-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 lg:gap-10 mb-16 px-4">
           {loading ? (
             <div className="col-span-full py-20 flex flex-col items-center justify-center text-gray-500 gap-4">
               <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
@@ -121,10 +122,10 @@ const CourseSection = ({ initialCourses = [] }: CourseSectionProps) => {
         <div className="flex justify-center">
           <button 
             onClick={handleEnrollmentClick}
-            className="group flex items-center gap-3 px-10 py-4 border border-white/10 bg-white/5 text-white rounded-2xl text-base font-bold hover:bg-[#2F2FE4] hover:border-[#2F2FE4] transition-all shadow-xl"
+            className="group flex items-center gap-2 w-full sm:w-auto px-8 py-3.5 bg-[#2F2FE4] text-white rounded-xl text-sm font-bold hover:bg-[#162E93] transition-all transform hover:-translate-y-0.5 active:scale-95"
           >
-            View All Courses
-            <MoveRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            কোর্সগুলো দেখুন
+            <MoveRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
       </div>

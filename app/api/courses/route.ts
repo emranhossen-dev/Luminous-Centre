@@ -59,14 +59,44 @@ export async function GET(req: NextRequest, context: any) {
     // Get courses with pagination
     const coursesQuery = `
       SELECT 
-        c.*,
+        c.id,
+        c.title,
+        c.slug,
+        c.description,
+        c.short_description,
+        c.category,
+        c.price,
+        c.old_price,
+        c.language,
+        c.level,
+        c.duration_weeks,
+        c.total_hours,
+        c.thumbnail_url,
+        c.preview_video_url,
+        c.status,
+        c.featured,
+        c.badge,
+        c.current_price,
+        c.regular_price,
+        c.currency,
+        c.classes_count,
+        c.projects_count,
+        c.enrollment_deadline,
+        c.class_start_date,
+        c.video_url,
+        c.learning_outcomes,
+        c.enrollment_ends,
+        c.class_starts,
+        c.selected_days,
+        c.course_outline_url,
+        c.created_by,
+        c.created_at,
+        c.updated_at,
         u.first_name as "creatorFirstName",
         u.last_name as "creatorLastName",
-        COUNT(DISTINCT cm.id) as "moduleCount",
         COUNT(DISTINCT e.id) as "enrollmentCount"
       FROM courses c
       LEFT JOIN users u ON c.created_by = u.id
-      LEFT JOIN course_modules cm ON c.id = cm.course_id
       LEFT JOIN enrollments e ON c.id = e.course_id
       ${whereClause}
       GROUP BY c.id, u.first_name, u.last_name
@@ -77,16 +107,7 @@ export async function GET(req: NextRequest, context: any) {
     queryParams.push(limit, offset);
     const coursesResult = await query(coursesQuery, queryParams);
 
-    // Debug: Log course categories
-    console.log('Total courses found:', total);
-    console.log('Requested category:', category);
-    console.log('Sample courses with categories:', coursesResult.rows.slice(0, 3).map(c => ({
-      id: c.id,
-      title: c.title,
-      category: c.category,
-      status: c.status
-    })));
-
+    
     return NextResponse.json({
       courses: coursesResult.rows,
       pagination: {
@@ -136,6 +157,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{}> }) {
       totalHours,
       thumbnailUrl,
       previewVideoUrl,
+      courseOutlineUrl,
       status = 'draft'
     } = courseData;
 
@@ -165,14 +187,14 @@ export async function POST(req: NextRequest, context: { params: Promise<{}> }) {
       INSERT INTO courses (
         title, slug, description, short_description, category, 
         price, old_price, language, level, duration_weeks, 
-        total_hours, thumbnail_url, preview_video_url, status, created_by
+        total_hours, thumbnail_url, preview_video_url, course_outline_url, status, created_by
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       RETURNING *
     `, [
       title, slug, description, shortDescription, category,
       price, oldPrice, language, level, durationWeeks,
-      totalHours, thumbnailUrl, previewVideoUrl, status, user.id
+      totalHours, thumbnailUrl, previewVideoUrl, courseOutlineUrl, status, user.id
     ]);
 
     const newCourse = result.rows[0];
