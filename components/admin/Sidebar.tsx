@@ -16,7 +16,8 @@ import {
   FileText, 
   Settings,
   Shield,
-  ChevronRight
+  ChevronRight,
+  PhoneCall
 } from 'lucide-react';
 
 const menuItems = [
@@ -24,6 +25,7 @@ const menuItems = [
   { id: 'courses', label: 'Course Management', icon: BookOpen, href: '/admin/courses' },
   { id: 'batches', label: 'Batch Control', icon: Layers, href: '/admin/batches' },
   { id: 'students', label: 'Student Directory', icon: Users, href: '/admin/students' },
+  { id: 'seminar', label: 'Seminar Applications', icon: PhoneCall, href: '/admin/seminar' },
   { id: 'employees', label: 'Employee Hub', icon: Briefcase, href: '/admin/employees' },
   { id: 'mentors', label: 'Mentor List', icon: GraduationCap, href: '/admin/mentors' },
   { id: 'cycles', label: 'Academic Cycles', icon: RefreshCcw, href: '/admin/cycles' },

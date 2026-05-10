@@ -97,6 +97,13 @@ const Banner = () => {
               কোর্সগুলো দেখুন
               <MoveRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
+            <button 
+              onClick={() => window.location.href = '/apply'}
+              className="group flex items-center gap-2 w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-bold hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:-translate-y-0.5 active:scale-95 shadow-lg hover:shadow-blue-500/25"
+            >
+              আপনার সিট বুক করুন
+              <MoveRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
         </motion.div>
 
