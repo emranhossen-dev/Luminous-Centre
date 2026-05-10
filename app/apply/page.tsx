@@ -81,7 +81,7 @@ const ApplyPage = () => {
       }
     } catch (error) {
       console.error('Error submitting application:', error);
-      alert('আবেদন জমা দেওয়ার সময় সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+      alert('Application failed. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -104,12 +104,12 @@ const ApplyPage = () => {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center p-4 relative overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-blob"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
+          <div className="absolute top-0 left-0 w-96 h-96 bg-gray-700/10 rounded-full blur-3xl animate-blob"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-gray-600/10 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gray-800/10 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
         </div>
 
         <motion.div 
@@ -128,11 +128,11 @@ const ApplyPage = () => {
           </motion.div>
           
           <h2 className="text-3xl font-bold text-white mb-4">আবেদন সফল!</h2>
-          <p className="text-blue-100 mb-8">
+          <p className="text-blue-200 mb-8">
             আপনার আবেদনটি সফলভাবে জমা হয়েছে। আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।
           </p>
           
-          <button 
+          <button
             onClick={handleBackToHome}
             className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all"
           >
@@ -145,34 +145,37 @@ const ApplyPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-cyan-800 to-blue-950 relative overflow-hidden">
+    <div className="min-h-screen bg-[#05060f] relative overflow-hidden">
       {/* Modern Glassmorphism Background */}
       <div className="absolute inset-0">
-        <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-cyan-400/10 rounded-full blur-[120px] animate-pulse"></div>
-        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[150px] animate-pulse"></div>
-        <div className="absolute top-1/2 left-1/3 w-[300px] h-[300px] bg-indigo-400/8 rounded-full blur-[100px] animate-pulse"></div>
+        <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-blue-600/20 rounded-full blur-[120px] animate-blob"></div>
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-indigo-600/15 rounded-full blur-[150px] animate-blob animation-delay-2000"></div>
+        <div className="absolute top-1/2 left-1/3 w-[300px] h-[300px] bg-blue-700/10 rounded-full blur-[100px] animate-blob animation-delay-4000"></div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-12">
+      <div className="relative z-10 container mx-auto px-4 py-22">
+        {/* Back to Home Button - Absolute Position within container */}
+        <motion.button
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+          onClick={handleBackToHome}
+          className="absolute top-0 left-0 -translate-y-full inline-flex items-center gap-2 text-blue-300 hover:text-white transition-all hover:scale-105 cursor-pointer z-50"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          হোমপেজে ফিরে যান
+        </motion.button>
         {/* Header */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <button 
-            onClick={handleBackToHome}
-            className="inline-flex items-center gap-2 text-cyan-300 hover:text-white mb-6 transition-all hover:scale-105"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            হোমপেজে ফিরে যান
-          </button>
-          
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-            কোর্সে <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">আবেদন করুন</span>
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            কোর্সে <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">আবেদন করুন</span>
           </h1>
-          <p className="text-cyan-100 text-lg max-w-2xl mx-auto">
+          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
             আপনার পছন্দের কোর্সে ভর্তির জন্য নিচের ফর্মটি পূরণ করুন এবং আপনার স্কিল ডেভেলপমেন্ট যাত্রা শুরু করুন
           </p>
         </motion.div>
@@ -190,7 +193,7 @@ const ApplyPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Full Name */}
                 <div>
-                  <label className="flex items-center gap-2 text-cyan-100 font-medium mb-2">
+                  <label className="flex items-center gap-2 text-blue-200 font-medium mb-2">
                     <User className="w-4 h-4" />
                     পূর্ণ নাম *
                   </label>
@@ -200,14 +203,14 @@ const ApplyPage = () => {
                     value={formData.fullName}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 bg-white/5 border border-cyan-400/30 rounded-xl text-white placeholder-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 bg-white/5 border border-blue-500/30 rounded-xl text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
                     placeholder="আপনার পূর্ণ নাম লিখুন"
                   />
                 </div>
 
                 {/* Mobile Number */}
                 <div>
-                  <label className="flex items-center gap-2 text-cyan-100 font-medium mb-2">
+                  <label className="flex items-center gap-2 text-blue-200 font-medium mb-2">
                     <Phone className="w-4 h-4" />
                     মোবাইল নম্বর *
                   </label>
@@ -217,14 +220,14 @@ const ApplyPage = () => {
                     value={formData.mobileNo}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 bg-white/5 border border-cyan-400/30 rounded-xl text-white placeholder-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 bg-white/5 border border-blue-500/30 rounded-xl text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
                     placeholder="০১XXXXXXXXX"
                   />
                 </div>
 
                 {/* Email */}
                 <div>
-                  <label className="flex items-center gap-2 text-cyan-100 font-medium mb-2">
+                  <label className="flex items-center gap-2 text-blue-200 font-medium mb-2">
                     <Mail className="w-4 h-4" />
                     ইমেইল *
                   </label>
@@ -234,14 +237,14 @@ const ApplyPage = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 bg-white/5 border border-cyan-400/30 rounded-xl text-white placeholder-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 bg-white/5 border border-blue-500/30 rounded-xl text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
                     placeholder="your@email.com"
                   />
                 </div>
 
                 {/* Course Selection */}
                 <div>
-                  <label className="flex items-center gap-2 text-cyan-100 font-medium mb-2">
+                  <label className="flex items-center gap-2 text-blue-200 font-medium mb-2">
                     <BookOpen className="w-4 h-4" />
                     কোর্স নির্বাচন *
                   </label>
@@ -250,11 +253,11 @@ const ApplyPage = () => {
                     value={formData.course}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 bg-white/5 border border-cyan-400/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 bg-white/5 border border-blue-500/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
                   >
-                    <option value="" className="bg-gray-800">একটি কোর্স নির্বাচন করুন</option>
+                    <option value="" className="bg-[#05060f]">একটি কোর্স নির্বাচন করুন</option>
                     {courses.map((course) => (
-                      <option key={course} value={course} className="bg-gray-800">
+                      <option key={course} value={course} className="bg-[#05060f]">
                         {course}
                       </option>
                     ))}
@@ -263,7 +266,7 @@ const ApplyPage = () => {
 
                 {/* Category Selection */}
                 <div>
-                  <label className="flex items-center gap-2 text-cyan-100 font-medium mb-2">
+                  <label className="flex items-center gap-2 text-blue-200 font-medium mb-2">
                     <Monitor className="w-4 h-4" />
                     ক্যাটাগরি নির্বাচন *
                   </label>
@@ -272,11 +275,11 @@ const ApplyPage = () => {
                     value={formData.category}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 bg-white/5 border border-cyan-400/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 bg-white/5 border border-blue-500/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
                   >
-                    <option value="" className="bg-gray-800">ক্যাটাগরি নির্বাচন করুন</option>
+                    <option value="" className="bg-[#05060f]">ক্যাটাগরি নির্বাচন করুন</option>
                     {categories.map((category) => (
-                      <option key={category} value={category} className="bg-gray-800">
+                      <option key={category} value={category} className="bg-[#05060f]">
                         {category}
                       </option>
                     ))}
@@ -284,8 +287,8 @@ const ApplyPage = () => {
                 </div>
 
                 {/* WhatsApp Number */}
-                <div className="md:col-span-2">
-                  <label className="flex items-center gap-2 text-cyan-100 font-medium mb-2">
+                <div>
+                  <label className="flex items-center gap-2 text-blue-200 font-medium mb-2">
                     <MessageCircle className="w-4 h-4" />
                     হোয়াটসঅ্যাপ নম্বর *
                   </label>
@@ -295,7 +298,7 @@ const ApplyPage = () => {
                     value={formData.whatsappNo}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 bg-white/5 border border-cyan-400/30 rounded-xl text-white placeholder-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 bg-white/5 border border-blue-500/30 rounded-xl text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
                     placeholder="০১XXXXXXXXX"
                   />
                 </div>
@@ -307,7 +310,7 @@ const ApplyPage = () => {
                 disabled={isSubmitting}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-blue-500/25"
+                className="w-full flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-blue-500/25 z-10"
               >
                 {isSubmitting ? (
                   <>

@@ -18,33 +18,35 @@ interface CourseEnrollmentData {
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication
+    // Check for authentication (optional for guest users)
     const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.substring(7);
-    let decoded: any;
+    let userId = null;
     
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
-    } catch (error) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      // User is logged in, verify token
+      const token = authHeader.substring(7);
+      let decoded: any;
+      
+      try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+        userId = decoded.userId || decoded.id;
+      } catch (error) {
+        return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      }
+      
+      if (!userId) {
+        return NextResponse.json({ error: 'Invalid user token' }, { status: 401 });
+      }
     }
-
-    const userId = decoded.userId || decoded.id;
-    if (!userId) {
-      return NextResponse.json({ error: 'Invalid user token' }, { status: 401 });
-    }
+    // If no auth header, allow guest user (userId remains null)
 
     // Parse request body
     const body: CourseEnrollmentData = await request.json();
     
-    // Validate required fields
+    // Validate required fields (paymentScreenshotUrl is optional)
     const requiredFields = [
       'courseId', 'fullName', 'mobileNumber', 'email', 
-      'transactionId', 'paymentScreenshotUrl', 'amount', 
+      'transactionId', 'amount', 
       'courseTitle', 'courseCategory', 'coursePrice', 'batchName'
     ];
 
@@ -56,12 +58,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Set default value for optional paymentScreenshotUrl
+    const paymentScreenshotUrl = body.paymentScreenshotUrl || null;
+
     // Check if user already has an active enrollment for this course
     const existingEnrollment = await query(
       `SELECT id FROM course_enrollment_requests 
-       WHERE user_id = $1 AND course_id = $2 
+       WHERE (user_id = $1 OR user_id IS NULL) AND course_id = $2 
        AND enrollment_status IN ('applied', 'waiting', 'admitted')`,
-      [userId, body.courseId]
+      [userId || 'NULL', body.courseId]
     );
 
     if (existingEnrollment.rows.length > 0) {
@@ -77,7 +82,7 @@ export async function POST(request: NextRequest) {
         payment_method, payment_status, enrollment_status,
         amount, currency, transaction_id, payment_screenshot_url,
         course_title, course_category, course_price, batch_name
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
        RETURNING id`,
       [
         userId,
@@ -91,7 +96,7 @@ export async function POST(request: NextRequest) {
         body.amount,
         'BDT',
         body.transactionId,
-        body.paymentScreenshotUrl,
+        paymentScreenshotUrl, // Use the optional field with default value
         body.courseTitle,
         body.courseCategory,
         body.coursePrice,
@@ -108,7 +113,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Course enrollment error:', error);
     return NextResponse.json({ 
-      error: 'Internal server error' 
+      error: 'Internal server error',
+      details: error.message 
     }, { status: 500 });
   }
 }

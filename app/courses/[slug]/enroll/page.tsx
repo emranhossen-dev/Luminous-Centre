@@ -293,11 +293,11 @@ export default function CourseEnrollPage() {
           className="text-center mb-8"
         >
           <button 
-            onClick={() => router.back()}
+            onClick={() => router.push('/courses')}
             className="inline-flex items-center gap-2 text-blue-300 hover:text-white mb-4 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Course
+            Back to Courses
           </button>
           
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
@@ -486,7 +486,7 @@ export default function CourseEnrollPage() {
                 <div className="pt-4 border-t border-white/10">
                   <motion.button
                     type="button"
-                    onClick={() => setActiveSection('seminar')}
+                    onClick={() => router.push('/apply')}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full flex items-center justify-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-xl text-white rounded-xl font-bold hover:bg-white/20 transition-all border border-white/20"

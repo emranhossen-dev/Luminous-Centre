@@ -3,22 +3,22 @@ import { query } from '@/lib/database';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+  const body = await request.json();
+  const { status } = body;
+
+  // Validate status
+  const validStatuses = ['waiting', 'admitted', 'rejected'];
+  if (!validStatuses.includes(status)) {
+    return NextResponse.json(
+      { error: 'Invalid status' },
+      { status: 400 }
+    );
+  }
+
   try {
-    const id = params.id;
-    const body = await request.json();
-    const { status } = body;
-
-    // Validate status
-    const validStatuses = ['waiting', 'admitted', 'rejected'];
-    if (!validStatuses.includes(status)) {
-      return NextResponse.json(
-        { error: 'Invalid status' },
-        { status: 400 }
-      );
-    }
-
     // Update application status
     const result = await query(`
       UPDATE applications 
@@ -41,7 +41,6 @@ export async function PATCH(
       message: 'Application status updated successfully',
       updatedAt: updatedApplication.updated_at
     });
-
   } catch (error) {
     console.error('Error updating application status:', error);
     return NextResponse.json(
@@ -53,11 +52,11 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const id = params.id;
+  const { id } = await params;
 
+  try {
     // Delete application
     const result = await query(`
       DELETE FROM applications 
@@ -76,7 +75,6 @@ export async function DELETE(
       success: true,
       message: 'Application deleted successfully'
     });
-
   } catch (error) {
     console.error('Error deleting application:', error);
     return NextResponse.json(

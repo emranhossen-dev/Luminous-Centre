@@ -4,8 +4,9 @@ import jwt from 'jsonwebtoken';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     // Verify admin authentication
     const authHeader = request.headers.get('authorization');
@@ -32,7 +33,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const applicationId = params.id;
+    const applicationId = id;
     const body = await request.json();
 
     // Build dynamic update query
