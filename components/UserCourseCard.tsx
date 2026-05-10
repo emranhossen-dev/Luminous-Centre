@@ -1,8 +1,9 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Clock, Users, Star } from 'lucide-react';
+import BestSpinner from '@/components/BestSpinner';
 
 interface UserCourseCardProps {
   course: {
@@ -32,6 +33,8 @@ interface UserCourseCardProps {
 }
 
 export default function UserCourseCard({ course }: UserCourseCardProps) {
+  const [navigating, setNavigating] = useState(false);
+  
   // Calculate discount percentage
   const discountPercentage = course.old_price && course.old_price > course.price 
     ? Math.round(((course.old_price - course.price) / course.old_price) * 100)
@@ -69,10 +72,21 @@ export default function UserCourseCard({ course }: UserCourseCardProps) {
 
   const daysLeft = calculateDaysLeft();
 
+  const handleViewDetails = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setNavigating(true);
+    window.location.href = `/courses/${course.slug}`;
+  };
+
+  const handleCardClick = () => {
+    setNavigating(true);
+    window.location.href = `/courses/${course.slug}`;
+  };
+
   return (
     <div 
       className="w-full bg-[#121821] rounded-[16px] overflow-hidden border border-[#1e293b] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.4)] cursor-pointer hover:border-[#00a651]/50 transition-all hover:transform hover:scale-[1.02] hover:-translate-y-1"
-      onClick={() => window.location.href = `/courses/${course.slug}`}
+      onClick={handleCardClick}
     >
       
       {/* Course Image with Category Badge */}
@@ -102,12 +116,10 @@ export default function UserCourseCard({ course }: UserCourseCardProps) {
 
       {/* Batch Badge and Time Remaining */}
       <div className="flex items-center pt-[15px] pb-[5px] pr-[15px] gap-[10px]">
-        {course.batch && (
-          <div className="relative bg-[#00a651] text-white py-[4px] pl-[12px] pr-[12px] font-bold text-[12px] rounded-r-[2px]">
-            {course.batch}
-            <div className="absolute top-0 -right-[10px] w-0 h-0 border-t-[13px] border-t-transparent border-b-[13px] border-b-transparent border-l-[10px] border-l-[#00a651]"></div>
-          </div>
-        )}
+        <div className="relative bg-[#00a651] text-white py-[4px] pl-[12px] pr-[12px] font-bold text-[12px] rounded-r-[2px]">
+          {course.batch || 'Batch 1'}
+          <div className="absolute top-0 -right-[10px] w-0 h-0 border-t-[13px] border-t-transparent border-b-[13px] border-b-transparent border-l-[10px] border-l-[#00a651]"></div>
+        </div>
 
         {/* Always show days left for testing */}
         <div className="ml-auto flex items-center gap-[5px] bg-red-500 text-white py-[5px] px-[10px] rounded-[6px] text-[11px] font-bold border border-red-600">
@@ -175,13 +187,17 @@ export default function UserCourseCard({ course }: UserCourseCardProps) {
       {/* Action Button */}
       <div className="px-[15px] pb-[15px]">
         <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            window.location.href = `/courses/${course.slug}`;
-          }}
-          className="w-full bg-[#00a651] text-white py-[12px] rounded-[10px] font-bold text-[15px] hover:opacity-90 transition-opacity duration-200"
+          onClick={handleViewDetails}
+          className="w-full bg-[#00a651] text-white py-[12px] rounded-[10px] font-bold text-[15px] hover:opacity-90 transition-opacity duration-200 flex items-center justify-center gap-2"
         >
-          View Details
+          {navigating ? (
+            <>
+              <BestSpinner size="small" color="#ffffff" />
+              Loading...
+            </>
+          ) : (
+            'View Details'
+          )}
         </button>
       </div>
     </div>

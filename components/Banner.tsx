@@ -8,23 +8,28 @@ import {
   Clock3, LayoutGrid, BookOpen, CodeXml, Megaphone, Layers, Calculator 
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLoading } from '@/contexts/LoadingContext';
 
 const Banner = () => {
   const { user, openModal } = useAuth();
+  const { startLoading } = useLoading();
 
   const handleEnrollmentClick = () => {
     console.log('Banner enrollment button clicked!');
+    startLoading();
     
-    if (!user) {
-      console.log('Redirecting to login page...');
-      // Redirect to login page
-      window.location.href = '/auth/login?redirect=enroll';
-      return;
-    }
-    
+    // Allow both logged-in and unlogged-in users to access courses
     console.log('Redirecting to courses...');
-    // If authenticated, redirect to courses page
-    window.location.href = '/courses';
+    setTimeout(() => {
+      window.location.href = '/courses';
+    }, 500);
+  };
+
+  const handleApplyClick = () => {
+    startLoading();
+    setTimeout(() => {
+      window.location.href = '/apply';
+    }, 500);
   };
 
   const completionTypes = [
@@ -53,7 +58,7 @@ const Banner = () => {
         <motion.div 
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
           className="text-center lg:text-left flex flex-col items-center lg:items-start"
         >
           <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full border border-blue-500/20 bg-blue-500/5 backdrop-blur-xl">
@@ -98,7 +103,7 @@ const Banner = () => {
               <MoveRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
             <button 
-              onClick={() => window.location.href = '/apply'}
+              onClick={handleApplyClick}
               className="group flex items-center gap-2 w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-bold hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:-translate-y-0.5 active:scale-95 shadow-lg hover:shadow-blue-500/25"
             >
               আপনার সিট বুক করুন
@@ -110,40 +115,90 @@ const Banner = () => {
         {/* RIGHT SIDE: Floating Visuals */}
         <div className="relative flex justify-center items-center h-full mb-16 lg:mb-0">
           <motion.div 
-            animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1,
+              y: [0, -15, 0], 
+              rotate: [0, 5, 0] 
+            }}
+            transition={{ 
+              duration: 0.4, 
+              delay: 0.3,
+              y: { duration: 4, repeat: Infinity, ease: "easeInOut" },
+              rotate: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+            }}
             className="absolute top-10 -left-4 lg:-left-16 z-20 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 backdrop-blur-md hidden sm:block"
           >
             <CodeXml className="w-6 h-6 text-blue-400" />
           </motion.div>
 
           <motion.div 
-            animate={{ y: [0, 15, 0], x: [0, 10, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1,
+              y: [0, 15, 0], 
+              x: [0, 10, 0] 
+            }}
+            transition={{ 
+              duration: 0.4, 
+              delay: 0.4,
+              y: { duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.2 },
+              x: { duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }
+            }}
             className="absolute -top-6 right-10 lg:right-0 z-20 p-3 rounded-xl bg-green-500/10 border border-green-500/20 backdrop-blur-md hidden sm:block"
           >
             <Megaphone className="w-6 h-6 text-green-400" />
           </motion.div>
 
           <motion.div 
-            animate={{ scale: [1, 1.1, 1], rotate: [0, -5, 0] }}
-            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ 
+              opacity: 1, 
+              scale: [1, 1.1, 1], 
+              rotate: [0, -5, 0] 
+            }}
+            transition={{ 
+              duration: 0.4, 
+              delay: 0.5,
+              scale: { duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 },
+              rotate: { duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }
+            }}
             className="absolute bottom-1/2 -right-6 lg:-right-12 z-20 p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 backdrop-blur-md hidden sm:block"
           >
             <Layers className="w-6 h-6 text-purple-400" />
           </motion.div>
 
           <motion.div 
-            animate={{ y: [0, -20, 0] }}
-            transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1,
+              y: [0, -20, 0] 
+            }}
+            transition={{ 
+              duration: 0.4, 
+              delay: 0.6,
+              y: { duration: 5.5, repeat: Infinity, ease: "easeInOut" }
+            }}
             className="absolute -bottom-8 left-12 lg:-left-4 z-20 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 backdrop-blur-md hidden sm:block"
           >
             <Calculator className="w-6 h-6 text-amber-400" />
           </motion.div>
 
           <motion.div 
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            initial={{ opacity: 0, y: 30, scale: 0.9 }}
+            animate={{ 
+              opacity: 1, 
+              y: [0, -10, 0],
+              scale: 1
+            }}
+            transition={{ 
+              duration: 0.5, 
+              delay: 0.2,
+              y: { duration: 6, repeat: Infinity, ease: "easeInOut" }
+            }}
             className="relative w-full max-w-[500px] rounded-[2rem] border border-white/10 bg-[#0c0e1f] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden group hover:border-blue-500/30 transition-all duration-500"
           >
             <div className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden mb-8 border border-white/5">

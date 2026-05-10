@@ -33,7 +33,7 @@ const AboutSection = () => {
           initial={{ opacity: 0, x: -50 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.5 }}
           className="relative group"
         >
           <div className="absolute -inset-1 bg-[#2F2FE4]/10 rounded-[2rem] blur opacity-20"></div>
@@ -52,7 +52,7 @@ const AboutSection = () => {
           initial={{ opacity: 0, x: 50 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.5 }}
           className="flex flex-col space-y-8"
         >
           <div className="space-y-5 text-center lg:text-left">

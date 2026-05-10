@@ -11,15 +11,8 @@ export default function CallToAction() {
   const handleEnrollmentClick = () => {
     console.log('CallToAction enrollment button clicked!');
     
-    if (!user) {
-      console.log('Redirecting to login page...');
-      // Redirect to login page
-      window.location.href = '/auth/login?redirect=enroll';
-      return;
-    }
-    
+    // Allow both logged-in and unlogged-in users to access courses
     console.log('Redirecting to courses...');
-    // If authenticated, redirect to courses page
     window.location.href = '/courses';
   };
 

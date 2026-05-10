@@ -5,7 +5,7 @@ import CourseSection from "@/components/CourseSection";
 import StudentFeedback from "@/components/StudentFeedback";
 import PartnerSection from "@/components/PartnerSection";
 import CallToAction from "@/components/CallToAction";
-
+import HomeWrapper from "@/components/HomeWrapper";
 import { query } from "@/lib/database";
 
 export default async function Home() {
@@ -35,14 +35,16 @@ export default async function Home() {
   }
 
   return (
-    <div className="space-y-0">
-      <Banner />
-      <AboutSection />
-      <CategorySection />
-      <CourseSection initialCourses={initialCourses} />
-      <StudentFeedback />
-      <PartnerSection />
-      <CallToAction />
-    </div>
+    <HomeWrapper>
+      <div className="space-y-0">
+        <Banner />
+        <AboutSection />
+        <CategorySection />
+        <CourseSection initialCourses={initialCourses} />
+        <StudentFeedback />
+        <PartnerSection />
+        <CallToAction />
+      </div>
+    </HomeWrapper>
   );
 }

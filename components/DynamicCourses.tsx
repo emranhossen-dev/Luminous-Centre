@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import UserCourseCard from "@/components/UserCourseCard";
+import BestSpinner from "@/components/BestSpinner";
 
 interface Course {
   id: number;
@@ -43,6 +44,7 @@ export default function DynamicCourses({ category }: DynamicCoursesProps) {
 
   const fetchCourses = async () => {
     try {
+      setLoading(true);
       let url = '/api/courses?limit=100';
       if (category && category !== 'all') {
         url += `&category=${category}`;
@@ -78,7 +80,7 @@ export default function DynamicCourses({ category }: DynamicCoursesProps) {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <BestSpinner size="large" color="#ffffff" />
       </div>
     );
   }

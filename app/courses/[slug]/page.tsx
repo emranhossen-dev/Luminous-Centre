@@ -2,14 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import CourseBanner from '@/components/CourseBanner';
+import BestSpinner from '@/components/BestSpinner';
+import { useLoading } from '@/contexts/LoadingContext';
 import { CourseData } from '@/types/course';
 
 export default function CourseDetailsPage() {
   const params = useParams();
   const slug = params.slug as string;
   const [course, setCourse] = useState<CourseData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCourseDetails = async () => {
@@ -30,15 +32,15 @@ export default function CourseDetailsPage() {
       }
     };
 
-    if (slug) {
+    if (slug && !course) {
       fetchCourseDetails();
     }
-  }, [slug]);
+  }, [slug, course]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#020617] flex items-center justify-center">
-        <div className="text-white text-xl">Loading course details...</div>
+        <BestSpinner size="large" color="#ffffff" />
       </div>
     );
   }

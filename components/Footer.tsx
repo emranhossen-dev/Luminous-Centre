@@ -33,7 +33,8 @@ const Footer = () => {
                             <img 
                                 src="https://i.ibb.co.com/d063XCPx/logo.jpg" 
                                 alt="Logo" 
-                                className="h-14 w-auto object-contain rounded-xl border border-white/10 shadow-2xl" 
+                                className="h-auto w-auto object-contain rounded-xl border border-white/10 shadow-2xl" 
+                                style={{ height: '56px', width: 'auto' }}
                             />
                             <div className="leading-none">
                                 <span className="text-2xl font-black tracking-tight text-white italic">LUMINOUS</span>

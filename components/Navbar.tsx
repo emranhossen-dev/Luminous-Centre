@@ -46,10 +46,7 @@ export default function Navbar() {
   }, [theme]);
 
   const handleEnrollmentClick = () => {
-    if (!user) {
-      router.push('/auth/login?redirect=enroll');
-      return;
-    }
+    // Allow both logged-in and unlogged-in users to access courses
     router.push('/courses');
   };
 

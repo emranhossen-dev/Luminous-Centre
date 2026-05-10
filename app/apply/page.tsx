@@ -7,8 +7,11 @@ import {
   Send, CheckCircle, ArrowLeft
 } from 'lucide-react';
 import Link from 'next/link';
+import { useLoading } from '@/contexts/LoadingContext';
+import SeminarForm from '@/components/SeminarForm';
 
 const ApplyPage = () => {
+  const { startLoading } = useLoading();
   const [formData, setFormData] = useState({
     fullName: '',
     mobileNo: '',
@@ -20,6 +23,14 @@ const ApplyPage = () => {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showSeminarModal, setShowSeminarModal] = useState(false);
+
+  const handleBackToHome = () => {
+    startLoading();
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 500);
+  };
 
   const courses = [
     'MERN Stack Development',
@@ -76,6 +87,21 @@ const ApplyPage = () => {
     }
   };
 
+  const handleSeminarApplication = async (data: any) => {
+    try {
+      await fetch('/api/enhanced-enrollment/seminar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+    } catch (error) {
+      console.error('Error submitting seminar application:', error);
+      alert('সেমিনার আবেদন সফল হয়েছে। আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।');
+    }
+  };
+
   if (isSubmitted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 flex items-center justify-center p-4 relative overflow-hidden">
@@ -106,25 +132,25 @@ const ApplyPage = () => {
             আপনার আবেদনটি সফলভাবে জমা হয়েছে। আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।
           </p>
           
-          <Link 
-            href="/"
+          <button 
+            onClick={handleBackToHome}
             className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
             হোমপেজে ফিরে যান
-          </Link>
+          </button>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 relative overflow-hidden">
-      {/* Animated Background */}
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-cyan-800 to-blue-950 relative overflow-hidden">
+      {/* Modern Glassmorphism Background */}
       <div className="absolute inset-0">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-blob"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
+        <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-cyan-400/10 rounded-full blur-[120px] animate-pulse"></div>
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[150px] animate-pulse"></div>
+        <div className="absolute top-1/2 left-1/3 w-[300px] h-[300px] bg-indigo-400/8 rounded-full blur-[100px] animate-pulse"></div>
       </div>
 
       <div className="relative z-10 container mx-auto px-4 py-12">
@@ -135,18 +161,18 @@ const ApplyPage = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <Link 
-            href="/"
-            className="inline-flex items-center gap-2 text-blue-200 hover:text-white mb-6 transition-colors"
+          <button 
+            onClick={handleBackToHome}
+            className="inline-flex items-center gap-2 text-cyan-300 hover:text-white mb-6 transition-all hover:scale-105"
           >
             <ArrowLeft className="w-4 h-4" />
             হোমপেজে ফিরে যান
-          </Link>
+          </button>
           
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            কোর্সে <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">আবেদন করুন</span>
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
+            কোর্সে <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">আবেদন করুন</span>
           </h1>
-          <p className="text-blue-100 text-lg max-w-2xl mx-auto">
+          <p className="text-cyan-100 text-lg max-w-2xl mx-auto">
             আপনার পছন্দের কোর্সে ভর্তির জন্য নিচের ফর্মটি পূরণ করুন এবং আপনার স্কিল ডেভেলপমেন্ট যাত্রা শুরু করুন
           </p>
         </motion.div>
@@ -158,118 +184,121 @@ const ApplyPage = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="max-w-2xl mx-auto"
         >
-          <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
+          <div className="bg-white/5 backdrop-blur-2xl rounded-3xl p-8 border border-white/10 shadow-2xl">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Full Name */}
-              <div>
-                <label className="flex items-center gap-2 text-blue-100 font-medium mb-2">
-                  <User className="w-4 h-4" />
-                  পূর্ণ নাম *
-                </label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
-                  placeholder="আপনার পূর্ণ নাম লিখুন"
-                />
-              </div>
+              {/* Form Grid for Desktop/Mobile */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Full Name */}
+                <div>
+                  <label className="flex items-center gap-2 text-cyan-100 font-medium mb-2">
+                    <User className="w-4 h-4" />
+                    পূর্ণ নাম *
+                  </label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 bg-white/5 border border-cyan-400/30 rounded-xl text-white placeholder-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                    placeholder="আপনার পূর্ণ নাম লিখুন"
+                  />
+                </div>
 
-              {/* Mobile Number */}
-              <div>
-                <label className="flex items-center gap-2 text-blue-100 font-medium mb-2">
-                  <Phone className="w-4 h-4" />
-                  মোবাইল নম্বর *
-                </label>
-                <input
-                  type="tel"
-                  name="mobileNo"
-                  value={formData.mobileNo}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
-                  placeholder="০১XXXXXXXXX"
-                />
-              </div>
+                {/* Mobile Number */}
+                <div>
+                  <label className="flex items-center gap-2 text-cyan-100 font-medium mb-2">
+                    <Phone className="w-4 h-4" />
+                    মোবাইল নম্বর *
+                  </label>
+                  <input
+                    type="tel"
+                    name="mobileNo"
+                    value={formData.mobileNo}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 bg-white/5 border border-cyan-400/30 rounded-xl text-white placeholder-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                    placeholder="০১XXXXXXXXX"
+                  />
+                </div>
 
-              {/* Email */}
-              <div>
-                <label className="flex items-center gap-2 text-blue-100 font-medium mb-2">
-                  <Mail className="w-4 h-4" />
-                  ইমেইল *
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
-                  placeholder="your@email.com"
-                />
-              </div>
+                {/* Email */}
+                <div>
+                  <label className="flex items-center gap-2 text-cyan-100 font-medium mb-2">
+                    <Mail className="w-4 h-4" />
+                    ইমেইল *
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 bg-white/5 border border-cyan-400/30 rounded-xl text-white placeholder-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                    placeholder="your@email.com"
+                  />
+                </div>
 
-              {/* Course Selection */}
-              <div>
-                <label className="flex items-center gap-2 text-blue-100 font-medium mb-2">
-                  <BookOpen className="w-4 h-4" />
-                  কোর্স নির্বাচন *
-                </label>
-                <select
-                  name="course"
-                  value={formData.course}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
-                >
-                  <option value="" className="bg-gray-800">একটি কোর্স নির্বাচন করুন</option>
-                  {courses.map((course) => (
-                    <option key={course} value={course} className="bg-gray-800">
-                      {course}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                {/* Course Selection */}
+                <div>
+                  <label className="flex items-center gap-2 text-cyan-100 font-medium mb-2">
+                    <BookOpen className="w-4 h-4" />
+                    কোর্স নির্বাচন *
+                  </label>
+                  <select
+                    name="course"
+                    value={formData.course}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 bg-white/5 border border-cyan-400/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                  >
+                    <option value="" className="bg-gray-800">একটি কোর্স নির্বাচন করুন</option>
+                    {courses.map((course) => (
+                      <option key={course} value={course} className="bg-gray-800">
+                        {course}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              {/* Category Selection */}
-              <div>
-                <label className="flex items-center gap-2 text-blue-100 font-medium mb-2">
-                  <Monitor className="w-4 h-4" />
-                  ক্যাটাগরি নির্বাচন *
-                </label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
-                >
-                  <option value="" className="bg-gray-800">ক্যাটাগরি নির্বাচন করুন</option>
-                  {categories.map((category) => (
-                    <option key={category} value={category} className="bg-gray-800">
-                      {category}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                {/* Category Selection */}
+                <div>
+                  <label className="flex items-center gap-2 text-cyan-100 font-medium mb-2">
+                    <Monitor className="w-4 h-4" />
+                    ক্যাটাগরি নির্বাচন *
+                  </label>
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 bg-white/5 border border-cyan-400/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                  >
+                    <option value="" className="bg-gray-800">ক্যাটাগরি নির্বাচন করুন</option>
+                    {categories.map((category) => (
+                      <option key={category} value={category} className="bg-gray-800">
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              {/* WhatsApp Number */}
-              <div>
-                <label className="flex items-center gap-2 text-blue-100 font-medium mb-2">
-                  <MessageCircle className="w-4 h-4" />
-                  হোয়াটসঅ্যাপ নম্বর *
-                </label>
-                <input
-                  type="tel"
-                  name="whatsappNo"
-                  value={formData.whatsappNo}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
-                  placeholder="০১XXXXXXXXX"
-                />
+                {/* WhatsApp Number */}
+                <div className="md:col-span-2">
+                  <label className="flex items-center gap-2 text-cyan-100 font-medium mb-2">
+                    <MessageCircle className="w-4 h-4" />
+                    হোয়াটসঅ্যাপ নম্বর *
+                  </label>
+                  <input
+                    type="tel"
+                    name="whatsappNo"
+                    value={formData.whatsappNo}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 bg-white/5 border border-cyan-400/30 rounded-xl text-white placeholder-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                    placeholder="০১XXXXXXXXX"
+                  />
+                </div>
               </div>
 
               {/* Submit Button */}
@@ -298,20 +327,12 @@ const ApplyPage = () => {
       </div>
 
       <style jsx>{`
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
+        @keyframes pulse {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 0.1; }
         }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
+        .animate-pulse {
+          animation: pulse 4s ease-in-out infinite;
         }
       `}</style>
     </div>

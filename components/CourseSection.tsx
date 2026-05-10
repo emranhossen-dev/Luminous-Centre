@@ -67,10 +67,7 @@ const CourseSection = ({ initialCourses = [] }: CourseSectionProps) => {
   }, []);
 
   const handleEnrollmentClick = () => {
-    if (!user) {
-      window.location.href = '/auth/login?redirect=enroll';
-      return;
-    }
+    // Allow both logged-in and unlogged-in users to access courses
     window.location.href = '/courses';
   };
 

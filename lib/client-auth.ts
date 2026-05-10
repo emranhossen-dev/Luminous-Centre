@@ -104,13 +104,7 @@ export class ClientAuth {
   static handleEnrollmentClick(e: React.MouseEvent): void {
     e.preventDefault();
     
-    if (!this.isAuthenticated()) {
-      // Redirect to login with enrollment intent
-      window.location.href = '/auth/login?redirect=enroll';
-      return;
-    }
-
-    // Redirect to courses page for logged-in users
+    // Allow both logged-in and unlogged-in users to access courses
     window.location.href = '/courses';
   }
 

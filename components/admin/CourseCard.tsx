@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Wifi, WifiOff, Trash2 } from 'lucide-react';
+import { useLoading } from '@/contexts/LoadingContext';
 
 interface CourseCardProps {
   course: {
@@ -17,9 +18,15 @@ interface CourseCardProps {
 }
 
 export default function CourseCard({ course, onDelete, onStatusUpdate }: CourseCardProps) {
+  const { startLoading } = useLoading();
+  
   // Handle card click
   const handleCardClick = () => {
-    window.location.href = `/courses/${course.slug}`;
+    startLoading();
+    // Small delay to show the loader before navigation
+    setTimeout(() => {
+      window.location.href = `/courses/${course.slug}`;
+    }, 300);
   };
 
   return (
