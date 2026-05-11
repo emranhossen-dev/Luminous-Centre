@@ -66,15 +66,6 @@ export default function CourseDetailsPage() {
 
   return (
     <div className="min-h-screen bg-[#020617]">
-      {/* Back Button - Absolute Position */}
-      <button
-        onClick={() => router.push('/courses')}
-        className="absolute top-8 left-6 z-50 inline-flex items-center gap-2 text-blue-300 hover:text-white transition-all hover:scale-105 cursor-pointer"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Courses
-      </button>
-
       {/* Course Banner */}
       <CourseBanner course={course} />
       
