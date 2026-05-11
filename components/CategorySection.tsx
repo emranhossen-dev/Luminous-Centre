@@ -95,14 +95,14 @@ export default function CategorySection() {
             <div key={idx} className="group rounded-[2rem] p-8 border border-white/5 bg-white/[0.02] flex flex-col transition-all duration-300 hover:-translate-y-2 hover:border-white/10 hover:bg-white/[0.04]">
               
               <div 
-                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-lg transition-transform group-hover:scale-110"
+                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-lg transition-transform group-hover:scale-110 self-center"
                 style={{ backgroundColor: `${item.color}20`, border: `1px solid ${item.color}40` }}
               >
                 <item.icon style={{ color: item.color }} size={28} />
               </div>
 
-              <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
-              <p className="text-sm text-gray-500 leading-relaxed mb-6 flex-grow">
+              <h3 className="text-xl font-bold text-white mb-3 text-center">{item.title}</h3>
+              <p className="text-sm text-gray-500 leading-relaxed mb-6 flex-grow text-center">
                 {item.desc}
               </p>
 

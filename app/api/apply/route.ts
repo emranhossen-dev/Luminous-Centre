@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate phone numbers (Bangladesh format)
-    const phoneRegex = /^(?:\+880|01)?[3-9]\d{8}$/;
+    const phoneRegex = /^(?:\+880|01|013|014|015|016|017|018|019)?[1-9]\d{8}$/;
     if (!phoneRegex.test(mobileNo.replace(/[\s-]/g, ''))) {
       return NextResponse.json(
         { error: 'Invalid mobile number format' },

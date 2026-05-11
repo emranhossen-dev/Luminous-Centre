@@ -94,20 +94,20 @@ const Banner = () => {
             })}
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+          <div className="flex items-center gap-4 w-full">
             <button 
               onClick={handleEnrollmentClick}
-              className="group flex items-center gap-2 w-full sm:w-auto px-8 py-3.5 bg-[#2F2FE4] text-white rounded-xl text-sm font-bold hover:bg-[#162E93] transition-all transform hover:-translate-y-0.5 active:scale-95"
+              className="group flex items-center gap-2 w-full sm:w-auto px-6 py-3.5 bg-[#2F2FE4] text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-[#162E93] transition-all transform hover:-translate-y-0.5 active:scale-95"
             >
-              কোর্সগুলো দেখুন
-              <MoveRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              সকল কোর্স
+              <MoveRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
             </button>
             <button 
               onClick={handleApplyClick}
-              className="group flex items-center gap-2 w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-bold hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:-translate-y-0.5 active:scale-95 shadow-lg hover:shadow-blue-500/25"
+              className="group flex items-center gap-2 w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs sm:text-sm font-bold hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:-translate-y-0.5 active:scale-95 shadow-lg hover:shadow-blue-500/25"
             >
-              আপনার সিট বুক করুন
-              <MoveRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              ফ্রি সেমিনার
+              <MoveRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
         </motion.div>

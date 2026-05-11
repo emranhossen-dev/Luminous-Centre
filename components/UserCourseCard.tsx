@@ -40,8 +40,8 @@ export default function UserCourseCard({ course }: UserCourseCardProps) {
     ? Math.round(((course.old_price - course.price) / course.old_price) * 100)
     : 0;
 
-  // Format price with TK
-  const formatPrice = (price: number) => `${price.toLocaleString()} TK`;
+  // Format price with TK (without decimal points)
+  const formatPrice = (price: number) => `${Math.round(price).toLocaleString()} TK`;
 
   // Get category color
   const getCategoryColor = (category: string) => {
@@ -188,7 +188,10 @@ export default function UserCourseCard({ course }: UserCourseCardProps) {
       <div className="px-[15px] pb-[15px]">
         <button 
           onClick={handleViewDetails}
-          className="w-full bg-[#00a651] text-white py-[12px] rounded-[10px] font-bold text-[15px] hover:opacity-90 transition-opacity duration-200 flex items-center justify-center gap-2"
+          className="w-full bg-[#00a651] text-white py-[12px] rounded-[10px] font-bold text-[15px] hover:opacity-90 transition-opacity duration-200 flex items-center justify-center gap-2 cursor-pointer hover:cursor-pointer"
+          style={{ cursor: 'pointer !important' }}
+          onMouseEnter={(e) => e.currentTarget.style.setProperty('cursor', 'pointer', 'important')}
+          onMouseLeave={(e) => e.currentTarget.style.setProperty('cursor', 'pointer', 'important')}
         >
           {navigating ? (
             <>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -21,34 +21,64 @@ const PARTNERS = [
 ];
 
 export default function PartnerSection() {
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
 
-  const itemsPerView = 5; // Number of items visible at once
-  const maxIndex = Math.max(0, PARTNERS.length - itemsPerView);
-
+  // Ensure auto-play works on mobile
   useEffect(() => {
-    if (!isAutoPlay) return;
+    // For mobile devices, ensure auto-play is enabled
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setIsAutoPlay(true);
+    }
+  }, []);
+  const [itemsPerView, setItemsPerView] = useState(5); // Number of items visible at once
+  const [animationDuration, setAnimationDuration] = useState(20); // Animation duration in seconds
+  const [manualControl, setManualControl] = useState(false);
+  const [xPosition, setXPosition] = useState(0);
+  const [dragStart, setDragStart] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const manualTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [isAutoPlay, maxIndex]);
-
-  const handlePrev = () => {
-    setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
+  // Clear timeout and return to auto-play
+  const returnToAutoPlay = () => {
+    if (manualTimeoutRef.current) {
+      clearTimeout(manualTimeoutRef.current);
+    }
+    manualTimeoutRef.current = setTimeout(() => {
+      setManualControl(false);
+      setXPosition(0); // Reset position when returning to auto-play
+    }, 5000); // Return to auto-play after 5 seconds
   };
 
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
-  };
+  // Update items per view and animation duration based on screen size
+  useEffect(() => {
+    const updateSettings = () => {
+      if (typeof window !== 'undefined') {
+        const width = window.innerWidth;
+        if (width < 640) {
+          setItemsPerView(1.5); // mobile: 1.5 items to show movement
+          setAnimationDuration(25); // mobile: slow continuous animation
+        } else if (width < 768) {
+          setItemsPerView(2); // sm: 2 items
+          setAnimationDuration(12); // sm: slightly faster
+        } else if (width < 1024) {
+          setItemsPerView(3); // md: 3 items
+          setAnimationDuration(15); // md: moderate speed
+        } else if (width < 1280) {
+          setItemsPerView(4); // lg: 4 items
+          setAnimationDuration(18); // lg: slightly slower
+        } else {
+          setItemsPerView(5); // xl: 5 items
+          setAnimationDuration(20); // xl: normal speed
+        }
+      }
+    };
 
-  const handleDotClick = (index: number) => {
-    setCurrentIndex(index);
-  };
+    updateSettings();
+    window.addEventListener('resize', updateSettings);
+    return () => window.removeEventListener('resize', updateSettings);
+  }, []);
 
+  
   return (
     <section className="relative w-full overflow-hidden py-16 lg:py-24">
       
@@ -77,14 +107,28 @@ export default function PartnerSection() {
         <div className="relative">
           {/* Navigation Buttons */}
           <button
-            onClick={handlePrev}
             className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/5 rounded-full border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+            onClick={() => {
+              setManualControl(true);
+              const cardWidth = 100 / itemsPerView;
+              const newPosition = xPosition + cardWidth;
+              console.log('Left arrow clicked - cardWidth:', cardWidth, 'newPosition:', newPosition);
+              setXPosition(newPosition);
+              returnToAutoPlay();
+            }}
           >
             <ChevronLeft size={20} />
           </button>
           <button
-            onClick={handleNext}
             className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/5 rounded-full border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+            onClick={() => {
+              setManualControl(true);
+              const cardWidth = 100 / itemsPerView;
+              const newPosition = xPosition - cardWidth;
+              console.log('Right arrow clicked - cardWidth:', cardWidth, 'newPosition:', newPosition);
+              setXPosition(newPosition);
+              returnToAutoPlay();
+            }}
           >
             <ChevronRight size={20} />
           </button>
@@ -92,15 +136,53 @@ export default function PartnerSection() {
           {/* Carousel Track */}
           <div className="overflow-hidden mx-12">
             <motion.div
-              animate={{ x: -currentIndex * (100 / itemsPerView) + "%" }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="flex gap-8"
+              animate={isAutoPlay && !manualControl ? { x: ["0%", "-50%"] } : { x: `${xPosition}%` }}
+              transition={isAutoPlay && !manualControl ? { 
+                duration: animationDuration, 
+                ease: "linear", 
+                repeat: Infinity,
+                repeatType: "loop"
+              } : { duration: 0.15, ease: "easeOut" }}
+              className="flex gap-4 cursor-grab active:cursor-grabbing"
+              onTouchStart={() => setIsAutoPlay(false)}
+              onTouchEnd={() => {
+                setTimeout(() => setIsAutoPlay(true), 3000);
+              }}
+              onMouseEnter={() => setIsAutoPlay(false)}
+              onMouseLeave={() => setIsAutoPlay(true)}
+              drag="x"
+              dragConstraints={{ left: -300, right: 300 }}
+              dragElastic={0.3}
+              dragMomentum={true}
+              dragTransition={{ 
+                bounceStiffness: 300, 
+                bounceDamping: 30 
+              }}
+              onDragStart={() => {
+                setIsDragging(true);
+                setManualControl(true);
+              }}
+              onDragEnd={(e, info) => {
+                setIsDragging(false);
+                const dragOffset = info.offset.x;
+                const velocity = info.velocity.x;
+                
+                // Use both offset and velocity for better detection
+                if (Math.abs(dragOffset) > 20 || Math.abs(velocity) > 500) {
+                  if (dragOffset > 0 || velocity > 0) {
+                    setXPosition(xPosition + (100 / itemsPerView));
+                  } else {
+                    setXPosition(xPosition - (100 / itemsPerView));
+                  }
+                }
+              }}
             >
-              {PARTNERS.map((partner, i) => (
+              {[...PARTNERS, ...PARTNERS].map((partner, i) => (
                 <motion.div
                   key={i}
                   whileHover={{ scale: 1.05 }}
-                  className="flex-shrink-0 w-[20%] flex flex-col items-center space-y-4 p-6 bg-white/[0.03] rounded-2xl border border-white/10 hover:border-blue-500/30 hover:bg-white/[0.05] transition-all cursor-pointer"
+                  className="flex-shrink-0 flex flex-col items-center space-y-4 p-4 bg-white/[0.03] rounded-3xl border border-white/10 hover:border-blue-500/30 hover:bg-white/[0.05] transition-all cursor-pointer"
+                  style={{ width: `${100 / itemsPerView}%` }}
                   onMouseEnter={() => setIsAutoPlay(false)}
                   onMouseLeave={() => setIsAutoPlay(true)}
                 >
@@ -119,19 +201,7 @@ export default function PartnerSection() {
             </motion.div>
           </div>
 
-          {/* Dots Navigation */}
-          <div className="flex justify-center gap-2 mt-8">
-            {Array.from({ length: maxIndex + 1 }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => handleDotClick(i)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  currentIndex === i ? "bg-blue-600 w-8" : "bg-white/20"
-                }`}
-              />
-            ))}
-          </div>
-        </div>
+                  </div>
 
         {/* Motivational Quote */}
         <div className="mt-16 text-center">

@@ -107,3 +107,11 @@
 .animate-pulse-glow {
   animation: pulse-glow 2s infinite;
 }
+
+/* Force pointer cursor on all buttons */
+button {
+  cursor: pointer !important;
+}
+button:hover {
+  cursor: pointer !important;
+}

@@ -32,17 +32,17 @@ export default function CallToAction() {
               initial={{ scale: 0.9, opacity: 0 }}
               whileInView={{ scale: 1, opacity: 1 }}
               viewport={{ once: true }}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#2F2FE4]/10 border border-[#2F2FE4]/20 text-[#60a5fa] text-sm font-black uppercase tracking-[0.2em]"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#2F2FE4]/10 border border-[#2F2FE4]/20 text-[#60a5fa] text-sm font-bold tracking-[0.2em]"
             >
               <Sparkles size={18} className="fill-[#60a5fa]" />
               Start Your Journey Today
             </motion.div>
 
-            <h2 className="text-4xl md:text-7xl font-black text-white italic leading-[1.1] tracking-tight">
+            <h2 className="text-2xl md:text-4xl lg:text-7xl font-black text-white italic leading-[1.1] tracking-tight">
               Ready to <span className="text-gradient-blue">Transform</span> Your Life?
             </h2>
             
-            <p className="text-gray-400 text-xl md:text-2xl max-w-3xl mx-auto font-medium" style={{ fontFamily: "var(--font-bangla)" }}>
+            <p className="text-gray-400 text-sm md:text-xl lg:text-2xl max-w-3xl mx-auto font-medium leading-relaxed" style={{ fontFamily: "var(--font-bangla)" }}>
               দেরি না করে আজই এনরোল করুন এবং আপনার পছন্দের ক্যারিয়ার গড়ার পথে প্রথম পদক্ষেপ নিন। আমরা আছি আপনার সাথে প্রতি পদক্ষেপে।
             </p>
           </div>
@@ -56,15 +56,15 @@ export default function CallToAction() {
           >
             <button 
               onClick={handleEnrollmentClick}
-              className="px-12 py-6 bg-[#2F2FE4] hover:bg-[#162E93] text-white rounded-[2rem] font-black text-xl transition-all transform active:scale-95 flex items-center gap-4 group shadow-[0_0_50px_rgba(47,47,228,0.4)] cursor-pointer"
+              className="px-6 py-3 md:px-12 md:py-6 bg-[#2F2FE4] hover:bg-[#162E93] text-white rounded-[2rem] font-black text-sm md:text-xl transition-all transform active:scale-95 flex items-center gap-2 md:gap-4 group shadow-[0_0_50px_rgba(47,47,228,0.4)] cursor-pointer"
             >
               Enroll Now
-              <Rocket size={24} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              <Rocket size={16} className="md:size-24 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
             </button>
             
-            <button className="px-12 py-6 glass hover:bg-white/10 text-white rounded-[2rem] font-black text-xl transition-all flex items-center gap-4">
+            <button className="px-6 py-3 md:px-12 md:py-6 glass hover:bg-white/10 text-white rounded-[2rem] font-black text-sm md:text-xl transition-all flex items-center gap-2 md:gap-4">
               Talk to Advisor
-              <ArrowRight size={24} />
+              <ArrowRight size={16} className="md:size-24" />
             </button>
           </motion.div>
 

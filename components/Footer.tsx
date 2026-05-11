@@ -31,11 +31,11 @@ const Footer = () => {
         <footer className="bg-[#05060f] border-t border-white/10">
             {/* Main Footer Content */}
             <div className="container mx-auto px-6 py-16">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 text-center md:text-left">
                     
                     {/* Institute Information */}
                     <div className="space-y-6">
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-col md:flex-row items-center gap-3 md:gap-3">
                             <Image
                                 src="https://i.ibb.co.com/d063XCPx/logo.jpg"
                                 alt="Luminous Skill Development Training Center Logo"
@@ -43,7 +43,7 @@ const Footer = () => {
                                 height={48}
                                 className="w-12 h-12 object-contain rounded-xl"
                             />
-                            <div>
+                            <div className="text-center md:text-left">
                                 <h3 className="text-white font-bold text-lg">Luminous Skill Development</h3>
                                 <p className="text-gray-400 text-md">Training Center</p>
                             </div>
@@ -54,7 +54,7 @@ const Footer = () => {
                         </p>
                         
                         {/* Social Media Links */}
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center gap-3 md:justify-start">
                             {socialLinks.map((social, index) => {
                                 const Icon = social.icon;
                                 return (
@@ -93,24 +93,24 @@ const Footer = () => {
                     <div className="space-y-6">
                         <h4 className="text-white font-bold text-lg mb-6">যোগাযোগ করুন</h4>
                         <div className="space-y-4">
-                            <div className="flex items-start gap-3">
-                                <Phone className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
+                            <div className="flex flex-col md:flex-row md:items-start gap-3 text-center md:text-left">
+                                <Phone className="w-5 h-5 text-blue-400 mt-0.5 shrink-0 mx-auto md:mx-0" />
                                 <div>
                                     <p className="text-gray-400 text-sm">কল করুন</p>
                                     <p className="text-white text-sm font-medium">+880 1577-296272</p>
                                 </div>
                             </div>
                             
-                            <div className="flex items-start gap-3">
-                                <Mail className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
+                            <div className="flex flex-col md:flex-row md:items-start gap-3 text-center md:text-left">
+                                <Mail className="w-5 h-5 text-blue-400 mt-0.5 shrink-0 mx-auto md:mx-0" />
                                 <div>
                                     <p className="text-gray-400 text-sm">ইমেল করুন</p>
                                     <p className="text-white text-sm font-medium">luminous.bd25@gmail.com</p>
                                 </div>
                             </div>
                             
-                            <div className="flex items-start gap-3">
-                                <MapPin className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
+                            <div className="flex flex-col md:flex-row md:items-start gap-3 text-center md:text-left">
+                                <MapPin className="w-5 h-5 text-blue-400 mt-0.5 shrink-0 mx-auto md:mx-0" />
                                 <div>
                                     <p className="text-gray-400 text-sm">ভিজিট করুন</p>
                                     <p className="text-white text-sm font-medium">
