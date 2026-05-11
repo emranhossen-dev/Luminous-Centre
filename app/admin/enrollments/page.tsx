@@ -164,7 +164,7 @@ export default function EnrollmentsPage() {
         enrollment.course_category?.toLowerCase().includes('project')
       ));
 
-    const matchesCourse = courseFilter === 'all' || enrollment.course_id === parseInt(courseFilter);
+    const matchesCourse = courseFilter === 'all' || enrollment.course_title === courseFilter;
     
     const matchesStatus = statusFilter === 'all' || enrollment.enrollment_status === statusFilter;
     
@@ -333,7 +333,7 @@ export default function EnrollmentsPage() {
                 >
                   <option value="all">All Courses</option>
                   {Array.from(new Set(enrollments.map(e => e.course_title))).filter(Boolean).map(course => (
-                    <option key={course} value={enrollments.find(e => e.course_title === course)?.course_id}>
+                    <option key={course} value={course}>
                       {course}
                     </option>
                   ))}

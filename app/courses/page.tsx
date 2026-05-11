@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import DynamicCourses from "@/components/DynamicCourses";
+import CategorySwitcher from "@/components/CategorySwitcher";
 
 export default function AllCoursesPage() {
   const router = useRouter();
@@ -23,14 +24,17 @@ export default function AllCoursesPage() {
         </button>
 
         {/* Title and Subtitle - Centered */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight inline-block">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight">
             Explore Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2F2FE4] to-[#60a5fa]">Courses</span>
           </h1>
           <p className="text-gray-400 max-w-2xl text-lg mx-auto mt-4">
             Professional training designed to help you master the MERN stack and beyond.
           </p>
         </div>
+
+        {/* Category Switcher */}
+        <CategorySwitcher currentCategory="all" />
 
         <DynamicCourses category="all" />
       </div>

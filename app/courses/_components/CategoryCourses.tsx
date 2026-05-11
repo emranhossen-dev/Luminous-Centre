@@ -1,32 +1,34 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import Link from "next/link";
-import { 
-  Clock, 
-  Users, 
-  Star, 
-  Calendar, 
-  Play, 
-  Award,
-  Filter,
-  Search
-} from "lucide-react";
+import { Search } from "lucide-react";
+import UserCourseCard from "@/components/UserCourseCard";
+import BestSpinner from "@/components/BestSpinner";
 
 interface Course {
   id: number;
   title: string;
-  description: string;
-  short_description: string;
+  slug: string;
+  thumbnail_url?: string;
   category: string;
   price: number;
-  old_price: number;
-  duration_weeks: number;
-  enrollmentCount: number;
-  thumbnail_url: string;
+  old_price?: number;
+  status: string;
   level: string;
-  slug: string;
+  duration_weeks?: number;
+  total_hours?: number;
+  enrollmentCount?: number;
+  featured?: boolean;
+  batch?: string;
+  created_at?: string;
+  enrollment_ends?: string;
+  class_starts?: string;
+  description?: string;
+  short_description?: string;
+  language?: string;
+  access_type?: string;
+  course_outline_url?: string;
 }
 
 interface CategoryCoursesProps {
@@ -142,10 +144,10 @@ export default function CategoryCourses({ category }: CategoryCoursesProps) {
       </div>
 
       {/* Courses Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 lg:gap-10">
         {loading ? (
           <div className="col-span-full py-20 flex flex-col items-center justify-center text-gray-400 gap-4">
-            <div className="w-12 h-12 border-4 border-[#2F2FE4] border-t-transparent rounded-full animate-spin"></div>
+            <BestSpinner size="large" color="#ffffff" />
             <p className="font-bold tracking-widest text-sm">Syncing Courses...</p>
           </div>
         ) : sortedCourses.length === 0 ? (
@@ -153,77 +155,11 @@ export default function CategoryCourses({ category }: CategoryCoursesProps) {
             <p className="text-lg">No courses found matching your search.</p>
           </div>
         ) : (
-          sortedCourses.map((course, index) => (
-            <motion.div
-              key={course.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="bg-slate-800/50 rounded-xl border border-white/5 hover:border-[#2F2FE4]/30 transition-all cursor-pointer group p-4"
-              onClick={() => window.location.href = `/courses/${course.slug}`}
-            >
-              {/* Header with Status Badges */}
-              <div className="flex items-center justify-between mb-4">
-                {/* Online/Offline Status - Top Left */}
-                <div className="flex items-center gap-2">
-                  {(course.category?.toLowerCase() === 'online' || course.category?.toLowerCase() === 'recorded') ? (
-                    <div className="flex items-center gap-1 px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full border border-blue-500/30">
-                      <Clock size={12} />
-                      <span className="text-xs font-medium">Online</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1 px-3 py-1 bg-green-600/20 text-green-400 rounded-full border border-green-500/30">
-                      <Users size={12} />
-                      <span className="text-xs font-medium">Offline</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Price Status - Top Right */}
-                <div className="flex items-center gap-2">
-                  {course.price === 0 ? (
-                    <span className="px-3 py-1 bg-emerald-600/20 text-emerald-400 rounded-full border border-emerald-500/30 text-xs font-medium">
-                      Free
-                    </span>
-                  ) : (
-                    <span className="px-3 py-1 bg-yellow-600/20 text-yellow-400 rounded-full border border-yellow-500/30 text-xs font-medium">
-                      ৳{course.price}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Course Title */}
-              <h3 className="text-lg font-bold text-white mb-3 line-clamp-2 group-hover:text-[#2F2FE4] transition-colors">
-                {course.title}
-              </h3>
-
-              {/* Course Description */}
-              <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-                {course.short_description || course.description}
-              </p>
-
-              {/* Course Meta */}
-              <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
-                <div className="flex items-center gap-1">
-                  <Clock size={14} />
-                  <span>{course.duration_weeks} Weeks</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Users size={14} />
-                  <span>{course.enrollmentCount || 0}+</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Star size={14} className="text-yellow-500 fill-yellow-500" />
-                  <span>4.8</span>
-                </div>
-              </div>
-
-              {/* Action Button */}
-              <button className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#2F2FE4] text-white rounded-lg hover:bg-[#2F2FE4]/80 transition-colors text-sm font-medium">
-                View Details
-              </button>
-            </motion.div>
+          sortedCourses.map((course) => (
+            <UserCourseCard 
+              key={course.id} 
+              course={course} 
+            />
           ))
         )}
       </div>

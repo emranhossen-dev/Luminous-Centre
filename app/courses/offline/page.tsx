@@ -1,5 +1,6 @@
 import React from "react";
-import CategoryCourses from "../_components/CategoryCourses";
+import DynamicCourses from "@/components/DynamicCourses";
+import CategorySwitcher from "@/components/CategorySwitcher";
 
 export default function OfflineCoursesPage() {
   return (
@@ -8,16 +9,20 @@ export default function OfflineCoursesPage() {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#2F2FE4] rounded-full mix-blend-screen filter blur-[150px] opacity-10"></div>
       
       <div className="container mx-auto px-6 relative z-10">
-        <div className="mb-16 space-y-4">
+        {/* Title and Subtitle - Centered */}
+        <div className="text-center mb-8">
           <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight">
             Offline <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2F2FE4] to-[#60a5fa]">Classroom Courses</span>
           </h1>
-          <p className="text-gray-400 max-w-2xl text-lg">
+          <p className="text-gray-400 max-w-2xl text-lg mx-auto mt-4">
             Join our offline classroom training for hands-on learning experience with direct instructor interaction.
           </p>
         </div>
+
+        {/* Category Switcher */}
+        <CategorySwitcher currentCategory="offline" />
         
-        <CategoryCourses category="offline" />
+        <DynamicCourses category="offline" />
       </div>
     </main>
   );
