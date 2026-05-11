@@ -86,7 +86,7 @@ export default function Navbar() {
 
               <div className="leading-tight">
                 <div className={`text-xs font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                  Luminous Skills
+                  Luminous Skill Development
                 </div>
                 <div className={`text-[10px] ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                   Training Center
@@ -107,10 +107,10 @@ export default function Navbar() {
               </div>
               <div className="leading-tight">
                 <div className={`text-sm font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                  LUMINOUS <span className="text-blue-600 italic">CENTER</span>
+                  LUMINOUS SKILL DEVELOPMENT <span className="text-blue-600 italic"></span>
                 </div>
                 <div className={`text-[10px] font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
-                  Skill Development Training
+                  TRAINING CENTER
                 </div>
               </div>
             </Link>

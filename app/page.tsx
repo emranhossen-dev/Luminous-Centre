@@ -7,6 +7,11 @@ import PartnerSection from "@/components/PartnerSection";
 import CallToAction from "@/components/CallToAction";
 import HomeWrapper from "@/components/HomeWrapper";
 import { query } from "@/lib/database";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: 'Home | LSDTC',
+};
 
 export default async function Home() {
   // Fetch courses on server for instant loading

@@ -17,8 +17,16 @@ const hindSiliguri = Hind_Siliguri({
 });
 
 export const metadata: Metadata = {
-  title: "Luminous Skill Development",
-  description: "Illuminate your skills with Luminous.",
+  title: {
+    default: "LSDTC",
+    template: "%s | LSDTC"
+  },
+  description: "Luminous Skill Development Training Center - Illuminate your skills with professional training.",
+  icons: {
+    icon: "/logo.jpg",
+    shortcut: "/logo.jpg",
+    apple: "/logo.jpg",
+  },
 };
 
 export default function RootLayout({

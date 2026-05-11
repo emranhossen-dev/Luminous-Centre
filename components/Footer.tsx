@@ -1,97 +1,182 @@
 "use client";
 
 import React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import { 
-  Globe, 
-  Mail, 
-  Link as LinkIcon,
-  // Use these modern replacements for the deprecated brand icons
-  Video,     // For Youtube
-  Camera,    // For Instagram
-  MessageSquare // For Twitter/X (or use 'Bird' if your version still has it)
+  Globe, MessageSquare, Users, Camera, Mail, Phone, MapPin, 
+  Heart, ArrowRight
 } from "lucide-react";
 
 const Footer = () => {
+    const currentYear = new Date().getFullYear();
+
+    const quickLinks = [
+        { name: 'হোম', href: '/' },
+        { name: 'সকল কোর্স', href: '/courses' },
+        { name: 'সরকারি কোর্স', href: '/courses/govt' },
+        { name: 'অনলাইন কোর্স', href: '/courses/online' },
+        { name: 'আমাদের সম্পর্কে', href: '/about' },
+        { name: 'যোগাযোগ', href: '/contact' },
+    ];
+
     const socialLinks = [
-        { icon: Globe, href: "#", label: "Website" },
-        { icon: Mail, href: "#", label: "Email" },
-        { icon: Camera, href: "#", label: "Instagram" }, // Replaced Instagram
-        { icon: MessageSquare, href: "#", label: "Twitter" }, // Replaced Twitter
-        { icon: Video, href: "#", label: "Youtube" }, // Replaced Youtube
-        { icon: LinkIcon, href: "#", label: "Links" }
+        { icon: Globe, href: '#', label: 'Website' },
+        { icon: MessageSquare, href: '#', label: 'Twitter' },
+        { icon: Users, href: '#', label: 'LinkedIn' },
+        { icon: Camera, href: '#', label: 'Instagram' },
     ];
 
     return (
-        <footer className="bg-[#080616] pt-24 pb-12 border-t border-white/5 relative overflow-hidden">
-            {/* Background Glow */}
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#2F2FE4] opacity-5 blur-[120px] rounded-full pointer-events-none"></div>
-
-            <div className="container mx-auto px-6 relative z-10">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-16">
-                    <div className="md:col-span-2 space-y-8">
+        <footer className="bg-[#05060f] border-t border-white/10">
+            {/* Main Footer Content */}
+            <div className="container mx-auto px-6 py-16">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+                    
+                    {/* Institute Information */}
+                    <div className="space-y-6">
                         <div className="flex items-center gap-3">
-                            <img 
-                                src="https://i.ibb.co.com/d063XCPx/logo.jpg" 
-                                alt="Logo" 
-                                className="h-auto w-auto object-contain rounded-xl border border-white/10 shadow-2xl" 
-                                style={{ height: '56px', width: 'auto' }}
+                            <Image
+                                src="https://i.ibb.co.com/d063XCPx/logo.jpg"
+                                alt="Luminous Skill Development Training Center Logo"
+                                width={48}
+                                height={48}
+                                className="w-12 h-12 object-contain rounded-xl"
                             />
-                            <div className="leading-none">
-                                <span className="text-2xl font-black tracking-tight text-white italic">LUMINOUS</span>
-                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Skill Development Center</p>
+                            <div>
+                                <h3 className="text-white font-bold text-lg">Luminous Skill</h3>
+                                <p className="text-gray-400 text-sm">Development Training Center</p>
                             </div>
                         </div>
-                        <p className="text-gray-400 max-w-sm leading-relaxed text-sm font-medium">
-                            The leading skill development training center dedicated to building the future of the digital workforce through practical, hands-on learning.
+                        
+                        <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
+                            আধুনিক প্রযুক্তির সাথে তাল মিলিয়ে নিজেকে দক্ষ করে তুলুন। প্রফেশনাল মেন্টরদের সাথে শিখুন ওয়েব ডেভেলপমেন্ট, ডিজাইন এবং আরও অনেক কিছু।
                         </p>
                         
-                        <div className="flex gap-4">
-                            {socialLinks.map((item, i) => (
-                                <a
-                                    key={i}
-                                    href={item.href}
-                                    aria-label={item.label}
-                                    className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:bg-[#2F2FE4] hover:text-white hover:border-[#2F2FE4] transition-all transform hover:-translate-y-1"
-                                >
-                                    <item.icon size={18} />
-                                </a>
-                            ))}
+                        {/* Social Media Links */}
+                        <div className="flex items-center gap-3">
+                            {socialLinks.map((social, index) => {
+                                const Icon = social.icon;
+                                return (
+                                    <a
+                                        key={index}
+                                        href={social.href}
+                                        aria-label={social.label}
+                                        className="w-10 h-10 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center hover:bg-blue-500/10 hover:border-blue-500/30 transition-all duration-300 group"
+                                    >
+                                        <Icon className="w-4 h-4 text-gray-400 group-hover:text-blue-400 transition-colors" />
+                                    </a>
+                                );
+                            })}
                         </div>
                     </div>
 
-                    <div>
-                        <h4 className="font-black text-white mb-8 uppercase tracking-widest text-xs italic">Programs</h4>
-                        <ul className="text-gray-500 space-y-4 text-sm font-bold">
-                            <li className="hover:text-[#60a5fa] cursor-pointer transition-colors flex items-center gap-2">
-                                <div className="w-1 h-1 rounded-full bg-[#2F2FE4]"></div> Recorded Sessions
-                            </li>
-                            <li className="hover:text-[#60a5fa] cursor-pointer transition-colors flex items-center gap-2">
-                                <div className="w-1 h-1 rounded-full bg-[#2F2FE4]"></div> Live Workshops
-                            </li>
-                            <li className="hover:text-[#60a5fa] cursor-pointer transition-colors flex items-center gap-2">
-                                <div className="w-1 h-1 rounded-full bg-[#2F2FE4]"></div> Campus Training
-                            </li>
-                            <li className="hover:text-[#60a5fa] cursor-pointer transition-colors flex items-center gap-2">
-                                <div className="w-1 h-1 rounded-full bg-[#2F2FE4]"></div> Free Assets
-                            </li>
+                    {/* Quick Links */}
+                    <div className="space-y-6">
+                        <h4 className="text-white font-bold text-lg mb-6">দ্রুত লিঙ্ক</h4>
+                        <ul className="space-y-3">
+                            {quickLinks.map((link, index) => (
+                                <li key={index}>
+                                    <Link
+                                        href={link.href}
+                                        className="text-gray-400 hover:text-white transition-colors duration-300 flex items-center gap-2 group"
+                                    >
+                                        <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <span className="text-sm">{link.name}</span>
+                                    </Link>
+                                </li>
+                            ))}
                         </ul>
                     </div>
 
-                    <div>
-                        <h4 className="font-black text-white mb-8 uppercase tracking-widest text-xs italic">Support</h4>
-                        <ul className="text-gray-500 space-y-4 text-sm font-bold">
-                            <li className="hover:text-[#60a5fa] cursor-pointer transition-colors">Contact Us</li>
-                            <li className="hover:text-[#60a5fa] cursor-pointer transition-colors">Privacy Policy</li>
-                            <li className="hover:text-[#60a5fa] cursor-pointer transition-colors">Terms of Service</li>
-                            <li className="hover:text-[#60a5fa] cursor-pointer transition-colors">Career Guidelines</li>
-                        </ul>
+                    {/* Get In Touch */}
+                    <div className="space-y-6">
+                        <h4 className="text-white font-bold text-lg mb-6">যোগাযোগ করুন</h4>
+                        <div className="space-y-4">
+                            <div className="flex items-start gap-3">
+                                <Phone className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
+                                <div>
+                                    <p className="text-gray-400 text-sm">কল করুন</p>
+                                    <p className="text-white text-sm font-medium">+৮৮০ ১৭১২-৩৪৫৬৭৮</p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-start gap-3">
+                                <Mail className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
+                                <div>
+                                    <p className="text-gray-400 text-sm">ইমেল করুন</p>
+                                    <p className="text-white text-sm font-medium">info@luminous-skill.com</p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-start gap-3">
+                                <MapPin className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
+                                <div>
+                                    <p className="text-gray-400 text-sm">ভিজিট করুন</p>
+                                    <p className="text-white text-sm font-medium">
+                                        ধানমন্ডি, ঢাকা-১২০৯, বাংলাদেশ
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Newsletter */}
+                    <div className="space-y-6">
+                        <h4 className="text-white font-bold text-lg mb-6">নিউজলেটার</h4>
+                        <p className="text-gray-400 text-sm leading-relaxed">
+                            আমাদের সর্বশেষ কোর্স এবং অফার সম্পর্কে জানতে সাবস্ক্রাইব করুন
+                        </p>
+                        
+                        <div className="space-y-3">
+                            <div className="relative">
+                                <input
+                                    type="email"
+                                    placeholder="আপনার ইমেল ঠিকানা"
+                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all"
+                                />
+                            </div>
+                            <button
+                                className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-indigo-700 transition-all duration-300"
+                            >
+                                সাবস্ক্রাইব করুন
+                            </button>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <div className="mt-24 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <p className="text-gray-600 text-[10px] font-black uppercase tracking-[0.2em]">
-                        © 2026 LUMINOUS SKILL DEVELOPMENT TRAINING CENTER. ALL RIGHTS RESERVED.
-                    </p>
+            {/* Bottom Footer */}
+            <div className="border-t border-white/10">
+                <div className="container mx-auto px-6 py-6">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center gap-2 text-gray-400 text-sm">
+                            <span>© {currentYear} Luminous Skill Development Training Center.</span>
+                            <span>সর্বস্বত্ব সংরক্ষিত।</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 text-sm">
+                            <Link
+                                href="/terms-of-service"
+                                className="text-gray-400 hover:text-white transition-colors duration-300"
+                            >
+                                শর্তাবলী
+                            </Link>
+                            <span className="text-gray-600">|</span>
+                            <Link
+                                href="/privacy-policy"
+                                className="text-gray-400 hover:text-white transition-colors duration-300"
+                            >
+                                গোপনীয়তা নীতি
+                            </Link>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-gray-400 text-sm">
+                            <span>তৈরি করেছে</span>
+                            <Heart className="w-4 h-4 text-red-500 fill-current" />
+                            <span>Luminous Team</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </footer>
