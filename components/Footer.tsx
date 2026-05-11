@@ -44,8 +44,8 @@ const Footer = () => {
                                 className="w-12 h-12 object-contain rounded-xl"
                             />
                             <div>
-                                <h3 className="text-white font-bold text-lg">Luminous Skill</h3>
-                                <p className="text-gray-400 text-sm">Development Training Center</p>
+                                <h3 className="text-white font-bold text-lg">Luminous Skill Development</h3>
+                                <p className="text-gray-400 text-md">Training Center</p>
                             </div>
                         </div>
                         
@@ -97,7 +97,7 @@ const Footer = () => {
                                 <Phone className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
                                 <div>
                                     <p className="text-gray-400 text-sm">কল করুন</p>
-                                    <p className="text-white text-sm font-medium">+৮৮০ ১৭১২-৩৪৫৬৭৮</p>
+                                    <p className="text-white text-sm font-medium">+880 1577-296272</p>
                                 </div>
                             </div>
                             
@@ -105,7 +105,7 @@ const Footer = () => {
                                 <Mail className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
                                 <div>
                                     <p className="text-gray-400 text-sm">ইমেল করুন</p>
-                                    <p className="text-white text-sm font-medium">info@luminous-skill.com</p>
+                                    <p className="text-white text-sm font-medium">luminous.bd25@gmail.com</p>
                                 </div>
                             </div>
                             
@@ -114,7 +114,7 @@ const Footer = () => {
                                 <div>
                                     <p className="text-gray-400 text-sm">ভিজিট করুন</p>
                                     <p className="text-white text-sm font-medium">
-                                        ধানমন্ডি, ঢাকা-১২০৯, বাংলাদেশ
+                                        85/1, Road: 4, Mohammadia Housing Limited, Mohammadpur, Dhaka-1207
                                     </p>
                                 </div>
                             </div>
