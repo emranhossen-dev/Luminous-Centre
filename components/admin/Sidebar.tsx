@@ -23,6 +23,7 @@ import {
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/admin/dashboard' },
   { id: 'courses', label: 'Course Management', icon: BookOpen, href: '/admin/courses' },
+  { id: 'seminar', label: 'Seminar Applications', icon: PhoneCall, href: '/admin/seminar' },
   { id: 'enrollments', label: 'Enrollments', icon: Users, href: '/admin/enrollments' },
   { id: 'employees', label: 'Employee Hub', icon: Briefcase, href: '/admin/employees' },
   { id: 'mentors', label: 'Mentor List', icon: GraduationCap, href: '/admin/mentors' },

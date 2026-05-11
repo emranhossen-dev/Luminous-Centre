@@ -107,10 +107,11 @@ export default function CourseEnrollPage() {
 
   const submitCourseEnrollment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!courseForm.paymentScreenshot) {
-      setMessage('Please upload payment screenshot');
-      return;
-    }
+    // Payment screenshot is now optional
+    // if (!courseForm.paymentScreenshot) {
+    //   setMessage('Please upload payment screenshot');
+    //   return;
+    // }
 
     setSubmitting(true);
     setMessage('');
@@ -118,12 +119,14 @@ export default function CourseEnrollPage() {
     try {
       const token = localStorage.getItem('token');
       
-      // Upload image to imgbb
+      // Upload image to imgbb if provided
       let imageUrl = '';
-      try {
-        imageUrl = await uploadToImgBB(courseForm.paymentScreenshot);
-      } catch (error) {
-        throw new Error('Failed to upload payment screenshot');
+      if (courseForm.paymentScreenshot) {
+        try {
+          imageUrl = await uploadToImgBB(courseForm.paymentScreenshot);
+        } catch (error) {
+          throw new Error('Failed to upload payment screenshot');
+        }
       }
 
       // Prepare headers - include Authorization only if token exists
@@ -135,10 +138,7 @@ export default function CourseEnrollPage() {
         headers.Authorization = `Bearer ${token}`;
       }
 
-      const response = await fetch('/api/enhanced-enrollment/course', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
+      const requestBody = {
           courseId: Number(course.id),
           fullName: courseForm.fullName,
           mobileNumber: courseForm.mobileNumber,
@@ -147,11 +147,19 @@ export default function CourseEnrollPage() {
           paymentScreenshotUrl: imageUrl,
           amount: course.current_price,
           courseTitle: course.title,
-          courseCategory: course.category || 'General',
+          courseCategory: course.category || 'offline',
           coursePrice: course.current_price,
           batchName: course.batch_name || 'Current Batch',
           isGuestUser: !token // Flag to indicate guest enrollment
-        })
+        };
+        
+        console.log('Submitting enrollment with data:', requestBody);
+        console.log('User token exists:', !!token);
+
+      const response = await fetch('/api/enhanced-enrollment/course', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(requestBody)
       });
 
       const data = await response.json();
@@ -159,8 +167,11 @@ export default function CourseEnrollPage() {
         throw new Error(data.error || 'Enrollment submission failed');
       }
 
-      setIsSubmitted(true);
-      setMessage('Enrollment submitted successfully! Please wait for admin approval.');
+      // Only show success if response is actually successful
+      if (response.status === 200) {
+        setIsSubmitted(true);
+        setMessage('Enrollment submitted successfully! Please wait for admin approval.');
+      }
     } catch (error: any) {
       setMessage(error.message || 'Failed to submit enrollment');
     } finally {
@@ -428,16 +439,15 @@ export default function CourseEnrollPage() {
 
                 {/* Payment Screenshot Upload */}
                 <div>
-                  <label className="flex items-center gap-2 text-blue-100 font-medium mb-2">
-                    <Camera className="w-4 h-4" />
-                    Payment Screenshot *
-                  </label>
+                    <label className="flex items-center gap-2 text-blue-100 font-medium mb-2">
+                      <Camera className="w-4 h-4" />
+                      Payment Screenshot (Optional)
+                    </label>
                   <div className="relative">
                     <input
                       type="file"
                       accept="image/*"
                       onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
-                      required
                       className="hidden"
                       id="payment-screenshot"
                     />
@@ -480,6 +490,29 @@ export default function CourseEnrollPage() {
                       Submit Enrollment
                     </>
                   )}
+                </motion.button>
+
+                {/* Clear Form Button */}
+                <motion.button
+                  type="button"
+                  onClick={() => {
+                    setCourseForm({
+                      fullName: '',
+                      mobileNumber: '',
+                      email: '',
+                      transactionId: '',
+                      paymentScreenshot: null
+                    });
+                    setPreviewUrl('');
+                    setMessage('');
+                    setIsSubmitted(false);
+                    console.log('Form cleared');
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full flex items-center justify-center gap-2 px-8 py-3 bg-white/10 backdrop-blur-xl text-white rounded-xl font-bold hover:bg-white/20 transition-all border border-white/20"
+                >
+                  Clear Form
                 </motion.button>
 
                 {/* Seminar Button */}

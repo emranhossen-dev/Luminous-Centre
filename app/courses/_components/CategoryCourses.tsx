@@ -91,37 +91,34 @@ export default function CategoryCourses({ category }: CategoryCoursesProps) {
   });
 
   return (
-    <main className="min-h-screen bg-gray-50 pt-32 pb-20 relative overflow-hidden">
-      {/* Background Gradients */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500 rounded-full mix-blend-screen filter blur-[150px] opacity-10"></div>
-      
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="flex flex-wrap gap-4 items-center justify-between mb-8">
-          <div className="flex flex-wrap gap-2">
-            {[
-              { id: "all", label: "All Courses", href: "/courses" },
-              { id: "online", label: "Online Live", href: "/courses/online" },
-              { id: "offline", label: "Offline", href: "/courses/offline" },
-              { id: "recorded", label: "Recorded", href: "/courses/recorded" },
-              { id: "govt", label: "Govt Free", href: "/courses/govt" }
-            ].map((tab) => (
-              <Link
-                key={tab.id}
-                href={tab.href}
-                className={`px-6 py-3 rounded-xl font-bold text-sm transition-all ${
-                  category === tab.id
-                    ? "bg-blue-600 text-white"
-                    : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                {tab.label}
-              </Link>
-            ))}
-          </div>
+    <div className="relative z-10">
+      {/* Category Navigation */}
+      <div className="flex flex-wrap gap-4 items-center justify-between mb-8">
+        <div className="flex flex-wrap gap-2">
+          {[
+            { id: "all", label: "All Courses", href: "/courses" },
+            { id: "online", label: "Online Live", href: "/courses/online" },
+            { id: "offline", label: "Offline", href: "/courses/offline" },
+            { id: "recorded", label: "Recorded", href: "/courses/recorded" },
+            { id: "govt", label: "Govt Free", href: "/courses/govt" }
+          ].map((tab) => (
+            <Link
+              key={tab.id}
+              href={tab.href}
+              className={`px-6 py-3 rounded-xl font-bold text-sm transition-all ${
+                category === tab.id
+                  ? "bg-[#2F2FE4] text-white"
+                  : "bg-slate-800/50 border border-white/5 text-gray-300 hover:border-[#2F2FE4]/30"
+              }`}
+            >
+              {tab.label}
+            </Link>
+          ))}
         </div>
+      </div>
 
       {/* Search and Filter */}
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col md:flex-row gap-4 mb-8">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
@@ -129,13 +126,13 @@ export default function CategoryCourses({ category }: CategoryCoursesProps) {
             placeholder="Search courses..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:border-[#2F2FE4] focus:outline-none"
+            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-800/50 border border-white/5 text-white placeholder-gray-400 focus:border-[#2F2FE4]/30 focus:outline-none"
           />
         </div>
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
-          className="px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-[#2F2FE4] focus:outline-none"
+          className="px-6 py-4 rounded-2xl bg-slate-800/50 border border-white/5 text-white focus:border-[#2F2FE4]/30 focus:outline-none"
         >
           <option value="popular">Most Popular</option>
           <option value="price-low">Price: Low to High</option>
@@ -145,10 +142,10 @@ export default function CategoryCourses({ category }: CategoryCoursesProps) {
       </div>
 
       {/* Courses Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
           <div className="col-span-full py-20 flex flex-col items-center justify-center text-gray-400 gap-4">
-            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-12 h-12 border-4 border-[#2F2FE4] border-t-transparent rounded-full animate-spin"></div>
             <p className="font-bold tracking-widest text-sm">Syncing Courses...</p>
           </div>
         ) : sortedCourses.length === 0 ? (
@@ -162,92 +159,81 @@ export default function CategoryCourses({ category }: CategoryCoursesProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="group glass rounded-[2.5rem] overflow-hidden border-white/5 hover:border-[#2F2FE4]/50 transition-all"
+              className="bg-slate-800/50 rounded-xl border border-white/5 hover:border-[#2F2FE4]/30 transition-all cursor-pointer group p-4"
+              onClick={() => window.location.href = `/courses/${course.slug}`}
             >
-              {/* Course Image */}
-              <div className="relative aspect-video overflow-hidden">
-                <img
-                  src={course.thumbnail_url || "https://i.ibb.co.com/35332p83/preview.png"}
-                  alt={course.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                
-                {/* Category Badge */}
-                <div className="absolute top-4 left-4">
-                  <span className="px-3 py-1 bg-[#2F2FE4] text-white text-xs font-bold rounded-full">
-                    {course.category}
-                  </span>
-                </div>
-              </div>
-
-              {/* Course Content */}
-              <div className="p-6 space-y-4">
-                <div className="space-y-2">
-                  <h3 className="text-xl font-black text-white group-hover:text-[#60a5fa] transition-colors">
-                    {course.title}
-                  </h3>
-                  <p className="text-gray-400 text-sm line-clamp-2">{course.short_description || course.description}</p>
-                </div>
-
-                {/* Course Meta */}
-                <div className="flex items-center gap-4 text-sm text-gray-400">
-                  <div className="flex items-center gap-1">
-                    <Clock size={14} />
-                    <span>{course.duration_weeks} Weeks</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Users size={14} />
-                    <span>{course.enrollmentCount || 0}+</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Star size={14} className="text-yellow-500 fill-yellow-500" />
-                    <span>4.8</span>
-                  </div>
-                </div>
-
-                {/* Instructor placeholder */}
+              {/* Header with Status Badges */}
+              <div className="flex items-center justify-between mb-4">
+                {/* Online/Offline Status - Top Left */}
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-[#2F2FE4]/20 flex items-center justify-center">
-                    <Award size={16} className="text-[#60a5fa]" />
-                  </div>
-                  <span className="text-sm text-gray-300">Professional Mentor</span>
+                  {(course.category?.toLowerCase() === 'online' || course.category?.toLowerCase() === 'recorded') ? (
+                    <div className="flex items-center gap-1 px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full border border-blue-500/30">
+                      <Clock size={12} />
+                      <span className="text-xs font-medium">Online</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1 px-3 py-1 bg-green-600/20 text-green-400 rounded-full border border-green-500/30">
+                      <Users size={12} />
+                      <span className="text-xs font-medium">Offline</span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Price */}
-                <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                  <div>
-                    {course.price === 0 ? (
-                      <span className="text-2xl font-black text-emerald-400">FREE</span>
-                    ) : (
-                      <div>
-                        <span className="text-2xl font-black text-white">৳{course.price}</span>
-                        {course.old_price > course.price && (
-                          <span className="text-sm text-gray-500 line-through ml-2">৳{course.old_price}</span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <Link
-                    href={`/courses/${course.slug}`}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-all"
-                  >
-                    View Details
-                  </Link>
+                {/* Price Status - Top Right */}
+                <div className="flex items-center gap-2">
+                  {course.price === 0 ? (
+                    <span className="px-3 py-1 bg-emerald-600/20 text-emerald-400 rounded-full border border-emerald-500/30 text-xs font-medium">
+                      Free
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1 bg-yellow-600/20 text-yellow-400 rounded-full border border-yellow-500/30 text-xs font-medium">
+                      ৳{course.price}
+                    </span>
+                  )}
                 </div>
               </div>
+
+              {/* Course Title */}
+              <h3 className="text-lg font-bold text-white mb-3 line-clamp-2 group-hover:text-[#2F2FE4] transition-colors">
+                {course.title}
+              </h3>
+
+              {/* Course Description */}
+              <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                {course.short_description || course.description}
+              </p>
+
+              {/* Course Meta */}
+              <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
+                <div className="flex items-center gap-1">
+                  <Clock size={14} />
+                  <span>{course.duration_weeks} Weeks</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Users size={14} />
+                  <span>{course.enrollmentCount || 0}+</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Star size={14} className="text-yellow-500 fill-yellow-500" />
+                  <span>4.8</span>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <button className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#2F2FE4] text-white rounded-lg hover:bg-[#2F2FE4]/80 transition-colors text-sm font-medium">
+                View Details
+              </button>
             </motion.div>
           ))
         )}
       </div>
 
       {/* No Results */}
-      {sortedCourses.length === 0 && (
+      {sortedCourses.length === 0 && !loading && (
         <div className="text-center py-16">
           <p className="text-gray-400 text-lg">No courses found matching your search.</p>
         </div>
       )}
-      </div>
-      </main>
+    </div>
   );
 }

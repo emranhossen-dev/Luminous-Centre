@@ -33,8 +33,8 @@ export default function AdminLogin() {
       if (response.ok) {
         // Check if user is admin
         if (data.user.roleName === 'admin') {
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('user', JSON.stringify(data.user));
+          localStorage.setItem('adminToken', data.token);
+          localStorage.setItem('adminUser', JSON.stringify(data.user));
           router.push('/admin/dashboard');
         } else {
           setError('Access denied. Admin privileges required.');

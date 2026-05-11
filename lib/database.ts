@@ -8,8 +8,8 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD || '',
   port: parseInt(process.env.DB_PORT || '6543'),
   max: 20, // Maximum number of connections
-  idleTimeoutMillis: 30000, // Idle connections timeout
-  connectionTimeoutMillis: 2000, // Connection timeout
+  idleTimeoutMillis: 60000, // Idle connections timeout (increased from 30s to 60s)
+  connectionTimeoutMillis: 10000, // Connection timeout (increased from 2s to 10s)
   ssl: process.env.DB_HOST?.includes('supabase.co') ? { rejectUnauthorized: false } : false,
 });
 

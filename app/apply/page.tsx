@@ -58,6 +58,8 @@ const ApplyPage = () => {
     setIsSubmitting(true);
 
     try {
+      console.log('Submitting application with data:', formData);
+      
       const response = await fetch('/api/apply', {
         method: 'POST',
         headers: {
@@ -65,6 +67,9 @@ const ApplyPage = () => {
         },
         body: JSON.stringify(formData),
       });
+
+      const data = await response.json();
+      console.log('API response:', data);
 
       if (response.ok) {
         setIsSubmitted(true);
@@ -77,11 +82,11 @@ const ApplyPage = () => {
           whatsappNo: ''
         });
       } else {
-        throw new Error('Application failed');
+        throw new Error(data.error || 'Application failed');
       }
     } catch (error) {
       console.error('Error submitting application:', error);
-      alert('Application failed. Please try again.');
+      alert(error.message || 'Application failed. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

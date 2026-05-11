@@ -62,16 +62,38 @@ export async function POST(request: NextRequest) {
     const paymentScreenshotUrl = body.paymentScreenshotUrl || null;
 
     // Check if user already has an active enrollment for this course
-    const existingEnrollment = await query(
-      `SELECT id FROM course_enrollment_requests 
-       WHERE (user_id = $1 OR user_id IS NULL) AND course_id = $2 
-       AND enrollment_status IN ('applied', 'waiting', 'admitted')`,
-      [userId || 'NULL', body.courseId]
-    );
+    let existingEnrollment;
+    
+    if (userId) {
+      // Logged-in user: check by user_id
+      existingEnrollment = await query(
+        `SELECT id FROM course_enrollment_requests 
+         WHERE user_id = $1 AND course_id = $2 
+         AND enrollment_status IN ('applied', 'waiting', 'admitted')`,
+        [userId, body.courseId]
+      );
+    } else {
+      // Guest user: check by email or mobile number to prevent duplicates
+      existingEnrollment = await query(
+        `SELECT id FROM course_enrollment_requests 
+         WHERE user_id IS NULL AND course_id = $1 
+         AND (email = $2 OR mobile_number = $3)
+         AND enrollment_status IN ('applied', 'waiting', 'admitted')`,
+        [body.courseId, body.email, body.mobileNumber]
+      );
+    }
 
     if (existingEnrollment.rows.length > 0) {
+      const errorMsg = userId 
+        ? 'You are already enrolled in this course. Please check your dashboard for existing enrollments.'
+        : 'An enrollment request with this email or mobile number already exists. Please use a different email or mobile number.';
+      
       return NextResponse.json({ 
-        error: 'You already have an active enrollment request for this course' 
+        error: errorMsg,
+        details: {
+          type: userId ? 'logged_in_duplicate' : 'guest_duplicate',
+          existingEnrollmentId: existingEnrollment.rows[0].id
+        }
       }, { status: 400 });
     }
 
@@ -82,7 +104,7 @@ export async function POST(request: NextRequest) {
         payment_method, payment_status, enrollment_status,
         amount, currency, transaction_id, payment_screenshot_url,
         course_title, course_category, course_price, batch_name
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
        RETURNING id`,
       [
         userId,

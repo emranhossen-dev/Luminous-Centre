@@ -58,8 +58,8 @@ export function withAdminAuth(handler: (req: NextRequest, context: any, user: JW
 export function isAdminAuthenticated(): boolean {
   if (typeof window === 'undefined') return false;
   
-  const token = localStorage.getItem('token');
-  const userStr = localStorage.getItem('user');
+  const token = localStorage.getItem('adminToken');
+  const userStr = localStorage.getItem('adminUser');
   
   if (!token || !userStr) return false;
   
@@ -74,7 +74,9 @@ export function isAdminAuthenticated(): boolean {
 // Redirect to admin login if not authenticated
 export function requireAdminAuth() {
   if (typeof window !== 'undefined' && !isAdminAuthenticated()) {
-    window.location.href = '/admin/login';
+    if (typeof window !== 'undefined') {
+      window.location.href = '/admin/login';
+    }
     return false;
   }
   return true;

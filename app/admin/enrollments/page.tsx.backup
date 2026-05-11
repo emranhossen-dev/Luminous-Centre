@@ -40,9 +40,6 @@ export default function EnrollmentsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [courseTypeFilter, setCourseTypeFilter] = useState<CourseTypeFilter>('all');
-  const [courseFilter, setCourseFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>('all');
   const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
   const [editingNote, setEditingNote] = useState(false);
   const [noteText, setNoteText] = useState('');
@@ -56,32 +53,18 @@ export default function EnrollmentsPage() {
       setLoading(true);
       const token = localStorage.getItem('adminToken');
       
-      console.log('Fetching enrollments with token:', token ? 'exists' : 'missing');
-      
-      if (!token) {
-        console.error('No admin token found in localStorage');
-        setEnrollments([]);
-        return;
-      }
-      
       const enrollmentsRes = await fetch('/api/admin/enhanced-enrollments', {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      console.log('Enrollments API response status:', enrollmentsRes.status);
-
       if (!enrollmentsRes.ok) {
-        const errorText = await enrollmentsRes.text();
-        console.error('API error:', errorText);
-        throw new Error(`Failed to fetch enrollments: ${enrollmentsRes.status}`);
+        throw new Error('Failed to fetch enrollments');
       }
 
       const data = await enrollmentsRes.json();
-      console.log('Enrollments data received:', data.enrollments?.length || 0, 'items');
       setEnrollments(data.enrollments || []);
     } catch (error) {
       console.error('Error fetching enrollments:', error);
-      setEnrollments([]);
     } finally {
       setLoading(false);
     }
@@ -148,7 +131,7 @@ export default function EnrollmentsPage() {
     }
   };
 
-  // Filter enrollments based on all filters
+  // Filter enrollments based on course type
   const filteredEnrollments = enrollments.filter(enrollment => {
     const matchesSearch = 
       enrollment.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -164,13 +147,7 @@ export default function EnrollmentsPage() {
         enrollment.course_category?.toLowerCase().includes('project')
       ));
 
-    const matchesCourse = courseFilter === 'all' || enrollment.course_id === parseInt(courseFilter);
-    
-    const matchesStatus = statusFilter === 'all' || enrollment.enrollment_status === statusFilter;
-    
-    const matchesPaymentStatus = paymentStatusFilter === 'all' || enrollment.payment_status === paymentStatusFilter;
-
-    return matchesSearch && matchesCourseType && matchesCourse && matchesStatus && matchesPaymentStatus;
+    return matchesSearch && matchesCourseType;
   });
 
   // Calculate counts for each filter
@@ -308,9 +285,8 @@ export default function EnrollmentsPage() {
           transition={{ delay: 0.2 }}
           className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 mb-6 border border-white/10"
         >
-          <div className="space-y-4">
-            {/* Search Input */}
-            <div className="relative">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
@@ -319,73 +295,6 @@ export default function EnrollmentsPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
               />
-            </div>
-            
-            {/* Advanced Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {/* Course Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Course</label>
-                <select
-                  value={courseFilter}
-                  onChange={(e) => setCourseFilter(e.target.value)}
-                  className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-                >
-                  <option value="all">All Courses</option>
-                  {Array.from(new Set(enrollments.map(e => e.course_title))).filter(Boolean).map(course => (
-                    <option key={course} value={enrollments.find(e => e.course_title === course)?.course_id}>
-                      {course}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              {/* Status Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Application Status</label>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-                >
-                  <option value="all">All Status</option>
-                  <option value="applied">Applied</option>
-                  <option value="waiting">Waiting</option>
-                  <option value="admitted">Admitted</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-              </div>
-              
-              {/* Payment Status Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Payment Status</label>
-                <select
-                  value={paymentStatusFilter}
-                  onChange={(e) => setPaymentStatusFilter(e.target.value)}
-                  className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-                >
-                  <option value="all">All Payment Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="verified">Verified</option>
-                  <option value="failed">Failed</option>
-                </select>
-              </div>
-              
-              {/* Clear Filters Button */}
-              <div className="flex items-end">
-                <button
-                  onClick={() => {
-                    setSearchTerm('');
-                    setCourseFilter('all');
-                    setStatusFilter('all');
-                    setPaymentStatusFilter('all');
-                    setCourseTypeFilter('all');
-                  }}
-                  className="w-full px-4 py-2 bg-red-600/20 text-red-400 border border-red-600/20 rounded-lg hover:bg-red-600/30 transition-all font-medium"
-                >
-                  Clear All Filters
-                </button>
-              </div>
             </div>
           </div>
         </motion.div>

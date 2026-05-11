@@ -26,18 +26,18 @@ export async function GET(req: NextRequest, context: { params: Promise<{}> }) {
     const totalCourses = parseInt(totalCoursesResult.rows[0].count);
 
     // Get total enrollments
-    const totalEnrollmentsResult = await query('SELECT COUNT(*) as count FROM enrollments');
+    const totalEnrollmentsResult = await query('SELECT COUNT(*) as count FROM course_enrollment_requests');
     const totalEnrollments = parseInt(totalEnrollmentsResult.rows[0].count);
 
     // Get total revenue (sum of course prices for paid enrollments)
     const revenueResult = await query(
-      'SELECT COALESCE(SUM(c.price), 0) as revenue FROM enrollments e JOIN courses c ON e.course_id = c.id WHERE c.price > 0'
+      'SELECT COALESCE(SUM(c.current_price), 0) as revenue FROM course_enrollment_requests e JOIN courses c ON e.course_id = c.id WHERE e.payment_status = \'verified\''
     );
     const totalRevenue = parseFloat(revenueResult.rows[0].revenue);
 
     // Get active users (logged in within last 30 days)
     const activeUsersResult = await query(
-      'SELECT COUNT(*) as count FROM users WHERE last_login >= NOW() - INTERVAL \'30 days\' AND is_active = true'
+      'SELECT COUNT(*) as count FROM users WHERE last_login >= NOW() - INTERVAL \'30 days\''
     );
     const activeUsers = parseInt(activeUsersResult.rows[0].count);
 
@@ -59,7 +59,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{}> }) {
 
     // Get recent enrollments (last 7 days)
     const recentEnrollmentsResult = await query(
-      'SELECT COUNT(*) as count FROM enrollments WHERE enrollment_date >= NOW() - INTERVAL \'7 days\''
+      'SELECT COUNT(*) as count FROM course_enrollment_requests WHERE created_at >= NOW() - INTERVAL \'7 days\''
     );
     const recentEnrollments = parseInt(recentEnrollmentsResult.rows[0].count);
 

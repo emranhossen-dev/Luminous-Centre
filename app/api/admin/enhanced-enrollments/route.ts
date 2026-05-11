@@ -21,7 +21,9 @@ export async function GET(request: NextRequest) {
 
     // Check if user is admin
     const adminCheck = await query(
-      'SELECT role FROM users WHERE id = $1',
+      `SELECT r.name as role FROM users u 
+       JOIN roles r ON u.role_id = r.id 
+       WHERE u.id = $1`,
       [decoded.userId || decoded.id]
     );
 
@@ -34,7 +36,7 @@ export async function GET(request: NextRequest) {
       SELECT 
         cer.*,
         u.email as user_email,
-        u.name as user_name
+        CONCAT(u.first_name, ' ', u.last_name) as user_name
       FROM course_enrollment_requests cer
       LEFT JOIN users u ON cer.user_id = u.id
       ORDER BY cer.created_at DESC
