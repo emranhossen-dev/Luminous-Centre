@@ -9,6 +9,8 @@ import { CourseFormData, CourseSubmission } from '@/types/course';
 interface CourseLaunchFormProps {
   onClose: () => void;
   onSuccess: () => void;
+  initialData?: any;
+  isEditMode?: boolean;
 }
 
 const weekDays = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
@@ -22,11 +24,10 @@ const weekDayFullNames = {
   'Fri': 'Friday'
 };
 
-export default function CourseLaunchForm({ onClose, onSuccess }: CourseLaunchFormProps) {
+export default function CourseLaunchForm({ onClose, onSuccess, initialData, isEditMode = false }: CourseLaunchFormProps) {
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [selectedPdf, setSelectedPdf] = useState<File | null>(null);
   const [uploadingPdf, setUploadingPdf] = useState(false);
   
@@ -47,6 +48,32 @@ export default function CourseLaunchForm({ onClose, onSuccess }: CourseLaunchFor
     selected_days: [],
     course_outline_url: ''
   });
+
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
+
+  // Initialize form with initial data if in edit mode
+  React.useEffect(() => {
+    if (isEditMode && initialData) {
+      setFormData({
+        title: initialData.title || '',
+        slug: initialData.slug || '',
+        thumbnail_url: initialData.thumbnail_url || '',
+        category: initialData.category || 'online',
+        price: initialData.price?.toString() || '',
+        old_price: initialData.old_price?.toString() || '',
+        description: initialData.description || '',
+        access_type: initialData.access_type || 'paid',
+        status: initialData.status || 'draft',
+        featured: initialData.featured || false,
+        batch: initialData.batch?.replace('Batch-', '') || '',
+        enrollment_ends: initialData.enrollment_ends?.split('T')[0] || '',
+        class_starts: initialData.class_starts?.split('T')[0] || '',
+        selected_days: initialData.selected_days || [],
+        course_outline_url: initialData.course_outline_url || ''
+      });
+      setSelectedDays(initialData.selected_days || []);
+    }
+  }, [isEditMode, initialData]);
 
   const [slugError, setSlugError] = useState('');
 
@@ -286,7 +313,7 @@ export default function CourseLaunchForm({ onClose, onSuccess }: CourseLaunchFor
 
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('adminToken');
       
       if (!token) {
         throw new Error('No authentication token found');
@@ -303,8 +330,11 @@ export default function CourseLaunchForm({ onClose, onSuccess }: CourseLaunchFor
 
       console.log('Submitting course data:', submissionData);
 
-      const response = await fetch('/api/admin/courses', {
-        method: 'POST',
+      const url = isEditMode ? `/api/admin/courses/${initialData.id}` : '/api/admin/courses';
+      const method = isEditMode ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -316,7 +346,7 @@ export default function CourseLaunchForm({ onClose, onSuccess }: CourseLaunchFor
       console.log('API Response:', data);
       
       if (response.ok) {
-        toast.success('Course created successfully! 🎉');
+        toast.success(isEditMode ? 'Course updated successfully! 🎉' : 'Course created successfully! 🎉');
         setTimeout(() => {
           onSuccess();
           onClose();
@@ -361,8 +391,12 @@ export default function CourseLaunchForm({ onClose, onSuccess }: CourseLaunchFor
       {/* Header */}
       <header className="mb-10">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Launch New Course</h1>
-          <p className="text-slate-400 mt-1">Create and publish a new course to Luminous Skills platform</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">
+            {isEditMode ? 'Edit Course' : 'Launch New Course'}
+          </h1>
+          <p className="text-slate-400 mt-1">
+            {isEditMode ? 'Update course details and settings' : 'Create and publish a new course to Luminous Skills platform'}
+          </p>
         </div>
       </header>
 
@@ -914,7 +948,7 @@ export default function CourseLaunchForm({ onClose, onSuccess }: CourseLaunchFor
           disabled={loading}
           className="px-8 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition shadow-lg shadow-emerald-900/20 disabled:opacity-50"
         >
-          {loading ? 'Launching...' : 'Launch Course'}
+          {loading ? (isEditMode ? 'Updating...' : 'Launching...') : (isEditMode ? 'Update Course' : 'Launch Course')}
         </button>
       </div>
     </div>

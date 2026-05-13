@@ -17,7 +17,7 @@ export default function CoursesPage() {
 
   const fetchCourses = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('adminToken');
       const response = await fetch('/api/admin/courses', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -25,6 +25,8 @@ export default function CoursesPage() {
       if (response.ok) {
         const data = await response.json();
         setCourses(data.courses);
+      } else {
+        console.error('Failed to fetch courses:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Failed to fetch courses:', error);
@@ -35,7 +37,7 @@ export default function CoursesPage() {
 
   const handleStatusUpdate = async (courseId: number, status: string) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('adminToken');
       const response = await fetch(`/api/admin/courses/${courseId}`, {
         method: 'PUT',
         headers: {
@@ -64,7 +66,7 @@ export default function CoursesPage() {
 
   const handleDelete = async (id: number) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('adminToken');
       
       // First check if course has enrollments
       const enrollmentsResponse = await fetch(`/api/admin/courses/${id}/enrollments`, {

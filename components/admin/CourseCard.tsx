@@ -1,8 +1,9 @@
 "use client";
 
 import React from 'react';
-import { Wifi, WifiOff, Trash2 } from 'lucide-react';
+import { Wifi, WifiOff, Trash2, Edit2 } from 'lucide-react';
 import { useLoading } from '@/contexts/LoadingContext';
+import { useRouter } from 'next/navigation';
 
 interface CourseCardProps {
   course: {
@@ -19,6 +20,7 @@ interface CourseCardProps {
 
 export default function CourseCard({ course, onDelete, onStatusUpdate }: CourseCardProps) {
   const { startLoading } = useLoading();
+  const router = useRouter();
   
   // Handle card click
   const handleCardClick = () => {
@@ -27,6 +29,12 @@ export default function CourseCard({ course, onDelete, onStatusUpdate }: CourseC
     setTimeout(() => {
       window.location.href = `/courses/${course.slug}`;
     }, 300);
+  };
+
+  // Handle edit button click
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/admin/courses/edit/${course.id}`);
   };
 
   return (
@@ -72,6 +80,13 @@ export default function CourseCard({ course, onDelete, onStatusUpdate }: CourseC
 
       {/* Action Buttons */}
       <div className="flex gap-2">
+        <button 
+          onClick={handleEditClick}
+          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors text-sm font-medium"
+        >
+          <Edit2 className="w-4 h-4" />
+          Edit
+        </button>
         {course.status === 'draft' ? (
           <button 
             onClick={(e) => {
@@ -101,7 +116,6 @@ export default function CourseCard({ course, onDelete, onStatusUpdate }: CourseC
           className="flex items-center justify-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-colors text-sm font-medium"
         >
           <Trash2 className="w-4 h-4" />
-          Delete
         </button>
       </div>
     </div>
