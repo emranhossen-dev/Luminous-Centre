@@ -16,9 +16,10 @@ interface CourseCardProps {
   };
   onDelete?: () => void;
   onStatusUpdate?: (status: string) => void;
+  onAddCurriculum?: () => void;
 }
 
-export default function CourseCard({ course, onDelete, onStatusUpdate }: CourseCardProps) {
+export default function CourseCard({ course, onDelete, onStatusUpdate, onAddCurriculum }: CourseCardProps) {
   const { startLoading } = useLoading();
   const router = useRouter();
   
@@ -35,6 +36,12 @@ export default function CourseCard({ course, onDelete, onStatusUpdate }: CourseC
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     router.push(`/admin/courses/edit/${course.id}`);
+  };
+
+  // Handle add curriculum button click
+  const handleAddCurriculumClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onAddCurriculum?.();
   };
 
   return (
@@ -86,6 +93,12 @@ export default function CourseCard({ course, onDelete, onStatusUpdate }: CourseC
         >
           <Edit2 className="w-4 h-4" />
           Edit
+        </button>
+        <button 
+          onClick={handleAddCurriculumClick}
+          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-500 transition-colors text-sm font-medium"
+        >
+          Curriculum
         </button>
         {course.status === 'draft' ? (
           <button 

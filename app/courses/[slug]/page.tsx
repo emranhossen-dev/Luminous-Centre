@@ -6,6 +6,7 @@ import CourseBanner from '@/components/CourseBanner';
 import BestSpinner from '@/components/BestSpinner';
 import { useLoading } from '@/contexts/LoadingContext';
 import { CourseData } from '@/types/course';
+import CourseCurriculum from '../components/CourseCurriculum';
 
 export default function CourseDetailsPage() {
   const params = useParams();
@@ -69,13 +70,8 @@ export default function CourseDetailsPage() {
       {/* Course Banner */}
       <CourseBanner course={course} />
       
-      {/* Additional course sections will be added here */}
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="text-center text-white">
-          <h2 className="text-3xl font-bold mb-4">Course Details</h2>
-          <p className="text-gray-400">More course content sections will be added here...</p>
-        </div>
-      </div>
+      {/* Course Curriculum Section */}
+      <CourseCurriculum curriculum={course.curriculum || []} />
     </div>
   );
 }

@@ -73,6 +73,21 @@ export interface CourseData {
     subtitle: string;
     icon: string;
   }>;
+  curriculum?: Array<{
+    id: number;
+    title: string;
+    order_index: number;
+    topics: Array<{
+      id: number;
+      topic_name: string;
+      order_index: number;
+    }>;
+    achievements: Array<{
+      id: number;
+      achievement_text: string;
+      order_index: number;
+    }>;
+  }>;
 }
 
 export interface LearningOutcome {

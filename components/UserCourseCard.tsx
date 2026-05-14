@@ -36,7 +36,7 @@ export default function UserCourseCard({ course }: UserCourseCardProps) {
   const [navigating, setNavigating] = useState(false);
   
   // Calculate discount percentage
-  const discountPercentage = course.old_price && course.old_price > course.price 
+  const discountPercentage = course.old_price !== null && course.old_price !== undefined && course.old_price > course.price 
     ? Math.round(((course.old_price - course.price) / course.old_price) * 100)
     : 0;
 
@@ -173,7 +173,7 @@ export default function UserCourseCard({ course }: UserCourseCardProps) {
       <div className="flex justify-between items-center px-[15px] pb-[15px]">
         <div className="flex items-baseline gap-[8px]">
           <span className="text-white text-[24px] font-extrabold">{formatPrice(course.price)}</span>
-          {course.old_price && course.old_price > course.price && (
+          {course.old_price !== null && course.old_price !== undefined && course.old_price > course.price && (
             <span className="text-[#64748b] line-through text-[14px]">{formatPrice(course.old_price)}</span>
           )}
         </div>

@@ -53,6 +53,48 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slug: s
       projectsResult = await query(projectsQuery, [course.id]);
     }
 
+    let curriculumResult = { rows: [] as any[] };
+    if (await tableExists('curriculum_modules')) {
+      const curriculumQuery = `
+        SELECT 
+          cm.id,
+          cm.title,
+          cm.order_index,
+          COALESCE(
+            (
+              SELECT json_agg(
+                json_build_object(
+                  'id', ct.id,
+                  'topic_name', ct.topic_name,
+                  'order_index', ct.order_index
+                ) ORDER BY ct.order_index
+              )
+              FROM curriculum_topics ct
+              WHERE ct.module_id = cm.id
+            ),
+            '[]'::json
+          ) as topics,
+          COALESCE(
+            (
+              SELECT json_agg(
+                json_build_object(
+                  'id', ca.id,
+                  'achievement_text', ca.achievement_text,
+                  'order_index', ca.order_index
+                ) ORDER BY ca.order_index
+              )
+              FROM curriculum_achievements ca
+              WHERE ca.module_id = cm.id
+            ),
+            '[]'::json
+          ) as achievements
+        FROM curriculum_modules cm
+        WHERE cm.course_id = $1
+        ORDER BY cm.order_index ASC
+      `;
+      curriculumResult = await query(curriculumQuery, [course.id]);
+    }
+
     // Transform course data to match CourseData structure for banner
     const courseData = {
       id: course.id.toString(),
@@ -82,11 +124,13 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slug: s
 
     return NextResponse.json({
       ...courseData,
+      curriculum: curriculumResult.rows,
       // Also include original course data for admin editing
       originalCourse: {
         ...course,
         modules: modulesResult.rows,
-        projects: projectsResult.rows
+        projects: projectsResult.rows,
+        curriculum: curriculumResult.rows
       }
     });
 
