@@ -16,10 +16,9 @@ interface CourseCardProps {
   };
   onDelete?: () => void;
   onStatusUpdate?: (status: string) => void;
-  onAddCurriculum?: () => void;
 }
 
-export default function CourseCard({ course, onDelete, onStatusUpdate, onAddCurriculum }: CourseCardProps) {
+export default function CourseCard({ course, onDelete, onStatusUpdate }: CourseCardProps) {
   const { startLoading } = useLoading();
   const router = useRouter();
   
@@ -41,7 +40,7 @@ export default function CourseCard({ course, onDelete, onStatusUpdate, onAddCurr
   // Handle add curriculum button click
   const handleAddCurriculumClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onAddCurriculum?.();
+    router.push(`/admin/courses/${course.slug}/curriculum`);
   };
 
   return (
