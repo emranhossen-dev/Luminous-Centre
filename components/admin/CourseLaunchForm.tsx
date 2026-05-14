@@ -46,7 +46,8 @@ export default function CourseLaunchForm({ onClose, onSuccess, initialData, isEd
     enrollment_ends: '',
     class_starts: '',
     selected_days: [],
-    course_outline_url: ''
+    course_outline_url: '',
+    curriculum_subtitle: ''
   });
 
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
@@ -69,7 +70,8 @@ export default function CourseLaunchForm({ onClose, onSuccess, initialData, isEd
         enrollment_ends: initialData.enrollment_ends?.split('T')[0] || '',
         class_starts: initialData.class_starts?.split('T')[0] || '',
         selected_days: initialData.selected_days || [],
-        course_outline_url: initialData.course_outline_url || ''
+        course_outline_url: initialData.course_outline_url || '',
+        curriculum_subtitle: initialData.curriculum_subtitle || ''
       });
       setSelectedDays(initialData.selected_days || []);
     }
@@ -469,6 +471,19 @@ export default function CourseLaunchForm({ onClose, onSuccess, initialData, isEd
                   required
                   rows={4}
                   placeholder="Full course details here - what students will learn, prerequisites, outcomes, etc." 
+                  className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 outline-none focus:border-emerald-500 transition resize-none"
+                />
+              </div>
+
+              {/* Curriculum Subtitle - Full Width */}
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-1.5">Curriculum Subtitle / Short Description</label>
+                <textarea 
+                  name="curriculum_subtitle" 
+                  value={formData.curriculum_subtitle || ''}
+                  onChange={handleChange}
+                  rows={3}
+                  placeholder="Short description that appears under the 'Course Curriculum' title (Bengali or English)" 
                   className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 outline-none focus:border-emerald-500 transition resize-none"
                 />
               </div>

@@ -34,6 +34,7 @@ export default function CourseDetailsUpdateForm({
     class_start_date: '',
     thumbnail_url: '',
     video_url: '',
+    curriculum_subtitle: '',
     category: 'online',
     learning_outcomes: [
       { title: 'প্রফেশনাল স্কিল', subtitle: 'ইন্ডাস্ট্রি স্ট্যান্ডার্ড', icon: 'TrendingUp' },
@@ -178,6 +179,18 @@ export default function CourseDetailsUpdateForm({
                 rows={4}
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-blue-500 transition-colors resize-none"
                 placeholder="Enter course description"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-400 mb-2">Curriculum Subtitle / Description</label>
+              <textarea
+                name="curriculum_subtitle"
+                value={formData.curriculum_subtitle || ''}
+                onChange={handleChange}
+                rows={3}
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-blue-500 transition-colors resize-none"
+                placeholder="Enter curriculum section subtitle (Bengali or English)"
               />
             </div>
           </div>

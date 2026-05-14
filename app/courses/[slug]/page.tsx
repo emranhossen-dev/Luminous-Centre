@@ -71,7 +71,10 @@ export default function CourseDetailsPage() {
       <CourseBanner course={course} />
       
       {/* Course Curriculum Section */}
-      <CourseCurriculum curriculum={course.curriculum || []} />
+      <CourseCurriculum 
+        curriculum={course.curriculum || []} 
+        subtitle={course.curriculum_subtitle} 
+      />
     </div>
   );
 }

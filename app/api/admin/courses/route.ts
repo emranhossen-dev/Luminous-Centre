@@ -116,7 +116,8 @@ export async function POST(req: NextRequest, context: { params: Promise<{}> }) {
       enrollment_ends,
       class_starts,
       selected_days,
-      course_outline_url
+      course_outline_url,
+      curriculum_subtitle
     } = courseData;
 
     // Debug logging to see what we're receiving
@@ -153,8 +154,8 @@ export async function POST(req: NextRequest, context: { params: Promise<{}> }) {
       INSERT INTO courses (
         title, slug, description, category, price, old_price,
         thumbnail_url, access_type, status, featured, batch,
-        enrollment_ends, class_starts, selected_days, course_outline_url, created_by
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+        enrollment_ends, class_starts, selected_days, course_outline_url, curriculum_subtitle, created_by
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
       RETURNING *
     `, [
       title || 'Untitled Course',
@@ -172,6 +173,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{}> }) {
       class_starts || null,
       selected_days || [],
       course_outline_url || null,
+      curriculum_subtitle || '',
       user.id
     ]);
 
@@ -237,7 +239,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{}> }) {
     // Add other fields that can be updated
     const allowedFields = ['title', 'slug', 'description', 'category', 'price', 'old_price', 
                           'thumbnail_url', 'access_type', 'featured', 'batch', 
-                          'enrollment_ends', 'class_starts', 'selected_days'];
+                          'enrollment_ends', 'class_starts', 'selected_days', 'curriculum_subtitle'];
 
     for (const field of allowedFields) {
       if (updateData[field] !== undefined) {

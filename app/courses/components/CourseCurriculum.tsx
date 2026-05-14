@@ -13,9 +13,10 @@ interface CurriculumModule {
 
 interface CourseCurriculumProps {
   curriculum: CurriculumModule[];
+  subtitle?: string;
 }
 
-export default function CourseCurriculum({ curriculum }: CourseCurriculumProps) {
+export default function CourseCurriculum({ curriculum, subtitle }: CourseCurriculumProps) {
   const [activeModule, setActiveModule] = useState(0);
   const [animateLines, setAnimateLines] = useState(false);
   const topicsRef = useRef<HTMLDivElement>(null);
@@ -39,10 +40,14 @@ export default function CourseCurriculum({ curriculum }: CourseCurriculumProps) 
         <h2 className="text-4xl font-bold text-white mb-4">
           কোর্স <span className="text-purple-400">কারিকুলাম</span>
         </h2>
-        <p className="text-gray-400 text-lg leading-relaxed">
-          Javascript, React, Node.js, MongoDB, Next.js এবং Express শিখে শুন্য থেকে দক্ষ ফুল-স্ট্যাক ওয়েব অ্যাপ্লিকেশন তৈরি করা শেখো।
-          <br />
-          ফ্রন্টএন্ডে এডভান্স হওয়ার সাথে শিখে নাও ব্যাকএন্ডও, যেন ইউজারকে দিতে পারো স্মুথ এক্সপেরিয়েন্স।
+        <p className="text-gray-400 text-lg leading-relaxed whitespace-pre-line">
+          {subtitle || (
+            <>
+              Javascript, React, Node.js, MongoDB, Next.js এবং Express শিখে শুন্য থেকে দক্ষ ফুল-স্ট্যাক ওয়েব অ্যাপ্লিকেশন তৈরি করা শেখো।
+              <br />
+              ফ্রন্টএন্ডে এডভান্স হওয়ার সাথে শিখে নাও ব্যাকএন্ডও, যেন ইউজারকে দিতে পারো স্মুথ এক্সপেরিয়েন্স।
+            </>
+          )}
         </p>
       </div>
 

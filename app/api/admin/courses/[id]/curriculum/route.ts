@@ -69,9 +69,15 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
     `;
 
     const result = await query(modulesQuery, [id]);
-    console.log('Curriculum data fetched:', result.rows);
+    
+    // Also fetch course subtitle
+    const courseResult = await query('SELECT curriculum_subtitle FROM courses WHERE id = $1', [id]);
+    const curriculum_subtitle = courseResult.rows[0]?.curriculum_subtitle || '';
 
-    return NextResponse.json({ modules: result.rows });
+    return NextResponse.json({ 
+      modules: result.rows,
+      curriculum_subtitle 
+    });
   } catch (error) {
     console.error('Get curriculum error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -95,7 +101,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     }
 
     const { id } = await context.params;
-    const { modules } = await req.json();
+    const { modules, curriculum_subtitle } = await req.json();
 
     // Check if course exists
     const courseCheck = await query('SELECT id FROM courses WHERE id = $1', [id]);
@@ -137,6 +143,11 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
 
     // Delete existing curriculum for this course
     await query('DELETE FROM curriculum_modules WHERE course_id = $1', [id]);
+
+    // Update course subtitle if provided
+    if (curriculum_subtitle !== undefined) {
+      await query('UPDATE courses SET curriculum_subtitle = $1 WHERE id = $2', [curriculum_subtitle, id]);
+    }
 
     // Insert new modules
     for (const module of modules) {

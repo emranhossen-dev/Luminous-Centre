@@ -14,6 +14,7 @@ export default function CurriculumPage({ params }: { params: Promise<{ slug: str
   const [mode, setMode] = useState<'individual' | 'bulk'>('individual');
   const [existingData, setExistingData] = useState<any[]>([]);
   const [jsonInput, setJsonInput] = useState('');
+  const [curriculumSubtitle, setCurriculumSubtitle] = useState('');
 
   useEffect(() => {
     fetchCourseData();
@@ -48,6 +49,7 @@ export default function CurriculumPage({ params }: { params: Promise<{ slug: str
             const data = await curriculumResponse.json();
             console.log('Curriculum data received:', data);
             setExistingData(data.modules || []);
+            setCurriculumSubtitle(data.curriculum_subtitle || '');
           } else {
             console.error('Curriculum fetch failed:', curriculumResponse.status);
           }
@@ -119,9 +121,19 @@ export default function CurriculumPage({ params }: { params: Promise<{ slug: str
 
         {/* Content based on mode */}
         {mode === 'individual' ? (
-          <IndividualForm courseId={courseId} existingData={existingData} />
+          <IndividualForm 
+            courseId={courseId} 
+            existingData={existingData} 
+            curriculumSubtitle={curriculumSubtitle}
+            setCurriculumSubtitle={setCurriculumSubtitle}
+          />
         ) : (
-          <BulkUpload courseId={courseId} existingData={existingData} />
+          <BulkUpload 
+            courseId={courseId} 
+            existingData={existingData} 
+            curriculumSubtitle={curriculumSubtitle}
+            setCurriculumSubtitle={setCurriculumSubtitle}
+          />
         )}
       </div>
     </div>
@@ -129,7 +141,17 @@ export default function CurriculumPage({ params }: { params: Promise<{ slug: str
 }
 
 // Individual Form Component
-function IndividualForm({ courseId, existingData }: { courseId: number | null; existingData: any[] }) {
+function IndividualForm({ 
+  courseId, 
+  existingData, 
+  curriculumSubtitle, 
+  setCurriculumSubtitle 
+}: { 
+  courseId: number | null; 
+  existingData: any[]; 
+  curriculumSubtitle: string;
+  setCurriculumSubtitle: (val: string) => void;
+}) {
   const [modules, setModules] = useState(() => {
     if (existingData && existingData.length > 0) {
       return existingData.map((m: any, index: number) => ({
@@ -231,7 +253,10 @@ function IndividualForm({ courseId, existingData }: { courseId: number | null; e
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ modules: modulesData })
+        body: JSON.stringify({ 
+          modules: modulesData,
+          curriculum_subtitle: curriculumSubtitle
+        })
       });
 
       if (response.ok) {
@@ -249,7 +274,24 @@ function IndividualForm({ courseId, existingData }: { courseId: number | null; e
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="space-y-8">
+      {/* Curriculum Subtitle Input */}
+      <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Curriculum Subtitle / Short Description
+        </label>
+        <textarea
+          value={curriculumSubtitle}
+          onChange={(e) => setCurriculumSubtitle(e.target.value)}
+          className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white placeholder-gray-500 min-h-[100px]"
+          placeholder="Short description that appears under the 'Course Curriculum' title"
+        />
+        <p className="mt-2 text-xs text-gray-500">
+          This description appears right below the "Course Curriculum" heading on the public course page.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
       {modules.map((module, moduleIndex) => (
         <div key={module.id} className="border border-slate-700 rounded-xl p-6 space-y-4 bg-slate-800/50">
           <div className="flex items-center gap-4">
@@ -361,11 +403,22 @@ function IndividualForm({ courseId, existingData }: { courseId: number | null; e
         {loading ? 'Saving...' : 'Save Curriculum'}
       </button>
     </form>
-  );
+  </div>
+);
 }
 
 // Bulk Upload Component
-function BulkUpload({ courseId, existingData }: { courseId: number | null; existingData: any[] }) {
+function BulkUpload({ 
+  courseId, 
+  existingData,
+  curriculumSubtitle,
+  setCurriculumSubtitle
+}: { 
+  courseId: number | null; 
+  existingData: any[];
+  curriculumSubtitle: string;
+  setCurriculumSubtitle: (val: string) => void;
+}) {
   const [jsonInput, setJsonInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -443,7 +496,10 @@ function BulkUpload({ courseId, existingData }: { courseId: number | null; exist
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ modules: modulesData })
+        body: JSON.stringify({ 
+          modules: modulesData,
+          curriculum_subtitle: curriculumSubtitle
+        })
       });
 
       if (response.ok) {
@@ -494,7 +550,24 @@ function BulkUpload({ courseId, existingData }: { courseId: number | null; exist
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Curriculum Subtitle Input */}
+      <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Curriculum Subtitle / Short Description
+        </label>
+        <textarea
+          value={curriculumSubtitle}
+          onChange={(e) => setCurriculumSubtitle(e.target.value)}
+          className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white placeholder-gray-500 min-h-[100px]"
+          placeholder="Short description that appears under the 'Course Curriculum' title"
+        />
+        <p className="mt-2 text-xs text-gray-500">
+          This description appears right below the "Course Curriculum" heading on the public course page.
+        </p>
+      </div>
+
+      <div className="space-y-6">
       <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
         <h3 className="text-xl font-bold text-white mb-4">JSON Format</h3>
         <p className="text-gray-400 mb-4">
@@ -537,5 +610,6 @@ function BulkUpload({ courseId, existingData }: { courseId: number | null; exist
         {loading ? 'Saving...' : 'Save Curriculum'}
       </button>
     </div>
-  );
+  </div>
+);
 }

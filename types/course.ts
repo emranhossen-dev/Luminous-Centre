@@ -15,6 +15,7 @@ export interface CourseFormData {
   class_starts: string;
   selected_days: string[]; // e.g., ["Sat", "Mon", "Wed"]
   course_outline_url: string;
+  curriculum_subtitle?: string;
 }
 
 // Clean version sent to Database
@@ -43,6 +44,7 @@ export interface Course {
   enrollment_ends: string;
   class_starts: string;
   selected_days: string[];
+  curriculum_subtitle?: string;
   created_at: string;
   updated_at: string;
   enrollmentCount?: number;
@@ -66,6 +68,7 @@ export interface CourseData {
   thumbnail_url: string;
   video_url: string;
   course_outline_url?: string;
+  curriculum_subtitle?: string;
   category: 'online' | 'offline' | 'recorded' | 'project';
   batch?: string;
   learning_outcomes: Array<{
@@ -110,5 +113,6 @@ export interface CourseDetailsFormData {
   class_start_date: string;
   thumbnail_url: string;
   video_url: string;
+  curriculum_subtitle?: string;
   learning_outcomes: LearningOutcome[];
 }

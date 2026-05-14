@@ -114,6 +114,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slug: s
       thumbnail_url: course.thumbnail_url || '',
       video_url: course.preview_video_url || '',
       course_outline_url: course.course_outline_url || '',
+      curriculum_subtitle: course.curriculum_subtitle || '',
       learning_outcomes: [
         { title: 'প্রফেশনাল স্কিল', subtitle: 'ইন্ডাস্ট্রি স্ট্যান্ডার্ড', icon: 'TrendingUp' },
         { title: 'রিয়েল প্রোজেক্ট', subtitle: '12+ প্রোজেক্ট তৈরি', icon: 'CheckSquare' },
@@ -183,7 +184,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ slug: s
       // Course details specific fields
       'badge', 'current_price', 'regular_price', 'currency',
       'classes_count', 'projects_count', 'enrollment_deadline',
-      'class_start_date', 'video_url', 'learning_outcomes'
+      'class_start_date', 'video_url', 'learning_outcomes', 'curriculum_subtitle'
     ];
 
     for (const field of allowedFields) {
