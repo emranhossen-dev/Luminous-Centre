@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   MoveRight, Zap, Video, MonitorPlay, Users, BookOpenCheck, 
@@ -13,6 +14,7 @@ import { useLoading } from '@/contexts/LoadingContext';
 const Banner = () => {
   const { user, openModal } = useAuth();
   const { startLoading } = useLoading();
+  const router = useRouter();
 
   const handleEnrollmentClick = () => {
     console.log('Banner enrollment button clicked!');
@@ -20,16 +22,12 @@ const Banner = () => {
     
     // Allow both logged-in and unlogged-in users to access courses
     console.log('Redirecting to courses...');
-    setTimeout(() => {
-      window.location.href = '/courses';
-    }, 500);
+    router.push('/courses');
   };
 
   const handleApplyClick = () => {
     startLoading();
-    setTimeout(() => {
-      window.location.href = '/apply';
-    }, 500);
+    router.push('/apply');
   };
 
   const completionTypes = [

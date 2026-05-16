@@ -53,7 +53,7 @@ export default function CourseBanner({ course }: { course: CourseData }) {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-3 gap-4 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
             <StatItem icon={<Layers size={22} />} label="Classes" value={course.classes_count} />
             <StatItem icon={<CheckCircle size={22} />} label="Projects" value={course.projects_count} />
             <StatItem icon={<Clock size={22} />} label="Days Left" value={daysLeft} />
@@ -79,13 +79,13 @@ export default function CourseBanner({ course }: { course: CourseData }) {
             </div>
 
             {/* Learning Outcomes - Restored Padding for Better Height */}
-            <div className="p-10">
+            <div className="p-6 sm:p-10">
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
                 <h3 className="text-xl font-black tracking-tight">কোর্স থেকে যা শিখবেন</h3>
               </div>
 
-              <div className="grid grid-cols-2 gap-y-10 gap-x-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-8 gap-x-6">
                 {course.learning_outcomes.map((item, i) => {
                   const Icon = iconMap[item.icon] || CheckSquare;
                   return (

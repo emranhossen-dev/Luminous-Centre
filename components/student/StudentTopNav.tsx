@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Bell, LogOut, Settings } from 'lucide-react';
 import Link from 'next/link';
 
@@ -15,6 +16,7 @@ export default function StudentTopNav({
   studentProfile = "",
   notifications = 0 
 }: StudentTopNavProps) {
+  const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
   const [user, setUser] = useState<any>(null);
 
@@ -30,7 +32,7 @@ export default function StudentTopNav({
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/auth/login';
+    router.push('/auth/login');
   };
 
   const displayName = user ? `${user.firstName} ${user.lastName}` : studentName;

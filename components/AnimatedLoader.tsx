@@ -13,7 +13,7 @@ export default function AnimatedLoader() {
       
       {/* Loading text */}
       <div className="absolute bottom-10 left-0 right-0 text-center">
-        <div className="text-white text-lg font-medium">Loading...</div>
+        <div className="text-white text-lg font-medium">Looaading...</div>
         <div className="text-gray-400 text-sm mt-2">Please wait while we process your request</div>
       </div>
       

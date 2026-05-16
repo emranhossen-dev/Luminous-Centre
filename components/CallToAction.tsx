@@ -1,19 +1,21 @@
 "use client";
 
 import React from "react";
+import { useRouter } from 'next/navigation';
 import { motion } from "framer-motion";
 import { Rocket, Sparkles, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function CallToAction() {
   const { user, openModal } = useAuth();
+  const router = useRouter();
 
   const handleEnrollmentClick = () => {
     console.log('CallToAction enrollment button clicked!');
     
     // Allow both logged-in and unlogged-in users to access courses
     console.log('Redirecting to courses...');
-    window.location.href = '/courses';
+    router.push('/courses');
   };
 
   return (

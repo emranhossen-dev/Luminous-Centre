@@ -243,7 +243,7 @@ export default function CourseEnrollPage() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="relative bg-white/10 backdrop-blur-xl rounded-3xl p-12 max-w-md w-full text-center border border-white/20"
+          className="relative bg-white/10 backdrop-blur-xl rounded-3xl p-6 sm:p-12 max-w-md w-full text-center border border-white/20"
         >
           <motion.div
             initial={{ scale: 0 }}
@@ -329,7 +329,7 @@ export default function CourseEnrollPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="space-y-6"
           >
-            <div className="bg-white/5 backdrop-blur-2xl rounded-3xl p-8 border border-white/10 shadow-2xl">
+            <div className="bg-white/5 backdrop-blur-2xl rounded-3xl p-4 sm:p-8 border border-white/10 shadow-2xl">
               <div className="mb-6">
                 <h3 className="text-2xl font-bold text-white mb-4">Payment Instructions</h3>
                 <div className="space-y-4">
@@ -364,7 +364,7 @@ export default function CourseEnrollPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            <div className="bg-white/5 backdrop-blur-2xl rounded-3xl p-8 border border-white/10 shadow-2xl">
+            <div className="bg-white/5 backdrop-blur-2xl rounded-3xl p-4 sm:p-8 border border-white/10 shadow-2xl">
               <div className="mb-6">
                 <h3 className="text-2xl font-bold text-white mb-2">Enrollment Form</h3>
                 <p className="text-blue-200">
@@ -453,7 +453,7 @@ export default function CourseEnrollPage() {
                     />
                     <label
                       htmlFor="payment-screenshot"
-                      className="flex items-center justify-center w-full px-4 py-8 bg-white/5 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:bg-white/10 transition-all"
+                      className="flex items-center justify-center w-full px-4 py-6 sm:py-8 bg-white/5 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:bg-white/10 transition-all"
                     >
                       {previewUrl ? (
                         <div className="text-center">
@@ -543,7 +543,7 @@ export default function CourseEnrollPage() {
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="bg-white/5 backdrop-blur-2xl rounded-3xl p-8 border border-white/10 shadow-2xl max-w-md w-full"
+              className="bg-white/5 backdrop-blur-2xl rounded-3xl p-4 sm:p-8 border border-white/10 shadow-2xl max-w-md w-full"
             >
               <div className="mb-6">
                 <h3 className="text-2xl font-bold text-white mb-2">Free Seminar Application</h3>

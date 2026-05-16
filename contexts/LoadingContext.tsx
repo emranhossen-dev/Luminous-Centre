@@ -7,7 +7,6 @@ interface LoadingContextType {
   setLoading: (loading: boolean) => void;
   startLoading: () => void;
   stopLoading: () => void;
-  forceRefresh: () => void;
 }
 
 const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
@@ -44,17 +43,8 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({ children }) =>
     setIsLoading(false);
   };
 
-  // Force page refresh on navigation to prevent caching issues
-  const forceRefresh = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      window.location.reload();
-    }, 100);
-  };
-
   return (
-    <LoadingContext.Provider value={{ isLoading, setLoading, startLoading, stopLoading, forceRefresh }}>
+    <LoadingContext.Provider value={{ isLoading, setLoading, startLoading, stopLoading }}>
       {children}
     </LoadingContext.Provider>
   );

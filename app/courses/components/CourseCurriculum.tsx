@@ -52,7 +52,7 @@ export default function CourseCurriculum({ curriculum, subtitle }: CourseCurricu
       </div>
 
       {/* Horizontal Milestone Navigation */}
-      <div className="flex justify-center gap-3 mb-8 flex-wrap">
+      <div className="flex justify-center gap-2 sm:gap-3 mb-6 sm:mb-8 flex-wrap">
         {curriculum.map((module, index) => (
           <button
             key={module.id}
@@ -61,7 +61,7 @@ export default function CourseCurriculum({ curriculum, subtitle }: CourseCurricu
               setAnimateLines(false);
               setTimeout(() => setAnimateLines(true), 100);
             }}
-            className={`w-12 h-12 rounded-xl font-bold text-sm transition-all flex items-center justify-center ${
+            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center ${
               activeModule === index
                 ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30 scale-110'
                 : 'bg-slate-800 text-gray-400 hover:bg-slate-700 hover:text-white'
@@ -80,7 +80,7 @@ export default function CourseCurriculum({ curriculum, subtitle }: CourseCurricu
       {/* Curriculum Layout */}
       <div className="relative grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-8 items-start">
         {/* Left Side - Topics */}
-        <div ref={topicsRef} className="space-y-4">
+        <div ref={topicsRef} className="space-y-4 order-1 lg:order-none">
           <div className="bg-gradient-to-br from-purple-900/40 to-purple-800/20 border border-purple-500/30 rounded-3xl p-6 backdrop-blur-sm">
             <div className="text-center mb-6">
               <h4 className="text-white font-bold text-lg">
@@ -107,10 +107,10 @@ export default function CourseCurriculum({ curriculum, subtitle }: CourseCurricu
         </div>
 
         {/* Middle - Milestone Folder Icon */}
-        <div ref={milestoneRef} className="flex flex-col items-center justify-center sticky top-4 relative">
+        <div ref={milestoneRef} className="flex flex-col items-center justify-center sticky top-4 relative order-2 lg:order-none">
           <div className="relative">
             {/* 3D Folder Icon */}
-            <svg width="250" height="250" viewBox="0 0 301 301" fill="none" className="drop-shadow-2xl">
+            <svg width="250" height="250" viewBox="0 0 301 301" fill="none" className="drop-shadow-2xl w-[150px] h-[150px] sm:w-[200px] sm:h-[200px] lg:w-[250px] lg:h-[250px]">
               {/* Folder layers for 3D effect */}
               <path d="M134.928 43.5484C132.474 41.3493 129.295 40.1333 126 40.1333H53.5109C47.9696 40.1333 43.4775 44.6254 43.4775 50.1667V205.683H257.522V67.5362C257.522 61.9949 253.03 57.5028 247.489 57.5028H155.617C152.322 57.5028 149.143 56.2868 146.689 54.0878L134.928 43.5484Z" fill="url(#folderGradient1)" />
               <path opacity="0.75" d="M42.3902 79.1551C42.0714 71.5535 48.1479 65.2168 55.7562 65.2168H245.244C252.852 65.2168 258.929 71.5535 258.61 79.1551L252.72 219.622C252.419 226.786 246.524 232.439 239.353 232.439H61.6468C54.4764 232.439 48.5811 226.786 48.2807 219.622L42.3902 79.1551Z" fill="url(#folderGradient2)" />
@@ -168,7 +168,7 @@ export default function CourseCurriculum({ curriculum, subtitle }: CourseCurricu
             </svg>
 
             {/* Animated Connecting Lines SVG */}
-            <svg className="absolute inset-0 pointer-events-none" style={{ width: '800px', height: '600px', left: '-275px', top: '-175px' }}>
+            <svg className="absolute inset-0 pointer-events-none hidden lg:block" style={{ width: '800px', height: '600px', left: '-275px', top: '-175px' }}>
               <defs>
                 <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
                   <feGaussianBlur stdDeviation="2" result="coloredBlur" />
@@ -214,7 +214,7 @@ export default function CourseCurriculum({ curriculum, subtitle }: CourseCurricu
           </div>
 
           {/* Navigation Buttons */}
-          <div className="flex gap-4 mt-8 relative z-10">
+          <div className="flex gap-3 sm:gap-4 mt-6 sm:mt-8 relative z-10">
             <button
               onClick={() => {
                 setActiveModule(Math.max(0, activeModule - 1));
@@ -222,9 +222,9 @@ export default function CourseCurriculum({ curriculum, subtitle }: CourseCurricu
                 setTimeout(() => setAnimateLines(true), 100);
               }}
               disabled={activeModule === 0}
-              className="p-3 bg-slate-800 rounded-lg text-white hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-slate-700"
+              className="p-2 sm:p-3 bg-slate-800 rounded-lg text-white hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-slate-700"
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
             <button
               onClick={() => {
@@ -233,15 +233,15 @@ export default function CourseCurriculum({ curriculum, subtitle }: CourseCurricu
                 setTimeout(() => setAnimateLines(true), 100);
               }}
               disabled={activeModule === curriculum.length - 1}
-              className="p-3 bg-slate-800 rounded-lg text-white hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-slate-700"
+              className="p-2 sm:p-3 bg-slate-800 rounded-lg text-white hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-slate-700"
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
         </div>
 
         {/* Right Side - Achievements */}
-        <div ref={achievementsRef} className="space-y-4">
+        <div ref={achievementsRef} className="space-y-4 order-3 lg:order-none">
           <div className="bg-gradient-to-br from-purple-900/40 to-purple-800/20 border border-purple-500/30 rounded-3xl p-6 backdrop-blur-sm">
             <div className="text-center mb-6">
               <h4 className="text-white font-bold text-lg">

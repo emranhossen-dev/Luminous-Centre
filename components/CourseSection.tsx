@@ -2,7 +2,8 @@
 
 import React from "react";
 import Image from "next/image";
-import Link from "next/link"; // [REQUIRED] Import Link for navigation
+import Link from 'next/link'; // [REQUIRED] Import Link for navigation
+import { useRouter } from 'next/navigation';
 import { Star, Users, Radio, MoveRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import UserCourseCard from "./UserCourseCard";
@@ -36,6 +37,7 @@ interface CourseSectionProps {
 
 const CourseSection = ({ initialCourses = [] }: CourseSectionProps) => {
   const { user, openModal } = useAuth();
+  const router = useRouter();
   const [courses, setCourses] = React.useState<Course[]>(initialCourses);
   const [loading, setLoading] = React.useState(initialCourses.length === 0);
 
@@ -68,11 +70,11 @@ const CourseSection = ({ initialCourses = [] }: CourseSectionProps) => {
 
   const handleEnrollmentClick = () => {
     // Allow both logged-in and unlogged-in users to access courses
-    window.location.href = '/courses';
+    router.push('/courses');
   };
 
   const handleCourseViewClick = (courseSlug: string) => {
-    window.location.href = `/courses/${courseSlug}`;
+    router.push(`/courses/${courseSlug}`);
   };
 
   return (

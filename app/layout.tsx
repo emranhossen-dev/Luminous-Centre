@@ -36,11 +36,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="bn" className={`${inter.variable} ${hindSiliguri.variable}`}>
-      <head>
-        <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-        <meta httpEquiv="Pragma" content="no-cache" />
-        <meta httpEquiv="Expires" content="0" />
-      </head>
       <body className="font-sans bg-[#0b0c17] text-white antialiased selection:bg-[#2e31e1] selection:text-white transition-colors duration-300">
         <LoadingProvider>
           <AuthProvider>

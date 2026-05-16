@@ -64,9 +64,15 @@ export default function AuthModal() {
     try {
       const { token, user } = await GoogleOAuth.signInWithPopup();
       
-      // Store token and user in context
-      // Note: We'll need to update the AuthContext to handle this
-      window.location.reload(); // Temporary fix to refresh context
+      // Store token and user in localStorage
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      // Close modal and let AuthContext handle the update
+      closeModal();
+      
+      // Reload to update AuthContext
+      window.location.reload();
     } catch (error: any) {
       setSubmitError(error.message || 'Google Sign-In failed');
     } finally {

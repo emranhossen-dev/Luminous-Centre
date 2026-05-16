@@ -86,6 +86,8 @@ export class ClientAuth {
     return this.hasRole('employee');
   }
 
+  // Note: These methods use window.location.href for authentication redirects
+  // which is acceptable for auth flows, but for navigation use router.push()
   // Redirect to login if not authenticated
   static requireAuth(): void {
     if (!this.isAuthenticated()) {
@@ -100,7 +102,7 @@ export class ClientAuth {
     }
   }
 
-  // Handle enrollment click
+  // Handle enrollment click - DEPRECATED: Use router.push() instead
   static handleEnrollmentClick(e: React.MouseEvent): void {
     e.preventDefault();
     
@@ -108,7 +110,7 @@ export class ClientAuth {
     window.location.href = '/courses';
   }
 
-  // Handle course view click
+  // Handle course view click - DEPRECATED: Use router.push() instead
   static handleCourseViewClick(e: React.MouseEvent, courseSlug: string): void {
     e.preventDefault();
     

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Clock, Users, Star } from 'lucide-react';
 import BestSpinner from '@/components/BestSpinner';
 
@@ -34,6 +35,7 @@ interface UserCourseCardProps {
 
 export default function UserCourseCard({ course }: UserCourseCardProps) {
   const [navigating, setNavigating] = useState(false);
+  const router = useRouter();
   
   // Calculate discount percentage
   const discountPercentage = course.old_price !== null && course.old_price !== undefined && course.old_price > course.price 
@@ -75,12 +77,12 @@ export default function UserCourseCard({ course }: UserCourseCardProps) {
   const handleViewDetails = (e: React.MouseEvent) => {
     e.stopPropagation();
     setNavigating(true);
-    window.location.href = `/courses/${course.slug}`;
+    router.push(`/courses/${course.slug}`);
   };
 
   const handleCardClick = () => {
     setNavigating(true);
-    window.location.href = `/courses/${course.slug}`;
+    router.push(`/courses/${course.slug}`);
   };
 
   return (
