@@ -41,8 +41,19 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const router = useRouter();
 
+  // Load theme from localStorage on client-side mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") as "dark" | "light";
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+  }, []);
+
+  // Update classes and store in localStorage when theme changes
   useEffect(() => {
     document.documentElement.classList.toggle("light", theme === "light");
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
   }, [theme]);
 
   const handleEnrollmentClick = () => {

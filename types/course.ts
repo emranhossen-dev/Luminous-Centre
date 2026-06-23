@@ -16,6 +16,7 @@ export interface CourseFormData {
   selected_days: string[]; // e.g., ["Sat", "Mon", "Wed"]
   course_outline_url: string;
   curriculum_subtitle?: string;
+  mentor_id?: string | null;
 }
 
 // Clean version sent to Database
@@ -25,6 +26,7 @@ export interface CourseSubmission extends Omit<CourseFormData, 'batch' | 'price'
   old_price: number;
   selected_days: string[]; // Formatted as ["Sat", "Mon"]
   course_outline_url: string; // PDF outline URL
+  mentor_id?: string | null;
 }
 
 // Course display interface
@@ -45,6 +47,7 @@ export interface Course {
   class_starts: string;
   selected_days: string[];
   curriculum_subtitle?: string;
+  mentor_id?: string | null;
   created_at: string;
   updated_at: string;
   enrollmentCount?: number;

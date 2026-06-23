@@ -30,6 +30,7 @@ export default function CourseLaunchForm({ onClose, onSuccess, initialData, isEd
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedPdf, setSelectedPdf] = useState<File | null>(null);
   const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [mentors, setMentors] = useState<any[]>([]);
   
   const [formData, setFormData] = useState<CourseFormData>({
     title: '',
@@ -47,7 +48,8 @@ export default function CourseLaunchForm({ onClose, onSuccess, initialData, isEd
     class_starts: '',
     selected_days: [],
     course_outline_url: '',
-    curriculum_subtitle: ''
+    curriculum_subtitle: '',
+    mentor_id: ''
   });
 
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
@@ -71,11 +73,31 @@ export default function CourseLaunchForm({ onClose, onSuccess, initialData, isEd
         class_starts: initialData.class_starts?.split('T')[0] || '',
         selected_days: initialData.selected_days || [],
         course_outline_url: initialData.course_outline_url || '',
-        curriculum_subtitle: initialData.curriculum_subtitle || ''
+        curriculum_subtitle: initialData.curriculum_subtitle || '',
+        mentor_id: initialData.mentor_id || ''
       });
       setSelectedDays(initialData.selected_days || []);
     }
   }, [isEditMode, initialData]);
+
+  React.useEffect(() => {
+    fetchMentors();
+  }, []);
+
+  const fetchMentors = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch('/api/admin/mentors', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setMentors(data.mentors || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch mentors:', error);
+    }
+  };
 
   const [slugError, setSlugError] = useState('');
 
@@ -855,6 +877,23 @@ export default function CourseLaunchForm({ onClose, onSuccess, initialData, isEd
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 outline-none focus:border-emerald-500"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider font-bold text-slate-500 mb-2">Assigned Mentor</label>
+              <select 
+                name="mentor_id"
+                value={formData.mentor_id || ''}
+                onChange={handleChange}
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 outline-none focus:border-emerald-500 text-slate-300"
+              >
+                <option value="" className="dark:bg-slate-900">Unassigned (None)</option>
+                {mentors.map(m => (
+                  <option key={m.id} value={m.id} className="dark:bg-slate-900">
+                    {m.name} ({m.designation || 'Mentor'})
+                  </option>
+                ))}
+              </select>
             </div>
             
             <div>

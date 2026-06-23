@@ -57,130 +57,145 @@ export default function AddMentorPage() {
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/admin/mentors" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+        <Link 
+          href="/admin/mentors" 
+          className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-full transition-colors"
+        >
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <h1 className="text-3xl font-bold tracking-tight">Add New Mentor</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Add New Mentor</h1>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 bg-white p-6 rounded-xl border shadow-sm">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 bg-white dark:bg-slate-900 p-6 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm">
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Full Name *</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Full Name *</label>
             <input 
               {...register('name')} 
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex h-10 w-full rounded-md border border-gray-300 dark:border-slate-800 bg-transparent dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
               placeholder="John Doe"
             />
             {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Email Address *</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Email Address *</label>
             <input 
               {...register('email')} 
               type="email"
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex h-10 w-full rounded-md border border-gray-300 dark:border-slate-800 bg-transparent dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
               placeholder="john@example.com"
             />
             {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Phone Number</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Phone Number</label>
             <input 
               {...register('phone')} 
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex h-10 w-full rounded-md border border-gray-300 dark:border-slate-800 bg-transparent dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
               placeholder="+1234567890"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Designation *</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Status *</label>
+            <select 
+              {...register('status')}
+              className="flex h-10 w-full rounded-md border border-gray-300 dark:border-slate-800 bg-transparent dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-100"
+            >
+              <option value="active" className="dark:bg-slate-900">Active</option>
+              <option value="suspended" className="dark:bg-slate-900">Suspended</option>
+              <option value="inactive" className="dark:bg-slate-900">Inactive</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Designation *</label>
             <input 
               {...register('designation')} 
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex h-10 w-full rounded-md border border-gray-300 dark:border-slate-800 bg-transparent dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
               placeholder="Senior Software Engineer"
             />
             {errors.designation && <p className="text-sm text-red-500">{errors.designation.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Experience</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Experience</label>
             <input 
               {...register('experience')} 
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex h-10 w-full rounded-md border border-gray-300 dark:border-slate-800 bg-transparent dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
               placeholder="e.g., 5 Years"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Skills (Comma separated)</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Skills (Comma separated)</label>
             <input 
               {...register('skills')} 
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex h-10 w-full rounded-md border border-gray-300 dark:border-slate-800 bg-transparent dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
               placeholder="React, Node.js, Python"
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Biography</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Biography</label>
           <textarea 
             {...register('bio')} 
             rows={4}
-            className="flex w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex w-full rounded-md border border-gray-300 dark:border-slate-800 bg-transparent dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
             placeholder="Write a short bio about the mentor..."
           />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">LinkedIn URL</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-slate-300">LinkedIn URL</label>
             <input 
               {...register('linkedin')} 
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex h-10 w-full rounded-md border border-gray-300 dark:border-slate-800 bg-transparent dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
               placeholder="https://linkedin.com/in/..."
             />
             {errors.linkedin && <p className="text-sm text-red-500">{errors.linkedin.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">GitHub URL</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-slate-300">GitHub URL</label>
             <input 
               {...register('github')} 
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex h-10 w-full rounded-md border border-gray-300 dark:border-slate-800 bg-transparent dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
               placeholder="https://github.com/..."
             />
             {errors.github && <p className="text-sm text-red-500">{errors.github.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Website URL</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Website URL</label>
             <input 
               {...register('website')} 
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex h-10 w-full rounded-md border border-gray-300 dark:border-slate-800 bg-transparent dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
               placeholder="https://..."
             />
             {errors.website && <p className="text-sm text-red-500">{errors.website.message}</p>}
           </div>
         </div>
 
-        <div className="flex justify-end gap-4 border-t pt-6">
+        <div className="flex justify-end gap-4 border-t border-gray-100 dark:border-slate-800 pt-6">
           <Link 
             href="/admin/mentors"
-            className="h-10 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium transition-colors"
+            className="h-10 px-4 py-2 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-200 rounded-md text-sm font-medium transition-colors"
           >
             Cancel
           </Link>
           <button 
             type="submit" 
             disabled={isSubmitting}
-            className="h-10 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors inline-flex items-center"
+            className="h-10 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors inline-flex items-center shadow-sm disabled:opacity-50"
           >
             {isSubmitting ? (
-              <span className="animate-spin mr-2">⏳</span>
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
             ) : (
               <Save className="w-4 h-4 mr-2" />
             )}

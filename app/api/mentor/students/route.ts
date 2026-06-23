@@ -17,24 +17,32 @@ export async function GET(req: NextRequest, context: { params: Promise<{}> }) {
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 401 });
     }
+    const mentorRes = await query('SELECT id FROM mentors WHERE email = $1', [user.email]);
+    if (mentorRes.rows.length === 0) {
+      return NextResponse.json({ error: 'Mentor profile not found' }, { status: 404 });
+    }
+    const mentorId = mentorRes.rows[0].id;
+
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search');
     const courseId = searchParams.get('courseId');
 
-    let whereClause = 'WHERE 1=1';
-    const queryParams: any[] = [];
-    let paramIndex = 1;
+    let whereClause = 'WHERE c.mentor_id = $1';
+    const queryParams: any[] = [mentorId];
+    let paramIndex = 2;
 
     if (search) {
-      whereClause += ` AND (s.first_name ILIKE $${paramIndex++} OR s.last_name ILIKE $${paramIndex++} OR s.email ILIKE $${paramIndex++})`;
-      queryParams.push(search, search, search);
+      whereClause += ` AND (s.first_name ILIKE $${paramIndex} OR s.last_name ILIKE $${paramIndex} OR s.email ILIKE $${paramIndex})`;
+      queryParams.push(`%${search}%`);
+      paramIndex++;
     }
 
     if (courseId) {
-      whereClause += ` AND e.course_id = $${paramIndex++}`;
+      whereClause += ` AND e.course_id = $${paramIndex}`;
       queryParams.push(courseId);
+      paramIndex++;
     }
 
     const offset = (page - 1) * limit;
@@ -54,8 +62,9 @@ export async function GET(req: NextRequest, context: { params: Promise<{}> }) {
       JOIN courses c ON e.course_id = c.id
       ${whereClause}
       ORDER BY e.enrolled_at DESC
-      LIMIT $${paramIndex++} OFFSET $${paramIndex++}
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
+    queryParams.push(limit, offset);
 
     const studentsResult = await query(studentsQuery, queryParams);
 

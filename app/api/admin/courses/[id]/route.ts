@@ -84,7 +84,13 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
       batch,
       course_details,
       status,
-      featured
+      featured,
+      mentor_id,
+      enrollment_ends,
+      class_starts,
+      selected_days,
+      course_outline_url,
+      curriculum_subtitle
     } = courseData;
 
     // For status-only updates, only require status field
@@ -131,14 +137,18 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
           price = $6, old_price = $7, language = $8, level = $9, duration_weeks = $10,
           total_hours = $11, thumbnail_url = $12, preview_video_url = $13, 
           promo_video_url = $14, access_type = $15, class_time = $16, batch = $17,
-          course_details = $18, status = $19, featured = $20, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $21
+          course_details = $18, status = $19, featured = $20, mentor_id = $21,
+          enrollment_ends = $22, class_starts = $23, selected_days = $24,
+          course_outline_url = $25, curriculum_subtitle = $26, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $27
         RETURNING *
       `, [
         title, slug, description, short_description, category,
         price, old_price, language, level, duration_weeks, total_hours,
         thumbnail_url, preview_video_url, promo_video_url, access_type,
-        class_time, batch, course_details, status, featured, id
+        class_time, batch, course_details, status, featured, mentor_id || null,
+        enrollment_ends || null, class_starts || null, selected_days || [],
+        course_outline_url || null, curriculum_subtitle || '', id
       ]);
     }
 

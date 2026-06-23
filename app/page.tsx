@@ -9,6 +9,8 @@ import HomeWrapper from "@/components/HomeWrapper";
 import { query } from "@/lib/database";
 import type { Metadata } from "next";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Home | LSDTC',
 };

@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode in Tailwind CSS v4 */
+@variant dark (.dark &);
+
 /* 
   =========================================
   1. CONFIGURATION & FONTS
@@ -115,3 +118,154 @@ button {
 button:hover {
   cursor: pointer !important;
 }
+
+/* 
+  =========================================
+  4. LIGHT THEME OVERRIDES FOR MAIN SITE
+  =========================================
+*/
+/* 
+  =========================================
+  4. LIGHT THEME OVERRIDES FOR MAIN SITE
+  =========================================
+*/
+html.light body {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html.light h1,
+html.light h2,
+html.light h3,
+html.light h4,
+html.light h5,
+html.light h6 {
+  color: #0f172a !important;
+}
+
+/* Base text overrides */
+html.light p,
+html.light span:not(.button-text-class):not(button *):not([class*="bg-"]):not(.bg-gradient-to-r),
+html.light label {
+  color: #334155;
+}
+
+/* Light mode backgrounds for sections and containers */
+html.light section,
+html.light .bg-\[\#05060f\],
+html.light .bg-\[\#080616\],
+html.light .bg-\[\#0b0c17\],
+html.light .bg-\[\#020617\],
+html.light .bg-\[\#121821\],
+html.light .bg-\[\#1a1c3d\],
+html.light .bg-\[\#0c0e1f\] {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  color: #0f172a !important;
+}
+
+/* Only remove gradient from main section background overlays, NOT image overlays */
+html.light section > .bg-gradient-to-b,
+html.light section > .bg-gradient-to-t {
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
+/* Hide image overlays completely in Light Mode so they don't cover the images */
+html.light .bg-gradient-to-t.from-\[\#0c0e1f\],
+html.light .bg-gradient-to-t.from-\[\#080616\]\/40 {
+  display: none !important;
+}
+
+/* Specific elements background adjustments */
+html.light .bg-slate-900,
+html.light .bg-slate-800,
+html.light .bg-slate-950,
+html.light .bg-slate-900\/50,
+html.light .bg-slate-950\/40 {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Card and Glass Container Overrides */
+html.light .glass,
+html.light .glass-card,
+html.light .border-\[\#1e293b\],
+html.light .border-slate-800,
+html.light .border-slate-700,
+html.light .border-white\/5,
+html.light .border-white\/10 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+}
+
+/* Handle glass buttons or clickable links so they have readable text and contrast */
+html.light button.glass,
+html.light a.glass,
+html.light .glass.cursor-pointer,
+html.light .glass[role="button"] {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+html.light button.glass *,
+html.light a.glass *,
+html.light .glass.cursor-pointer * {
+  color: #0f172a !important;
+}
+
+/* Common opacity backgrounds override */
+html.light .bg-white\/5,
+html.light .bg-white\/10,
+html.light .bg-white\/20,
+html.light .bg-white\/\[0\.02\],
+html.light .bg-white\/\[0\.03\],
+html.light .bg-white\/\[0\.04\],
+html.light .bg-white\/\[0\.05\] {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* Safe Text Color overrides to prevent button text issues */
+html.light .text-white:not(button):not(button *):not([class*="bg-"]):not(.bg-gradient-to-r) {
+  color: #0f172a !important;
+}
+
+html.light .text-gray-300:not(button):not(button *):not([class*="bg-"]),
+html.light .text-gray-400:not(button):not(button *):not([class*="bg-"]),
+html.light .text-slate-300:not(button):not(button *):not([class*="bg-"]) {
+  color: #334155 !important;
+}
+
+html.light .text-gray-500:not(button):not(button *),
+html.light .text-slate-400:not(button):not(button *),
+html.light .text-slate-500:not(button):not(button *) {
+  color: #475569 !important;
+}
+
+html.light .text-\[\#94a3b8\] {
+  color: #475569 !important;
+}
+
+/* Input Fields and Selects in Light Mode */
+html.light input,
+html.light select,
+html.light textarea {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* Hide background glows and animated blobs in Light Mode */
+html.light .animate-blob,
+html.light .bg-blue-600\/20,
+html.light .bg-indigo-600\/15,
+html.light .bg-purple-600\/10,
+html.light .bg-blue-600\/10,
+html.light .bg-blue-600\/12 {
+  display: none !important;
+}
+

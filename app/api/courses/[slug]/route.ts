@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, tableExists } from '@/lib/database';
+
+export const dynamic = 'force-dynamic';
 import { verifyToken, getUserById } from '@/lib/auth';
 import { logActivity } from '@/lib/auth';
 
