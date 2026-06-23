@@ -54,9 +54,15 @@ export class ClientAuth {
     const payload = this.parseToken(token);
     if (!payload) return false;
     
-    // Check if token is expired (optional - basic check)
+    // Check if token is expired
     const now = Math.floor(Date.now() / 1000);
-    // Note: JWT tokens have exp field, but we're not verifying it here for simplicity
+    if ((payload as any).exp && (payload as any).exp < now) {
+      this.removeToken();
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('user');
+      }
+      return false;
+    }
     return true;
   }
 

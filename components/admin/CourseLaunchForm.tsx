@@ -126,7 +126,7 @@ export default function CourseLaunchForm({ onClose, onSuccess, initialData, isEd
     try {
       const uploadFormData = new FormData();
       uploadFormData.append('image', selectedFile);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('adminToken');
 
       const response = await fetch('/api/admin/upload', {
         method: 'POST',

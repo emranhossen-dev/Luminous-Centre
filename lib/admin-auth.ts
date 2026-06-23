@@ -64,9 +64,22 @@ export function isAdminAuthenticated(): boolean {
   if (!token || !userStr) return false;
   
   try {
+    // Decode token to check expiration (client-side only, no verification)
+    const parts = token.split('.');
+    if (parts.length === 3) {
+      const payload = JSON.parse(atob(parts[1]));
+      if (payload.exp && payload.exp < Date.now() / 1000) {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        return false;
+      }
+    }
+    
     const user = JSON.parse(userStr);
     return user.roleName === 'admin';
   } catch {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
     return false;
   }
 }

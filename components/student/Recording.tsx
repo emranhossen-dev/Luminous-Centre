@@ -26,7 +26,7 @@ export default function Recording() {
     fetchRecordings();
   }, []);
 
-  const fetchRecordings = async () => {
+  async function fetchRecordings() {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('/api/student/recordings', {

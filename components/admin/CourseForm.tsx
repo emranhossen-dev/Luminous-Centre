@@ -38,7 +38,7 @@ export default function CourseForm({ onClose, onSuccess }: CourseFormProps) {
     setLoading(true);
     
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('adminToken');
       const submissionData = {
         ...formData,
         price: parseFloat(formData.price) || 0,

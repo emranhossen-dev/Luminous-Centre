@@ -24,7 +24,7 @@ export default function ClassJoining() {
     fetchLiveClasses();
   }, []);
 
-  const fetchLiveClasses = async () => {
+  async function fetchLiveClasses() {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('/api/student/live-classes', {

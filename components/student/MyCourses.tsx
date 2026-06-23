@@ -43,7 +43,7 @@ export default function MyCourses() {
     fetchCourses();
   }, []);
 
-  const fetchCourses = async () => {
+  async function fetchCourses() {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('/api/courses?status=published', {

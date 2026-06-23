@@ -42,7 +42,7 @@ export default function Dashboard() {
     fetchDashboardData();
   }, []);
 
-  const fetchDashboardData = async () => {
+  async function fetchDashboardData() {
     try {
       const token = localStorage.getItem('token');
       

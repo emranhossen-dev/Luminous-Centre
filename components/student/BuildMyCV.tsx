@@ -71,7 +71,7 @@ export default function BuildMyCV() {
     fetchCVData();
   }, []);
 
-  const fetchCVData = async () => {
+  async function fetchCVData() {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('/api/student/cv', {

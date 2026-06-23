@@ -37,7 +37,7 @@ export default function Resources() {
     fetchResources();
   }, []);
 
-  const fetchResources = async () => {
+  async function fetchResources() {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('/api/student/resources', {

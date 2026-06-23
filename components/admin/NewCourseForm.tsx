@@ -90,7 +90,7 @@ export default function NewCourseForm({ onClose, onSuccess }: NewCourseFormProps
     try {
       const uploadFormData = new FormData();
       uploadFormData.append('image', selectedFile);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('adminToken');
 
       const response = await fetch('/api/admin/upload', {
         method: 'POST',
@@ -144,7 +144,7 @@ export default function NewCourseForm({ onClose, onSuccess }: NewCourseFormProps
 
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('adminToken');
       
       if (!token) {
         throw new Error('No authentication token found');
