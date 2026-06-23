@@ -174,7 +174,8 @@ export default function Navbar() {
               </div>
             </div>
 
-            <NavLink href="/course-details" label="Course Details" theme={theme} />
+            <NavLink href="/prospectus" label="Prospectus" theme={theme} />
+            <NavLink href="/gallery" label="Gallery" theme={theme} />
             <NavLink href="/about" label="About Us" theme={theme} />
           </div>
 
@@ -333,8 +334,10 @@ export default function Navbar() {
           <Link href="/courses/offline" className="hover:text-[#2e31e1] transition-colors" onClick={() => setSidebar(false)}>Offline Course</Link>
           <Link href="/courses/govt" className="hover:text-[#2e31e1] transition-colors" onClick={() => setSidebar(false)}>Govt Free Course</Link>
           <hr className="border-white/10" />
-          <Link href="/courses" onClick={() => setSidebar(false)}>All Courses</Link>
-          <Link href="/about" onClick={() => setSidebar(false)}>About Us</Link>
+          <Link href="/courses" className="hover:text-[#2e31e1] transition-colors" onClick={() => setSidebar(false)}>All Courses</Link>
+          <Link href="/prospectus" className="hover:text-[#2e31e1] transition-colors" onClick={() => setSidebar(false)}>Prospectus</Link>
+          <Link href="/gallery" className="hover:text-[#2e31e1] transition-colors" onClick={() => setSidebar(false)}>Gallery</Link>
+          <Link href="/about" className="hover:text-[#2e31e1] transition-colors" onClick={() => setSidebar(false)}>About Us</Link>
         </div>
       </div>
     </>
