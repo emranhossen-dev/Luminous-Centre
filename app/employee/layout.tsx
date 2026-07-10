@@ -6,12 +6,11 @@ import Sidebar from '@/components/admin/Sidebar';
 import Navbar from '@/components/admin/Navbar';
 import { AdminThemeProvider, useAdminTheme } from '@/contexts/AdminThemeContext';
 import { isAdminAuthenticated } from '@/lib/admin-auth';
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { menuItems } from '@/lib/admin-menu';
 import { useLayout } from '@/contexts/LayoutContext';
 
-function AdminLayoutContent({ children }: { children: React.ReactNode }) {
+function EmployeeLayoutContent({ children }: { children: React.ReactNode }) {
   const { theme } = useAdminTheme();
 
   return (
@@ -256,7 +255,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function AdminLayout({
+export default function EmployeeLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -267,14 +266,7 @@ export default function AdminLayout({
   const { hideNavbarAndFooter } = useLayout();
 
   useEffect(() => {
-    // Skip auth check if layout is hidden (e.g. 404 page)
     if (hideNavbarAndFooter) {
-      return;
-    }
-
-    // Skip auth check for login page
-    if (pathname === '/admin/login') {
-      setIsAuth(true);
       return;
     }
 
@@ -284,28 +276,18 @@ export default function AdminLayout({
       return;
     }
 
-    // Check module permission for the active path
+    // Check role is admin or employee
     const userStr = localStorage.getItem('adminUser');
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
-        // Find which menu item matches the current pathname
-        const activeItem = menuItems.find(item => pathname.startsWith(item.href));
-        
-        if (activeItem && activeItem.id !== 'dashboard') {
-          const hasPerm = 
-            user.roleName === 'admin' || 
-            user.permissions?.includes('*') || 
-            user.permissions?.includes(activeItem.id);
-            
-          if (!hasPerm) {
-            toast.error(`Access Denied: You do not have permission for ${activeItem.label}.`);
-            router.push('/admin/dashboard');
-            return;
-          }
+        if (user.roleName !== 'employee' && user.roleName !== 'admin') {
+          notFound();
+          return;
         }
       } catch (e) {
-        console.error('Error checking route permission:', e);
+        notFound();
+        return;
       }
     }
 
@@ -318,20 +300,15 @@ export default function AdminLayout({
 
   if (isAuth === null) {
     return (
-      <div className={`min-h-screen ${pathname === '/admin/login' ? 'bg-slate-950' : 'bg-white'} flex items-center justify-center`}>
+      <div className="min-h-screen bg-[#0b0c17] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
-  // Login page doesn't get the full layout
-  if (pathname === '/admin/login') {
-    return <AdminThemeProvider>{children}</AdminThemeProvider>;
-  }
-
   return (
     <AdminThemeProvider>
-      <AdminLayoutContent>{children}</AdminLayoutContent>
+      <EmployeeLayoutContent>{children}</EmployeeLayoutContent>
     </AdminThemeProvider>
   );
 }

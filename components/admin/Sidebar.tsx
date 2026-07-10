@@ -1,40 +1,39 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { 
-  LayoutDashboard, 
-  BookOpen, 
-  Layers, 
-  Users, 
-  Briefcase, 
-  GraduationCap, 
-  RefreshCcw, 
-  HelpCircle, 
-  FileText, 
-  Settings,
-  Shield,
-  ChevronRight,
-  PhoneCall
-} from 'lucide-react';
-
-const menuItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/admin/dashboard' },
-  { id: 'courses', label: 'Course Management', icon: BookOpen, href: '/admin/courses' },
-  { id: 'seminar', label: 'Seminar Applications', icon: PhoneCall, href: '/admin/seminar' },
-  { id: 'enrollments', label: 'Enrollments', icon: Users, href: '/admin/enrollments' },
-  { id: 'employees', label: 'Employee Hub', icon: Briefcase, href: '/admin/employees' },
-  { id: 'mentors', label: 'Mentor List', icon: GraduationCap, href: '/admin/mentors' },
-  { id: 'cycles', label: 'Academic Cycles', icon: RefreshCcw, href: '/admin/cycles' },
-  { id: 'quizzes', label: 'Quiz Center', icon: HelpCircle, href: '/admin/quizzes' },
-  { id: 'assignments', label: 'Assignments', icon: FileText, href: '/admin/assignments' },
-  { id: 'settings', label: 'Platform Settings', icon: Settings, href: '/admin/settings' },
-];
+import { ChevronRight, Shield } from 'lucide-react';
+import { menuItems } from '@/lib/admin-menu';
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('adminUser');
+    if (userStr) {
+      try {
+        setUser(JSON.parse(userStr));
+      } catch (e) {
+        console.error('Failed to parse admin user from localStorage:', e);
+      }
+    }
+  }, []);
+
+  const hasAccess = (itemId: string) => {
+    if (!user) return false;
+    // Admins always have access
+    if (user.roleName === 'admin') return true;
+    // Wildcard permissions
+    if (user.permissions?.includes('*')) return true;
+    // Dashboard is default access for all logged in staff
+    if (itemId === 'dashboard') return true;
+    
+    // Check specific module permission
+    return user.permissions?.includes(itemId);
+  };
 
   return (
     <div className="w-72 h-screen bg-slate-900 text-slate-300 flex flex-col border-r border-white/5 relative z-50">
@@ -53,12 +52,22 @@ export default function Sidebar() {
 
       {/* Sidebar Navigation */}
       <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar pb-6">
-        {menuItems.map((item) => {
-          const isActive = pathname === item.href;
+        {menuItems.filter(item => hasAccess(item.id)).map((item) => {
+          let href = item.href;
+          if (item.id === 'dashboard' && user) {
+            if (user.roleName === 'employee') {
+              href = '/employee';
+            } else if (user.roleName === 'mentor') {
+              href = '/mentor';
+            } else if (user.roleName === 'admin') {
+              href = '/admin/dashboard';
+            }
+          }
+          const isActive = pathname === href;
           const Icon = item.icon;
 
           return (
-            <Link key={item.id} href={item.href}>
+            <Link key={item.id} href={href}>
               <motion.div
                 whileHover={{ x: 4 }}
                 className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group ${

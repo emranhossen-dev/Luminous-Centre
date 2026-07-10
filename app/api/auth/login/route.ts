@@ -29,7 +29,8 @@ export async function POST(req: NextRequest) {
         u.last_login as "lastLogin",
         u.created_at as "createdAt",
         r.name as "roleName",
-        r.permissions
+        r.permissions as "rolePermissions",
+        u.permissions as "userPermissions"
       FROM users u
       JOIN roles r ON u.role_id = r.id
       WHERE u.email = $1
@@ -64,9 +65,21 @@ export async function POST(req: NextRequest) {
     // Update last login
     await updateLastLogin(user.id);
 
+    // Merge permissions
+    const userPermissions = user.userPermissions;
+    const rolePermissions = user.rolePermissions || [];
+    const mergedPermissions = (Array.isArray(userPermissions) && userPermissions.length > 0)
+      ? userPermissions
+      : rolePermissions;
+
+    const userWithPermissions = {
+      ...user,
+      permissions: mergedPermissions
+    };
+
     // Generate tokens
-    const token = generateToken(user);
-    const refreshToken = generateRefreshToken(user);
+    const token = generateToken(userWithPermissions);
+    const refreshToken = generateRefreshToken(userWithPermissions);
 
     // Log activity
     await logActivity(
@@ -79,22 +92,22 @@ export async function POST(req: NextRequest) {
       req.headers.get('user-agent') || undefined
     );
 
-    // Remove password hash from response
-    const { passwordHash, ...userWithoutPassword } = user;
+    // Remove password hash and db helper keys from response
+    const { passwordHash, userPermissions: _, rolePermissions: __, ...userWithoutPassword } = userWithPermissions;
 
     return NextResponse.json({
       message: 'Login successful',
       user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        phone: user.phone,
-        roleName: user.roleName,
-        permissions: user.permissions,
-        emailVerified: user.emailVerified,
+        id: userWithPermissions.id,
+        email: userWithPermissions.email,
+        firstName: userWithPermissions.firstName,
+        lastName: userWithPermissions.lastName,
+        phone: userWithPermissions.phone,
+        roleName: userWithPermissions.roleName,
+        permissions: userWithPermissions.permissions,
+        emailVerified: userWithPermissions.emailVerified,
         lastLogin: new Date(),
-        createdAt: user.createdAt
+        createdAt: userWithPermissions.createdAt
       },
       token,
       refreshToken

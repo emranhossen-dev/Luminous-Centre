@@ -32,7 +32,7 @@ export default function StudentTopNav({
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    router.push('/auth/login');
+    router.push('/login');
   };
 
   const displayName = user ? `${user.firstName} ${user.lastName}` : studentName;

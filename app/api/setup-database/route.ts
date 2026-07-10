@@ -19,6 +19,7 @@ export async function POST() {
     await query(`
       INSERT INTO roles (name, description, permissions) VALUES
       ('admin', 'System administrator with full access', '["*"]'),
+      ('manager', 'Manager with dynamic management access', '["courses.read", "courses.create", "courses.update", "courses.delete", "students.read", "students.create", "students.update", "students.delete", "quizzes.read", "quizzes.create", "quizzes.update", "quizzes.delete"]'),
       ('employee', 'Employee with course management access', '["courses.create", "courses.read", "courses.update", "courses.delete", "students.read", "grades.read"]'),
       ('mentor', 'Mentor with teaching and student management access', '["courses.read", "students.create", "students.read", "students.update", "grades.create", "grades.read", "grades.update"]'),
       ('student', 'Student with learning access', '["courses.read", "enrollments.create", "enrollments.read", "progress.read"]')
@@ -49,10 +50,19 @@ export async function POST() {
         email_verified BOOLEAN DEFAULT false,
         last_login TIMESTAMP,
         google_id VARCHAR(255),
+        designation VARCHAR(255),
+        permissions JSONB DEFAULT '[]',
+        reset_token VARCHAR(255),
+        reset_token_expires TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // Ensure reset token columns exist in case the table already existed
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token VARCHAR(255)`);
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMP`);
+
 
     // Create courses table
     await query(`

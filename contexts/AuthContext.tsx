@@ -100,6 +100,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(data.user);
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
+        
+        // Save staff adminToken/adminUser keys
+        if (data.user.roleName !== 'student') {
+          localStorage.setItem('adminToken', data.token);
+          localStorage.setItem('adminUser', JSON.stringify(data.user));
+        }
+        
         closeModal();
       } else {
         throw new Error(data.error || 'Login failed');

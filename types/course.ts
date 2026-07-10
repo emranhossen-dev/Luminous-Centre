@@ -3,7 +3,7 @@ export interface CourseFormData {
   title: string;
   slug: string;
   thumbnail_url: string;
-  category: 'online' | 'offline' | 'recorded' | 'project';
+  category: 'online' | 'offline' | 'recorded' | 'project' | 'govt';
   price: number | string;
   old_price: number | string;
   description: string;
@@ -72,7 +72,7 @@ export interface CourseData {
   video_url: string;
   course_outline_url?: string;
   curriculum_subtitle?: string;
-  category: 'online' | 'offline' | 'recorded' | 'project';
+  category: 'online' | 'offline' | 'recorded' | 'project' | 'govt';
   batch?: string;
   learning_outcomes: Array<{
     title: string;

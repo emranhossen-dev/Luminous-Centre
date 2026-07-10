@@ -88,7 +88,8 @@ export async function getUserById(id: number): Promise<User | null> {
       u.last_login as "lastLogin",
       u.created_at as "createdAt",
       r.name as "roleName",
-      r.permissions
+      r.permissions as "rolePermissions",
+      u.permissions as "userPermissions"
     FROM users u
     JOIN roles r ON u.role_id = r.id
     WHERE u.id = $1 AND u.is_active = true
@@ -98,7 +99,18 @@ export async function getUserById(id: number): Promise<User | null> {
     return null;
   }
 
-  return result.rows[0] as User;
+  const row = result.rows[0];
+  const userPermissions = row.userPermissions;
+  const rolePermissions = row.rolePermissions || [];
+  
+  const permissions = (Array.isArray(userPermissions) && userPermissions.length > 0)
+    ? userPermissions
+    : rolePermissions;
+
+  return {
+    ...row,
+    permissions
+  } as User;
 }
 
 // Get user by email with role and permissions
@@ -116,7 +128,8 @@ export async function getUserByEmail(email: string): Promise<User | null> {
       u.last_login as "lastLogin",
       u.created_at as "createdAt",
       r.name as "roleName",
-      r.permissions
+      r.permissions as "rolePermissions",
+      u.permissions as "userPermissions"
     FROM users u
     JOIN roles r ON u.role_id = r.id
     WHERE u.email = $1 AND u.is_active = true
@@ -126,7 +139,18 @@ export async function getUserByEmail(email: string): Promise<User | null> {
     return null;
   }
 
-  return result.rows[0] as User;
+  const row = result.rows[0];
+  const userPermissions = row.userPermissions;
+  const rolePermissions = row.rolePermissions || [];
+  
+  const permissions = (Array.isArray(userPermissions) && userPermissions.length > 0)
+    ? userPermissions
+    : rolePermissions;
+
+  return {
+    ...row,
+    permissions
+  } as User;
 }
 
 // Check if user has specific permission
@@ -138,6 +162,12 @@ export function hasPermission(user: User, permission: string): boolean {
 
   // Check for wildcard permission
   if (user.permissions.includes('*')) {
+    return true;
+  }
+
+  // Check if user has broad module permission (e.g., 'courses' grants access to 'courses.read')
+  const baseModule = permission.split('.')[0];
+  if (user.permissions.includes(baseModule)) {
     return true;
   }
 

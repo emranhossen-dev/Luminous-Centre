@@ -81,7 +81,8 @@ export default function Dashboard() {
       case 'recorded': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
       case 'online': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
       case 'offline': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
-      case 'project': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
+      case 'project':
+      case 'govt': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
       default: return 'bg-slate-500/10 text-slate-500 border-slate-500/20';
     }
   };

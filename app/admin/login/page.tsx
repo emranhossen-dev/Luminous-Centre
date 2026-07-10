@@ -31,13 +31,13 @@ export default function AdminLogin() {
       const data = await response.json();
 
       if (response.ok) {
-        // Check if user is admin
-        if (data.user.roleName === 'admin') {
+        // Check if user is a staff member (not a student)
+        if (data.user.roleName !== 'student') {
           localStorage.setItem('adminToken', data.token);
           localStorage.setItem('adminUser', JSON.stringify(data.user));
           router.push('/admin/dashboard');
         } else {
-          setError('Access denied. Admin privileges required.');
+          setError('Access denied. Staff privileges required.');
         }
       } else {
         setError(data.error || 'Login failed');

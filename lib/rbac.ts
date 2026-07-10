@@ -5,7 +5,7 @@ export type Role = 'Super Admin' | 'Admin' | 'Mentor' | 'Employee' | 'Student';
 // Define route prefixes mapped to allowed roles
 export const RolePermissions: Record<string, Role[]> = {
   '/admin/super': ['Super Admin'],
-  '/admin/mentors': ['Super Admin', 'Admin'],
+  '/admin/staff': ['Super Admin', 'Admin'],
   '/admin/students': ['Super Admin', 'Admin'],
   '/admin/courses': ['Super Admin', 'Admin'],
   '/admin/quizzes': ['Super Admin', 'Admin'],

@@ -26,10 +26,10 @@ export function withAdminAuth(handler: (req: NextRequest, context: any, user: JW
       // Verify JWT token
       const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
 
-      // Check if user is admin
-      if (decoded.roleName !== 'admin') {
+      // Check if user is a student (only non-student staff allowed)
+      if (decoded.roleName === 'student') {
         return NextResponse.json(
-          { error: 'Admin access required' },
+          { error: 'Admin/Staff access required' },
           { status: 403 }
         );
       }
@@ -76,7 +76,7 @@ export function isAdminAuthenticated(): boolean {
     }
     
     const user = JSON.parse(userStr);
-    return user.roleName === 'admin';
+    return user.roleName !== 'student';
   } catch {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');
@@ -88,7 +88,7 @@ export function isAdminAuthenticated(): boolean {
 export function requireAdminAuth() {
   if (typeof window !== 'undefined' && !isAdminAuthenticated()) {
     if (typeof window !== 'undefined') {
-      window.location.href = '/admin/login';
+      window.location.href = '/login';
     }
     return false;
   }

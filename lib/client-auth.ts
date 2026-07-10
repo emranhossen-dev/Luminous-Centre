@@ -97,14 +97,14 @@ export class ClientAuth {
   // Redirect to login if not authenticated
   static requireAuth(): void {
     if (!this.isAuthenticated()) {
-      window.location.href = '/auth/login';
+      window.location.href = '/login';
     }
   }
 
   // Redirect to specific page if not authenticated
   static requireAuthWithRedirect(redirectUrl: string): void {
     if (!this.isAuthenticated()) {
-      window.location.href = `/auth/login?redirect=${encodeURIComponent(redirectUrl)}`;
+      window.location.href = `/login?redirect=${encodeURIComponent(redirectUrl)}`;
     }
   }
 
@@ -122,7 +122,7 @@ export class ClientAuth {
     
     if (!this.isAuthenticated()) {
       // Redirect to login with course view intent
-      window.location.href = `/auth/login?redirect=course&course=${courseSlug}`;
+      window.location.href = `/login?redirect=course&course=${courseSlug}`;
       return;
     }
 

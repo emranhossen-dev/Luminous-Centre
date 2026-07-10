@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { 
   BookOpen, Users, Award, FileText, Plus, CheckCircle, XCircle, 
   Search, Eye, Settings, HelpCircle, ChevronRight, LogOut, Loader2, Save 
@@ -70,6 +71,7 @@ interface Question {
 }
 
 export default function MentorDashboard() {
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'students' | 'quizzes' | 'attempts'>('overview');
   const [courses, setCourses] = useState<Course[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -115,17 +117,33 @@ export default function MentorDashboard() {
   });
 
   useEffect(() => {
-    fetchMentorData();
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    let authorized = false;
+
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.roleName === 'mentor' || user.roleName === 'admin') {
+          authorized = true;
+        }
+      } catch (e) {}
+    }
+
+    if (!authorized) {
+      setIsAuthorized(false);
+      notFound();
+    } else {
+      setIsAuthorized(true);
+      fetchMentorData();
+    }
   }, []);
 
   const fetchMentorData = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error("Not authenticated as mentor");
-        return;
-      }
+      if (!token) return;
       
       // 1. Fetch courses
       const coursesRes = await fetch('/api/mentor/courses', {
@@ -297,6 +315,18 @@ export default function MentorDashboard() {
     return matchesSearch && matchesCourse;
   });
 
+  if (isAuthorized === null) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
+  if (isAuthorized === false) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans">
       <ToastContainer position="top-right" autoClose={3000} theme="dark" />
@@ -320,7 +350,7 @@ export default function MentorDashboard() {
               <p className="text-xs font-bold leading-none text-slate-200">Mentor Portal</p>
             </div>
           </div>
-          <Link href="/auth/login" className="p-2 bg-slate-800/80 hover:bg-red-950/30 hover:text-red-400 rounded-xl transition border border-slate-700/50 flex items-center gap-2 text-xs font-semibold text-slate-400">
+          <Link href="/login" className="p-2 bg-slate-800/80 hover:bg-red-950/30 hover:text-red-400 rounded-xl transition border border-slate-700/50 flex items-center gap-2 text-xs font-semibold text-slate-400">
             <LogOut className="w-4 h-4" /> Sign Out
           </Link>
         </div>

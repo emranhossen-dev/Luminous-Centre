@@ -4,6 +4,7 @@ import "./globals.css";
 import ConditionalLayout from "@/components/ConditionalLayout";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LoadingProvider } from "@/contexts/LoadingContext";
+import { LayoutProvider } from "@/contexts/LayoutContext";
 import LoadingOverlay from "@/components/LoadingOverlay";
 
 // Font for English and general UI
@@ -39,10 +40,12 @@ export default function RootLayout({
       <body className="font-sans bg-[#0b0c17] text-white antialiased selection:bg-[#2e31e1] selection:text-white transition-colors duration-300">
         <LoadingProvider>
           <AuthProvider>
-            <ConditionalLayout>
-              {children}
-            </ConditionalLayout>
-            <LoadingOverlay />
+            <LayoutProvider>
+              <ConditionalLayout>
+                {children}
+              </ConditionalLayout>
+              <LoadingOverlay />
+            </LayoutProvider>
           </AuthProvider>
         </LoadingProvider>
       </body>

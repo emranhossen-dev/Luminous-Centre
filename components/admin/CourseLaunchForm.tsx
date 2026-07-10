@@ -796,7 +796,7 @@ export default function CourseLaunchForm({ onClose, onSuccess, initialData, isEd
                   <option value="online">Online</option>
                   <option value="offline">Offline</option>
                   <option value="recorded">Recorded</option>
-                  <option value="project">Govt Project</option>
+                  <option value="govt">Govt Project</option>
                 </select>
               </div>
               <div>

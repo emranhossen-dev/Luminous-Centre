@@ -161,7 +161,8 @@ export default function EnrollmentsPage() {
       (courseTypeFilter === 'online_course' && enrollment.course_category?.toLowerCase().includes('online')) ||
       (courseTypeFilter === 'govt_project' && (
         enrollment.course_category?.toLowerCase().includes('government') || 
-        enrollment.course_category?.toLowerCase().includes('project')
+        enrollment.course_category?.toLowerCase().includes('project') ||
+        enrollment.course_category?.toLowerCase().includes('govt')
       ));
 
     const matchesCourse = courseFilter === 'all' || enrollment.course_title === courseFilter;
@@ -183,7 +184,8 @@ export default function EnrollmentsPage() {
     e.course_category?.toLowerCase().includes('online')).length;
   const govtProjectCount = enrollments.filter(e => 
     e.course_category?.toLowerCase().includes('government') || 
-    e.course_category?.toLowerCase().includes('project')).length;
+    e.course_category?.toLowerCase().includes('project') ||
+    e.course_category?.toLowerCase().includes('govt')).length;
 
   // Calculate status counts
   const appliedCount = enrollments.filter(e => e.enrollment_status === 'applied').length;

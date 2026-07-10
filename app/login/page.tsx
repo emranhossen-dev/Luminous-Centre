@@ -58,6 +58,12 @@ function LoginPageContent() {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
 
+        // If staff member, also authenticate for admin/staff panel
+        if (data.user.roleName !== 'student') {
+          localStorage.setItem('adminToken', data.token);
+          localStorage.setItem('adminUser', JSON.stringify(data.user));
+        }
+
         const redirect = searchParams.get('redirect');
         const course = searchParams.get('course');
 
@@ -69,12 +75,22 @@ function LoginPageContent() {
           return;
         }
 
+        // Redirect based on role
         switch (data.user.roleName) {
-          case 'admin': router.push('/admin'); break;
-          case 'employee': router.push('/employee'); break;
-          case 'mentor': router.push('/mentor'); break;
-          case 'student': router.push('/student'); break;
-          default: router.push('/'); break;
+          case 'admin':
+          case 'manager':
+          case 'employee':
+            router.push('/admin/dashboard');
+            break;
+          case 'mentor':
+            router.push('/mentor');
+            break;
+          case 'student':
+            router.push('/student');
+            break;
+          default:
+            router.push('/');
+            break;
         }
       } else {
         setError(data.error || 'Login failed');
@@ -197,7 +213,7 @@ function LoginPageContent() {
                   <label htmlFor="password" className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
                     Password
                   </label>
-                  <Link href="#" className="text-[10px] font-bold text-blue-500 hover:text-blue-400 uppercase tracking-tighter transition-colors">
+                  <Link href="/auth/forgot-password" className="text-[10px] font-bold text-blue-500 hover:text-blue-400 uppercase tracking-tighter transition-colors">
                     Forgot?
                   </Link>
                 </div>
@@ -254,7 +270,7 @@ function LoginPageContent() {
           <div className="w-48 h-48 border-2 border-indigo-500/20 rounded-full"></div>
         </div>
       </div>
-        </div>
+    </div>
   );
 }
 

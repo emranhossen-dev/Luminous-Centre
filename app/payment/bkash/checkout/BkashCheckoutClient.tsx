@@ -22,7 +22,7 @@ export default function BkashCheckoutClient() {
       const token = localStorage.getItem('token');
       if (!token) {
         router.push(
-          `/auth/login?redirect=${encodeURIComponent(`/payment/bkash/checkout?courseId=${courseId}&slug=${slug || ''}`)}`
+          `/login?redirect=${encodeURIComponent(`/payment/bkash/checkout?courseId=${courseId}&slug=${slug || ''}`)}`
         );
         return;
       }

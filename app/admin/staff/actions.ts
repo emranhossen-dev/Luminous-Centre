@@ -1,0 +1,263 @@
+'use server';
+
+import pool from '@/lib/database';
+import { revalidatePath } from 'next/cache';
+import { hashPassword } from '@/lib/auth';
+import { logAudit } from '@/lib/audit';
+import { sendEmail } from '@/lib/email';
+
+export interface StaffData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  password?: string;
+  roleId: number;
+  designation?: string;
+  permissions: string[];
+  isActive?: boolean;
+}
+
+// Get all staff users (role != student)
+export async function getStaffList() {
+  try {
+    const query = `
+      SELECT 
+        u.id,
+        u.email,
+        u.first_name as "firstName",
+        u.last_name as "lastName",
+        u.phone,
+        u.role_id as "roleId",
+        u.is_active as "isActive",
+        u.designation,
+        u.permissions,
+        r.name as "roleName"
+      FROM users u
+      JOIN roles r ON u.role_id = r.id
+      WHERE r.name != 'student'
+      ORDER BY u.id DESC
+    `;
+    const res = await pool.query(query);
+    return { success: true, staff: res.rows };
+  } catch (error: any) {
+    console.error('Failed to fetch staff list:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Get all available roles (excluding student)
+export async function getRoles() {
+  try {
+    const query = `
+      SELECT id, name, description, permissions
+      FROM roles
+      WHERE name != 'student'
+      ORDER BY id ASC
+    `;
+    const res = await pool.query(query);
+    return { success: true, roles: res.rows };
+  } catch (error: any) {
+    console.error('Failed to fetch roles:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Create a new staff user
+export async function createStaff(data: StaffData) {
+  try {
+    if (!data.password) {
+      return { success: false, error: 'Password is required for new staff' };
+    }
+
+    const passwordHash = await hashPassword(data.password);
+    
+    // Check if email already exists
+    const checkEmail = await pool.query('SELECT id FROM users WHERE email = $1', [data.email.toLowerCase()]);
+    if (checkEmail.rows.length > 0) {
+      return { success: false, error: 'Email already registered' };
+    }
+
+    const query = `
+      INSERT INTO users (
+        first_name, last_name, email, password_hash, phone, 
+        role_id, designation, permissions, is_active, email_verified
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, true
+      ) RETURNING id
+    `;
+    
+    const values = [
+      data.firstName,
+      data.lastName,
+      data.email.toLowerCase(),
+      passwordHash,
+      data.phone || null,
+      data.roleId,
+      data.designation || null,
+      JSON.stringify(data.permissions || []),
+      data.isActive !== undefined ? data.isActive : true
+    ];
+
+    const res = await pool.query(query, values);
+    const newStaffId = res.rows[0].id;
+
+    // Send welcome email with login details
+    try {
+      const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login`;
+      const welcomeHtml = `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); color: #1e293b;">
+          <div style="text-align: center; margin-bottom: 25px;">
+            <div style="display: inline-block; background-color: #2563eb; color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 20px; letter-spacing: 0.5px;">Luminous Skills</div>
+          </div>
+          <h2 style="color: #0f172a; font-size: 20px; font-weight: bold; margin-bottom: 15px;">Welcome to Luminous Skill Development Center!</h2>
+          <p style="font-size: 14px; line-height: 1.6; color: #475569;">Hello <strong>${data.firstName} ${data.lastName}</strong>,</p>
+          <p style="font-size: 14px; line-height: 1.6; color: #475569;">Your administrative staff account has been created successfully. You can now log in using the details below:</p>
+          
+          <div style="background-color: #f8fafc; padding: 20px; border-radius: 16px; margin: 25px 0; border: 1px solid #f1f5f9; font-size: 14px;">
+            <p style="margin: 0 0 10px 0; color: #475569;"><strong>Login URL:</strong> <a href="${loginUrl}" style="color: #2563eb; text-decoration: none; font-weight: 500;">${loginUrl}</a></p>
+            <p style="margin: 0 0 10px 0; color: #475569;"><strong>Username / Email:</strong> ${data.email}</p>
+            <p style="margin: 0; color: #475569;"><strong>Temporary Password:</strong> <code style="background-color: #e2e8f0; padding: 3px 8px; border-radius: 6px; font-family: monospace; font-size: 13px; font-weight: bold; color: #0f172a;">${data.password}</code></p>
+          </div>
+          
+          <p style="font-size: 13px; color: #e11d48; font-weight: 500; margin-top: 20px;">
+            * Important: Please log in and update your password immediately inside your profile settings for safety.
+          </p>
+          <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 25px 0;" />
+          <p style="font-size: 11px; text-align: center; color: #94a3b8; margin: 0;">
+            Luminous Skill Development Center Training Management Platform.
+          </p>
+        </div>
+      `;
+
+      await sendEmail({
+        to: data.email,
+        subject: 'Your Staff Account is Ready! - Luminous Skills',
+        html: welcomeHtml
+      });
+    } catch (mailError) {
+      console.error('Failed to send welcome email to staff:', mailError);
+    }
+
+    // Log audit trail
+    await logAudit(
+      '0', // system/admin id placeholder
+      'CREATE_STAFF_USER',
+      'STAFF_MODULE',
+      newStaffId.toString()
+    );
+
+    revalidatePath('/admin/staff');
+    return { success: true, id: newStaffId };
+  } catch (error: any) {
+    console.error('Error in createStaff server action:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Update an existing staff user
+export async function updateStaff(id: number, data: StaffData) {
+  try {
+    // Check if email is already in use by another user
+    const checkEmail = await pool.query('SELECT id FROM users WHERE email = $1 AND id != $2', [data.email.toLowerCase(), id]);
+    if (checkEmail.rows.length > 0) {
+      return { success: false, error: 'Email already in use by another account' };
+    }
+
+    let queryStr = `
+      UPDATE users 
+      SET 
+        first_name = $1, 
+        last_name = $2, 
+        email = $3, 
+        phone = $4, 
+        role_id = $5, 
+        designation = $6, 
+        permissions = $7,
+        is_active = $8,
+        updated_at = CURRENT_TIMESTAMP
+    `;
+    
+    const values = [
+      data.firstName,
+      data.lastName,
+      data.email.toLowerCase(),
+      data.phone || null,
+      data.roleId,
+      data.designation || null,
+      JSON.stringify(data.permissions || []),
+      data.isActive !== undefined ? data.isActive : true
+    ];
+
+    let paramCounter = 9;
+
+    // Only update password if provided
+    if (data.password && data.password.trim() !== '') {
+      const passwordHash = await hashPassword(data.password);
+      queryStr += `, password_hash = $${paramCounter}`;
+      values.push(passwordHash);
+      paramCounter++;
+    }
+
+    queryStr += ` WHERE id = $${paramCounter}`;
+    values.push(id);
+
+    await pool.query(queryStr, values);
+
+    // Log audit trail
+    await logAudit(
+      '0',
+      'UPDATE_STAFF_USER',
+      'STAFF_MODULE',
+      id.toString()
+    );
+
+    revalidatePath('/admin/staff');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error in updateStaff server action:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Toggle staff active status
+export async function toggleStaffStatus(id: number, currentStatus: boolean) {
+  try {
+    const query = `
+      UPDATE users 
+      SET is_active = $1, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $2
+    `;
+    await pool.query(query, [!currentStatus, id]);
+
+    await logAudit(
+      '0',
+      currentStatus ? 'DEACTIVATE_STAFF' : 'ACTIVATE_STAFF',
+      'STAFF_MODULE',
+      id.toString()
+    );
+
+    revalidatePath('/admin/staff');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error in toggleStaffStatus:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Delete staff user
+export async function deleteStaff(id: number) {
+  try {
+    // Check references first or perform logical deletion by changing role or setting status.
+    // To prevent database error, we do physical delete. If referencing objects exist, DB throws error,
+    // which is caught and returned.
+    await pool.query('DELETE FROM users WHERE id = $1', [id]);
+
+    await logAudit('0', 'DELETE_STAFF_USER', 'STAFF_MODULE', id.toString());
+    revalidatePath('/admin/staff');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error in deleteStaff:', error);
+    return { success: false, error: 'Could not delete staff. They might have related records (e.g. courses, enrollments). Try deactivating them instead.' };
+  }
+}

@@ -15,7 +15,7 @@ export default function GoogleCallbackPage() {
 
     if (error) {
       console.error('Google OAuth error:', error);
-      router.push('/auth/login?error=' + error);
+      router.push('/login?error=' + error);
       return;
     }
 
@@ -66,7 +66,7 @@ export default function GoogleCallbackPage() {
         }
       } catch (err) {
         console.error('Failed to parse user data:', err);
-        router.push('/auth/login?error=Failed to parse user data');
+        router.push('/login?error=Failed to parse user data');
       }
     } else {
       // Try popup method
