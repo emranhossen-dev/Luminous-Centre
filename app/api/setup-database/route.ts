@@ -62,6 +62,17 @@ export async function POST() {
     // Ensure reset token columns exist in case the table already existed
     await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token VARCHAR(255)`);
     await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMP`);
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS date_of_birth DATE`);
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR(50)`);
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT`);
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(255)`);
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS timezone VARCHAR(100) DEFAULT 'Asia/Dhaka'`);
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS language VARCHAR(50) DEFAULT 'bn'`);
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS theme VARCHAR(20) DEFAULT 'dark'`);
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS notifications_email BOOLEAN DEFAULT true`);
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS notifications_sms BOOLEAN DEFAULT false`);
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS notifications_marketing BOOLEAN DEFAULT false`);
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS notifications_course_updates BOOLEAN DEFAULT true`);
 
 
     // Create courses table

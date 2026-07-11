@@ -280,7 +280,7 @@ export default function AdminLayout({
 
     const authenticated = isAdminAuthenticated();
     if (!authenticated) {
-      notFound();
+      router.push('/admin/login');
       return;
     }
 

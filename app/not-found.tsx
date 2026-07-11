@@ -98,12 +98,6 @@ export default function NotFound() {
           >
             <Rocket className="w-4 h-4" /> Teleport Home
           </Link>
-          <button
-            onClick={() => window.history.back()}
-            className="inline-flex justify-center items-center gap-2 px-6 py-3.5 bg-white/5 hover:bg-white/10 text-white font-semibold rounded-2xl border border-white/10 transition-all active:scale-95 text-sm"
-          >
-            <ArrowLeft className="w-4 h-4" /> Go Back
-          </button>
         </div>
 
         {/* Sitemap links at the bottom (matching image) */}

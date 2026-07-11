@@ -3,13 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
 import { 
   BookOpen, Users, Award, FileText, Plus, CheckCircle, XCircle, 
-  Search, Eye, Settings, HelpCircle, ChevronRight, LogOut, Loader2, Save 
+  Search, Eye, Settings, HelpCircle, ChevronRight, LogOut, Loader2, Save,
+  PlayCircle
 } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import MentorRecordings from '@/components/mentor/MentorRecordings';
+import MentorAssignments from '@/components/mentor/MentorAssignments';
 
 interface Course {
   id: number;
@@ -71,8 +74,9 @@ interface Question {
 }
 
 export default function MentorDashboard() {
+  const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'students' | 'quizzes' | 'attempts'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'students' | 'quizzes' | 'attempts' | 'recordings' | 'assignments'>('overview');
   const [courses, setCourses] = useState<Course[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -132,12 +136,12 @@ export default function MentorDashboard() {
 
     if (!authorized) {
       setIsAuthorized(false);
-      notFound();
+      router.push('/login');
     } else {
       setIsAuthorized(true);
       fetchMentorData();
     }
-  }, []);
+  }, [router]);
 
   const fetchMentorData = async () => {
     setLoading(true);
@@ -411,6 +415,26 @@ export default function MentorDashboard() {
             }`}
           >
             <Award className="w-5 h-5" /> Quiz Attempts
+          </button>
+          <button 
+            onClick={() => setActiveTab('recordings')} 
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+              activeTab === 'recordings' 
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10' 
+                : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'
+            }`}
+          >
+            <PlayCircle className="w-5 h-5" /> Class Recordings
+          </button>
+          <button 
+            onClick={() => setActiveTab('assignments')} 
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+              activeTab === 'assignments' 
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10' 
+                : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'
+            }`}
+          >
+            <FileText className="w-5 h-5" /> Assignments
           </button>
         </aside>
 
@@ -831,6 +855,30 @@ export default function MentorDashboard() {
                       </tbody>
                     </table>
                   </div>
+                </motion.div>
+              )}
+
+              {/* TAB 6: CLASS RECORDINGS */}
+              {activeTab === 'recordings' && (
+                <motion.div 
+                  key="recordings" 
+                  initial={{ opacity: 0, y: 15 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  exit={{ opacity: 0, y: -15 }}
+                >
+                  <MentorRecordings />
+                </motion.div>
+              )}
+
+              {/* TAB 7: ASSIGNMENTS */}
+              {activeTab === 'assignments' && (
+                <motion.div 
+                  key="assignments" 
+                  initial={{ opacity: 0, y: 15 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  exit={{ opacity: 0, y: -15 }}
+                >
+                  <MentorAssignments />
                 </motion.div>
               )}
 

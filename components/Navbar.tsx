@@ -68,7 +68,7 @@ export default function Navbar() {
           ? 'bg-[#0b0c17]/80 backdrop-blur-md border-b border-white/10'
           : 'bg-white border-b border-gray-200 shadow-sm'
         }`}>
-        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="w-full px-4 md:px-8 lg:px-12 xl:px-16 h-16 flex items-center justify-between">
 
           {/* LEFT */}
           <div className="flex items-center gap-3">
@@ -198,8 +198,6 @@ export default function Navbar() {
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#2F2FE4] to-[#60a5fa] flex items-center justify-center text-white font-semibold">
                       {user.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
                     </div>
-                    <ChevronDown size={16} className={`transition-transform ${profileOpen ? 'rotate-180' : ''} ${theme === 'dark' ? 'text-white' : 'text-gray-900'
-                      }`} />
                   </button>
 
                   <div

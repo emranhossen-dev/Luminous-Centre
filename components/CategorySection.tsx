@@ -79,7 +79,7 @@ export default function CategorySection() {
         <div className="absolute top-1/2 right-[-5%] w-[30%] h-[30%] bg-indigo-600/12 rounded-full blur-[100px] animate-blob animation-delay-4000"></div>
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="w-full px-4 md:px-8 lg:px-12 xl:px-16 relative z-10">
         
         {/* Header Area */}
         <div className="text-center mb-16 space-y-4">

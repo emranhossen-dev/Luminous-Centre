@@ -24,7 +24,7 @@ export default function CallToAction() {
       <div className="absolute top-1/2 left-1/4 w-[600px] h-[600px] bg-[#2F2FE4] rounded-full mix-blend-screen filter blur-[150px] opacity-10 animate-blob"></div>
       <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-[#60a5fa] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-blob animation-delay-2000"></div>
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="w-full px-4 md:px-8 lg:px-12 xl:px-16 relative z-10">
         <div className="relative glass rounded-[4rem] p-12 md:p-24 border-white/5 overflow-hidden text-center space-y-10 group">
           {/* Decorative Border Glow */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#2F2FE4]/0 via-[#2F2FE4]/10 to-[#2F2FE4]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>

@@ -56,6 +56,17 @@ export async function POST(req: NextRequest) {
       WHERE id = $2
     `, [hashed, decoded.userId]);
 
+    // Insert activity log
+    await query(`
+      INSERT INTO activity_logs (user_id, action, resource_type, details)
+      VALUES ($1, $2, $3, $4)
+    `, [
+      decoded.userId,
+      'Password Changed',
+      'User',
+      JSON.stringify({ message: 'User password was changed securely' })
+    ]);
+
     return NextResponse.json({ success: true, message: 'Password updated successfully' });
 
   } catch (error: any) {

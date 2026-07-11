@@ -7,7 +7,9 @@ import {
   FileText, 
   Settings,
   Shield,
-  PhoneCall
+  PhoneCall,
+  User,
+  GraduationCap
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -21,6 +23,7 @@ export const menuItems: MenuItem[] = [
   { id: 'dashboard', label: 'Dashboard Access', icon: LayoutDashboard, href: '/admin/dashboard' },
   { id: 'courses', label: 'Course Management', icon: BookOpen, href: '/admin/courses' },
   { id: 'students', label: 'Student Management', icon: Users, href: '/admin/students' },
+  { id: 'mentors', label: 'Mentor Management', icon: GraduationCap, href: '/admin/mentors' },
   { id: 'seminar', label: 'Seminar Applications', icon: PhoneCall, href: '/admin/seminar' },
   { id: 'enrollments', label: 'Enrollments', icon: Users, href: '/admin/enrollments' },
   { id: 'staff', label: 'Staff Management', icon: Shield, href: '/admin/staff' },
@@ -28,4 +31,5 @@ export const menuItems: MenuItem[] = [
   { id: 'quizzes', label: 'Quiz Center', icon: HelpCircle, href: '/admin/quizzes' },
   { id: 'assignments', label: 'Assignments', icon: FileText, href: '/admin/assignments' },
   { id: 'settings', label: 'Platform Settings', icon: Settings, href: '/admin/settings' },
+  { id: 'profile', label: 'My Profile', icon: User, href: '/profile' },
 ];

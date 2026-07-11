@@ -272,7 +272,7 @@ export default function EmployeeLayout({
 
     const authenticated = isAdminAuthenticated();
     if (!authenticated) {
-      notFound();
+      router.push('/admin/login');
       return;
     }
 
@@ -282,11 +282,11 @@ export default function EmployeeLayout({
       try {
         const user = JSON.parse(userStr);
         if (user.roleName !== 'employee' && user.roleName !== 'admin') {
-          notFound();
+          router.push('/admin/login');
           return;
         }
       } catch (e) {
-        notFound();
+        router.push('/admin/login');
         return;
       }
     }

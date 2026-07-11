@@ -87,7 +87,6 @@ export async function POST(req: NextRequest) {
 
     // Hash password
     const passwordHash = await hashPassword(password);
-
     // Create user
     const result = await query(`
       INSERT INTO users (email, password_hash, first_name, last_name, phone, role_id)
@@ -97,6 +96,14 @@ export async function POST(req: NextRequest) {
 
     const newUser = result.rows[0];
 
+    // If role is mentor, insert into mentors table to sync
+    if (role === 'mentor') {
+      await query(`
+        INSERT INTO mentors (name, email, phone, status)
+        VALUES ($1, $2, $3, 'active')
+        ON CONFLICT (email) DO NOTHING
+      `, [`${firstName} ${lastName}`, email.toLowerCase(), phone || null]);
+    }
     // Get user with role and permissions
     const userResult = await query(`
       SELECT 

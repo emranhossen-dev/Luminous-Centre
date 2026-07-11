@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAdminTheme } from '@/contexts/AdminThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Navbar() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -29,13 +30,11 @@ export default function Navbar() {
   ]);
 
   const { theme, setTheme } = useAdminTheme();
+  const { logout } = useAuth();
   const router = useRouter();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminUser');
+    logout();
     router.push('/admin/login');
   };
 

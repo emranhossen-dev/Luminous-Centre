@@ -47,6 +47,87 @@ export default function EnrollmentsPage() {
   const [editingNote, setEditingNote] = useState(false);
   const [noteText, setNoteText] = useState('');
 
+  // Course Direct Assignment Modal state
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [allStudents, setAllStudents] = useState<any[]>([]);
+  const [allCourses, setAllCourses] = useState<any[]>([]);
+  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [assignAmount, setAssignAmount] = useState('');
+  const [assignPaymentMethod, setAssignPaymentMethod] = useState('cash');
+  const [assigning, setAssigning] = useState(false);
+
+  const handleOpenAssignModal = async () => {
+    setAssignModalOpen(true);
+    try {
+      const token = localStorage.getItem('adminToken');
+      
+      // Fetch students
+      const studentsRes = await fetch('/api/admin/users?role=student&limit=500', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (studentsRes.ok) {
+        const data = await studentsRes.json();
+        setAllStudents(data.users || []);
+      }
+
+      // Fetch courses
+      const coursesRes = await fetch('/api/admin/courses', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (coursesRes.ok) {
+        const data = await coursesRes.json();
+        setAllCourses(data.courses || []);
+      }
+    } catch (error) {
+      console.error('Failed to prefetch assign course data:', error);
+    }
+  };
+
+  const handleAssignSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedStudentId || !selectedCourseId) {
+      alert('Please select both a student and a course');
+      return;
+    }
+
+    setAssigning(true);
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch('/api/admin/enrollments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          userId: parseInt(selectedStudentId),
+          courseId: parseInt(selectedCourseId),
+          amount: assignAmount ? parseFloat(assignAmount) : undefined,
+          paymentMethod: assignPaymentMethod
+        })
+      });
+
+      if (response.ok) {
+        alert('Course assigned successfully! 🚀');
+        setAssignModalOpen(false);
+        setSelectedStudentId('');
+        setSelectedCourseId('');
+        setAssignAmount('');
+        setAssignPaymentMethod('cash');
+        fetchData(); // Refresh enrollments list
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to assign course');
+      }
+    } catch (error) {
+      console.error('Assign course error:', error);
+      alert('An error occurred while assigning the course');
+    } finally {
+      setAssigning(false);
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -207,10 +288,18 @@ export default function EnrollmentsPage() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-8 flex justify-between items-center"
         >
-          <h1 className="text-3xl font-bold text-white mb-2">Enrollments</h1>
-          <p className="text-gray-300">Manage course enrollment applications</p>
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Enrollments</h1>
+            <p className="text-gray-300">Manage course enrollment applications</p>
+          </div>
+          <button
+            onClick={handleOpenAssignModal}
+            className="px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm transition shadow-lg shadow-blue-500/20 active:scale-[0.98]"
+          >
+            Assign Course
+          </button>
         </motion.div>
 
         {/* Course Type Filter Buttons */}
@@ -620,6 +709,124 @@ export default function EnrollmentsPage() {
                   </div>
                 )}
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Course Assignment Modal */}
+        {assignModalOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 flex items-center justify-center p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-slate-900 rounded-3xl p-8 border border-white/10 shadow-2xl max-w-md w-full"
+            >
+              <div className="flex justify-between items-start mb-6">
+                <h2 className="text-2xl font-bold text-white">Assign Course</h2>
+                <button
+                  onClick={() => setAssignModalOpen(false)}
+                  className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleAssignSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    Select Student User <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={selectedStudentId}
+                    onChange={(e) => setSelectedStudentId(e.target.value)}
+                    required
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm"
+                  >
+                    <option value="">Select a student...</option>
+                    {allStudents.map(student => (
+                      <option key={student.id} value={student.id}>
+                        {student.first_name} {student.last_name} ({student.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    Select Course <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={selectedCourseId}
+                    onChange={(e) => {
+                      setSelectedCourseId(e.target.value);
+                      const course = allCourses.find(c => c.id === parseInt(e.target.value));
+                      if (course) {
+                        setAssignAmount(course.price ? course.price.toString() : '0');
+                      }
+                    }}
+                    required
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm"
+                  >
+                    <option value="">Select a course...</option>
+                    {allCourses.map(course => (
+                      <option key={course.id} value={course.id}>
+                        {course.title} ({course.price || 'Free'} BDT)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                      Custom Amount (BDT)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="Price"
+                      value={assignAmount}
+                      onChange={(e) => setAssignAmount(e.target.value)}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                      Payment Method
+                    </label>
+                    <select
+                      value={assignPaymentMethod}
+                      onChange={(e) => setAssignPaymentMethod(e.target.value)}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm"
+                    >
+                      <option value="cash">Cash</option>
+                      <option value="bkash">bKash</option>
+                      <option value="bank">Bank Transfer</option>
+                      <option value="free">Free / Guest</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/5">
+                  <button
+                    type="button"
+                    onClick={() => setAssignModalOpen(false)}
+                    className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-gray-400 hover:text-white text-xs font-bold rounded-xl transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={assigning}
+                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5"
+                  >
+                    {assigning ? 'Assigning...' : 'Assign Course'}
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </motion.div>
         )}

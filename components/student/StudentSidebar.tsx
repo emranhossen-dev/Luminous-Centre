@@ -11,7 +11,8 @@ import {
   PlayCircle, 
   FolderOpen, 
   FileText,
-  ChevronRight
+  ChevronRight,
+  User
 } from 'lucide-react';
 
 const menuItems = [
@@ -20,7 +21,9 @@ const menuItems = [
   { id: 'my-courses', label: 'My Courses', icon: BookOpen, href: '/student/my-courses' },
   { id: 'recording', label: 'Recording', icon: PlayCircle, href: '/student/recording' },
   { id: 'resources', label: 'Resources', icon: FolderOpen, href: '/student/resources' },
+  { id: 'assignments', label: 'Assignments', icon: FileText, href: '/student/assignments' },
   { id: 'build-my-cv', label: 'Build My CV', icon: FileText, href: '/student/build-my-cv' },
+  { id: 'profile', label: 'My Profile', icon: User, href: '/profile' },
 ];
 
 export default function StudentSidebar() {

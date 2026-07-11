@@ -80,13 +80,6 @@ export default function CourseUpdatePage() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button
-                onClick={handleBack}
-                className="text-slate-400 hover:text-white transition-colors flex items-center gap-2"
-              >
-                <ArrowLeft size={20} />
-                Back to Courses
-              </button>
               <div className="text-white">
                 <h1 className="text-xl font-bold">Update Course Details</h1>
                 <p className="text-slate-400 text-sm">{courseData.title}</p>

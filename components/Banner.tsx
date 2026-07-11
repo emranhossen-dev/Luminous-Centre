@@ -50,7 +50,7 @@ const Banner = () => {
         <div className="absolute top-[40%] left-1/2 -translate-x-1/2 w-[20%] h-[20%] bg-purple-600/10 rounded-full blur-[80px] animate-blob animation-delay-4000"></div>
       </div>
 
-      <div className="container mx-auto px-6 py-12 lg:py-20 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <div className="w-full px-4 md:px-8 lg:px-12 xl:px-16 py-12 lg:py-20 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         
         {/* LEFT SIDE: Typography */}
         <motion.div 
@@ -92,17 +92,17 @@ const Banner = () => {
             })}
           </div>
 
-          <div className="flex items-center gap-4 w-full">
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
             <button 
               onClick={handleEnrollmentClick}
-              className="group flex items-center gap-2 w-full sm:w-auto px-6 py-3.5 bg-[#2F2FE4] text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-[#162E93] transition-all transform hover:-translate-y-0.5 active:scale-95"
+              className="group flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3.5 bg-[#2F2FE4] text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-[#162E93] transition-all transform hover:-translate-y-0.5 active:scale-95"
             >
               সকল কোর্স
               <MoveRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
             </button>
             <button 
               onClick={handleApplyClick}
-              className="group flex items-center gap-2 w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs sm:text-sm font-bold hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:-translate-y-0.5 active:scale-95 shadow-lg hover:shadow-blue-500/25"
+              className="group flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs sm:text-sm font-bold hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:-translate-y-0.5 active:scale-95 shadow-lg hover:shadow-blue-500/25"
             >
               ফ্রি সেমিনার
               <MoveRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
@@ -126,7 +126,7 @@ const Banner = () => {
               y: { duration: 4, repeat: Infinity, ease: "easeInOut" },
               rotate: { duration: 4, repeat: Infinity, ease: "easeInOut" }
             }}
-            className="absolute top-10 -left-4 lg:-left-16 z-20 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 backdrop-blur-md hidden sm:block"
+            className="absolute top-10 -left-4 lg:-left-10 z-20 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 backdrop-blur-md hidden sm:block"
           >
             <CodeXml className="w-6 h-6 text-blue-400" />
           </motion.div>
@@ -145,7 +145,7 @@ const Banner = () => {
               y: { duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.2 },
               x: { duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }
             }}
-            className="absolute -top-6 right-10 lg:right-0 z-20 p-3 rounded-xl bg-green-500/10 border border-green-500/20 backdrop-blur-md hidden sm:block"
+            className="absolute -top-6 right-10 lg:right-4 z-20 p-3 rounded-xl bg-green-500/10 border border-green-500/20 backdrop-blur-md hidden sm:block"
           >
             <Megaphone className="w-6 h-6 text-green-400" />
           </motion.div>
@@ -163,7 +163,7 @@ const Banner = () => {
               scale: { duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 },
               rotate: { duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }
             }}
-            className="absolute bottom-1/2 -right-6 lg:-right-12 z-20 p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 backdrop-blur-md hidden sm:block"
+            className="absolute bottom-1/2 -right-6 lg:-right-8 z-20 p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 backdrop-blur-md hidden sm:block"
           >
             <Layers className="w-6 h-6 text-purple-400" />
           </motion.div>
@@ -180,7 +180,7 @@ const Banner = () => {
               delay: 0.6,
               y: { duration: 5.5, repeat: Infinity, ease: "easeInOut" }
             }}
-            className="absolute -bottom-8 left-12 lg:-left-4 z-20 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 backdrop-blur-md hidden sm:block"
+            className="absolute -bottom-8 left-12 lg:left-6 z-20 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 backdrop-blur-md hidden sm:block"
           >
             <Calculator className="w-6 h-6 text-amber-400" />
           </motion.div>
@@ -209,7 +209,7 @@ const Banner = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-[#0c0e1f] via-transparent to-transparent"></div>
             </div>
 
-            <div className="grid grid-cols-4 gap-3 mb-10">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
               {[
                 { name: "Digital Marketing", icon: "📢" },
                 { name: "Graphic Design", icon: "🎨" },
@@ -227,7 +227,7 @@ const Banner = () => {
               ))}
             </div>
 
-            <div className="grid grid-cols-2 gap-y-5 gap-x-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-4">
               {[
                 { text: "24/7 Support", icon: Clock3 },
                 { text: "1:1 Mentor Support", icon: Users },

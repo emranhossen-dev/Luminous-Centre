@@ -1,26 +1,53 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
 import { GoogleOAuth } from '@/lib/google-oauth';
-import { Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
+import { Mail, Lock, ArrowRight, LogIn, Eye, EyeOff, User, Phone, AlertCircle } from 'lucide-react';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function LoginPageContent() {
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const router = useRouter();
 
-  // Clear error when typing
+  // Determine active tab from URL query params (default to 'login')
+  const tabParam = searchParams.get('tab');
+  const [isLogin, setIsLogin] = useState(tabParam !== 'signup');
+
+  // Sign In States
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Sign Up States
+  const [signUpData, setSignUpData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    phone: '',
+    role: 'student'
+  });
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Clear errors when toggling tabs or typing
   useEffect(() => {
-    if (error) setError('');
-  }, [email, password]);
+    setError('');
+  }, [isLogin, email, password, signUpData]);
+
+  // Sync tab with query params if changed externally
+  useEffect(() => {
+    setIsLogin(tabParam !== 'signup');
+  }, [tabParam]);
 
   const handleGoogleSignIn = () => {
     setIsGoogleLoading(true);
@@ -34,14 +61,15 @@ function LoginPageContent() {
 
     try {
       GoogleOAuth.signInWithRedirect();
-    } catch (error: any) {
-      setError(error.message || 'Google sign in failed');
+    } catch (err: any) {
+      setError(err.message || 'Google sign in failed');
       setIsGoogleLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Handle Login Submission
+  const handleLoginSubmit = async () => {
+    if (!email || !password) return;
     setLoading(true);
     setError('');
 
@@ -58,7 +86,6 @@ function LoginPageContent() {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
 
-        // If staff member, also authenticate for admin/staff panel
         if (data.user.roleName !== 'student') {
           localStorage.setItem('adminToken', data.token);
           localStorage.setItem('adminUser', JSON.stringify(data.user));
@@ -102,172 +129,624 @@ function LoginPageContent() {
     }
   };
 
+  // Handle Sign Up Submission
+  const handleSignUpSubmit = async () => {
+    if (!signUpData.firstName || !signUpData.lastName || !signUpData.email || !signUpData.password) {
+      setError('Required fields are missing.');
+      return;
+    }
+
+    if (signUpData.password !== signUpData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: signUpData.firstName,
+          lastName: signUpData.lastName,
+          email: signUpData.email,
+          password: signUpData.password,
+          phone: signUpData.phone,
+          role: 'student' // Force role to student for public registration
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        toast.success('Account created successfully! 🎉');
+
+        setTimeout(() => {
+          switch (data.user.roleName) {
+            case 'admin': router.push('/admin'); break;
+            case 'employee': router.push('/employee'); break;
+            case 'mentor': router.push('/mentor'); break;
+            case 'student': router.push('/student'); break;
+            default: router.push('/'); break;
+          }
+        }, 1500);
+      } else {
+        setError(data.error || 'Registration failed');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignUpChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setSignUpData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const toggleMode = () => {
+    setIsLogin(!isLogin);
+    setEmail("");
+    setPassword("");
+    setSignUpData({
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      phone: '',
+      role: 'student'
+    });
+    setShowPassword(false);
+    setShowSignUpPassword(false);
+    setShowConfirmPassword(false);
+  };
+
   return (
-    <div className="min-h-screen relative bg-[#05060f] flex items-center justify-center px-4 overflow-hidden">
-      {/* Background Animated Blobs */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px] animate-blob"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[120px] animate-blob animation-delay-2000"></div>
-        <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-indigo-600/10 rounded-full blur-[100px] animate-blob animation-delay-4000"></div>
+    <div className="w-full min-h-[calc(100vh-160px)] pt-24 pb-12 px-4 flex items-center justify-center relative overflow-hidden bg-slate-50 text-slate-900 dark:bg-gradient-to-br dark:from-[#030014] dark:via-[#05051a] dark:to-[#09092d] dark:text-white font-sans">
+      <ToastContainer position="top-right" theme="dark" />
+
+      {/* Animated Background Blobs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 dark:block hidden">
+        <div
+          className="absolute top-[10%] left-[10%] w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] animate-pulse"
+          style={{ animationDuration: "8s" }}
+        />
+        <div
+          className="absolute top-[30%] right-[15%] w-80 h-80 bg-cyan-500/10 rounded-full blur-[100px] animate-pulse"
+          style={{ animationDuration: "10s", animationDelay: "2s" }}
+        />
+        <div
+          className="absolute bottom-[20%] left-[30%] w-72 h-72 bg-indigo-600/10 rounded-full blur-[90px] animate-pulse"
+          style={{ animationDuration: "12s", animationDelay: "4s" }}
+        />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="w-full max-w-md relative z-10"
-      >
-        <div className="glass rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.3)] overflow-hidden border border-white/10">
-          <div className="p-8 md:p-10">
-            {/* Header */}
-            <div className="text-center mb-10">
-              <motion.div
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="inline-block p-3 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 mb-4 shadow-lg shadow-blue-500/20"
-              >
-                <Lock className="w-6 h-6 text-white" />
-              </motion.div>
-              <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">
-                Welcome Back
-              </h2>
-              <p className="text-gray-400 text-sm">
-                Sign in to continue your learning journey
-              </p>
-            </div>
+      {/* Main Content Area */}
+      <div className="relative z-20 flex-1 flex items-center justify-center w-full max-w-5xl mx-auto">
+        
+        {/* Desktop sliding overlay container */}
+        <div className="hidden lg:flex w-full max-w-5xl h-[560px] relative bg-white border border-slate-200 rounded-3xl shadow-xl overflow-hidden dark:bg-white/5 dark:border-white/10 dark:shadow-2xl dark:backdrop-blur-xl">
+          
+          {/* Sign In panel (left half on login mode) */}
+          <div
+            className={`absolute left-0 top-0 w-1/2 h-full flex items-center justify-center p-10 transition-all duration-700 ease-in-out ${
+              isLogin
+                ? "opacity-100 translate-x-0"
+                : "opacity-0 -translate-x-full pointer-events-none"
+            }`}
+          >
+            <div className="w-full max-w-sm space-y-6">
+              <div className="text-center space-y-2">
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                  Sign In
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">
+                  Enter your credentials to continue
+                </p>
+              </div>
 
-            {/* Error Message */}
-            <AnimatePresence>
               {error && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0, y: -10 }}
-                  animate={{ opacity: 1, height: 'auto', y: 0 }}
-                  exit={{ opacity: 0, height: 0, y: -10 }}
-                  className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl mb-6 flex items-center gap-3 text-sm"
-                >
-                  <AlertCircle className="shrink-0" />
-                  {error}
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Google Sign-In Button */}
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={isGoogleLoading}
-              className="w-full flex justify-center items-center gap-3 py-3 px-4 rounded-xl border border-white/10 text-sm font-medium text-white bg-white/5 hover:bg-white/10 transition-all duration-300 group disabled:opacity-50 mb-6"
-            >
-              {isGoogleLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>Connecting...</span>
+                <div className="bg-red-500/10 border border-red-500/20 text-red-450 dark:text-red-400 px-4 py-2.5 rounded-xl flex items-center gap-3 text-xs">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{error}</span>
                 </div>
-              ) : (
-                <>
-                  <svg className="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                  </svg>
-                  <span>Sign in with Google</span>
-                </>
               )}
-            </button>
 
-            <div className="relative mb-8">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/5"></div>
-              </div>
-              <div className="relative flex justify-center text-xs uppercase tracking-widest">
-                <span className="px-3 bg-transparent text-gray-500">Or email</span>
-              </div>
-            </div>
-
-            {/* Login Form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-2">
-                <label htmlFor="email" className="block text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">
-                  Email Address
-                </label>
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within:text-blue-500 transition-colors">
-                    <Mail className="w-5 h-5" />
+              <div className="space-y-4">
+                <div className="space-y-3">
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-3.5 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors dark:text-slate-500 dark:group-focus-within:text-blue-400" />
+                    <input
+                      type="email"
+                      placeholder="Email address"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-100 border border-slate-200 text-slate-900 rounded-xl placeholder-slate-450 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all text-sm h-11 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-600"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleLoginSubmit()}
+                    />
                   </div>
-                  <input
-                    id="email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-white/[0.03] border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-white placeholder-gray-600 transition-all"
-                    placeholder="name@example.com"
-                  />
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-3.5 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors dark:text-slate-500 dark:group-focus-within:text-blue-400" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password"
+                      className="w-full pl-11 pr-10 py-3 bg-slate-100 border border-slate-200 text-slate-900 rounded-xl placeholder-slate-450 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all text-sm h-11 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-600"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleLoginSubmit()}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-2.5 text-slate-500 hover:text-slate-700 transition-colors focus:outline-none cursor-pointer dark:hover:text-slate-300"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between ml-1">
-                  <label htmlFor="password" className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Password
-                  </label>
-                  <Link href="/auth/forgot-password" className="text-[10px] font-bold text-blue-500 hover:text-blue-400 uppercase tracking-tighter transition-colors">
-                    Forgot?
+                <div className="text-right">
+                  <Link href="/login/forget" className="text-xs font-bold text-blue-600 hover:text-blue-500 transition-colors dark:text-blue-500 dark:hover:text-blue-400">
+                    Forgot Password?
                   </Link>
                 </div>
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within:text-blue-500 transition-colors">
-                    <Lock className="w-5 h-5" />
-                  </div>
-                  <input
-                    id="password"
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-white/[0.03] border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-white placeholder-gray-600 transition-all"
-                    placeholder="••••••••"
-                  />
+
+                <button
+                  onClick={handleLoginSubmit}
+                  disabled={loading}
+                  className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl shadow-lg shadow-blue-500/25 h-11 font-semibold transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+                >
+                  {loading ? "Signing in..." : "Sign In"}
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-slate-200 dark:border-white/10" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white dark:bg-[#0c0d21] px-3 text-slate-500">
+                    Or continue with
+                  </span>
                 </div>
               </div>
 
               <button
-                type="submit"
-                disabled={loading}
-                className="w-full group relative flex justify-center items-center py-3.5 px-4 border border-transparent rounded-xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 transition-all duration-300 shadow-lg shadow-blue-600/20 disabled:opacity-50 overflow-hidden"
+                onClick={handleGoogleSignIn}
+                disabled={isGoogleLoading}
+                className="w-full flex items-center justify-center border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-xl h-11 transition-all cursor-pointer disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
               >
-                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
-                    <span>Authenticating...</span>
-                  </div>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    Sign In <ArrowRight className="group-hover:translate-x-1 transition-transform" />
-                  </span>
-                )}
+                <LogIn className="w-4 h-4 mr-2 text-blue-500 dark:text-blue-400" />
+                Google Account
               </button>
-            </form>
+            </div>
+          </div>
 
-            <div className="mt-8 text-center">
-              <p className="text-sm text-gray-500">
-                New here?{' '}
-                <Link href="/auth/register" className="font-bold text-white hover:text-blue-400 transition-colors">
-                  Create an account
-                </Link>
-              </p>
+          {/* Sign Up panel (right half on register mode) */}
+          <div
+            className={`absolute left-1/2 top-0 w-1/2 h-full flex items-center justify-center p-10 transition-all duration-700 ease-in-out ${
+              !isLogin
+                ? "opacity-100 translate-x-0"
+                : "opacity-0 translate-x-full pointer-events-none"
+            }`}
+          >
+            <div className="w-full max-w-sm space-y-5">
+              <div className="text-center space-y-1">
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                  Create Account
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">
+                  Join Luminous LMS Portal today
+                </p>
+              </div>
+
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-450 dark:text-red-400 px-4 py-2 rounded-xl flex items-center gap-3 text-xs">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <div className="space-y-3.5">
+                <div className="space-y-2.5">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="relative group">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 dark:text-slate-500" />
+                      <input
+                        name="firstName"
+                        type="text"
+                        placeholder="First name"
+                        className="w-full pl-9 pr-3 py-2 bg-slate-100 border border-slate-200 text-slate-900 rounded-xl placeholder-slate-450 focus:outline-none focus:border-blue-500/50 text-xs h-10 transition-all dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-600"
+                        value={signUpData.firstName}
+                        onChange={handleSignUpChange}
+                      />
+                    </div>
+                    <div className="relative group">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 dark:text-slate-500" />
+                      <input
+                        name="lastName"
+                        type="text"
+                        placeholder="Last name"
+                        className="w-full pl-9 pr-3 py-2 bg-slate-100 border border-slate-200 text-slate-900 rounded-xl placeholder-slate-450 focus:outline-none focus:border-blue-500/50 text-xs h-10 transition-all dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-600"
+                        value={signUpData.lastName}
+                        onChange={handleSignUpChange}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="relative group">
+                    <Mail className="absolute left-3.5 top-3 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 dark:text-slate-500" />
+                    <input
+                      name="email"
+                      type="email"
+                      placeholder="Email address"
+                      className="w-full pl-9 pr-3 py-2 bg-slate-100 border border-slate-200 text-slate-900 rounded-xl placeholder-slate-450 focus:outline-none focus:border-blue-500/50 text-xs h-10 transition-all dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-600"
+                      value={signUpData.email}
+                      onChange={handleSignUpChange}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="relative group">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 dark:text-slate-500" />
+                      <input
+                        name="password"
+                        type={showSignUpPassword ? "text" : "password"}
+                        placeholder="Password"
+                        className="w-full pl-9 pr-8 py-2 bg-slate-100 border border-slate-200 text-slate-900 rounded-xl placeholder-slate-450 focus:outline-none focus:border-blue-500/50 text-xs h-10 transition-all dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-600"
+                        value={signUpData.password}
+                        onChange={handleSignUpChange}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                        className="absolute right-2 top-2.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 focus:outline-none"
+                      >
+                        {showSignUpPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                    <div className="relative group">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 dark:text-slate-500" />
+                      <input
+                        name="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Confirm"
+                        className="w-full pl-9 pr-8 py-2 bg-slate-100 border border-slate-200 text-slate-900 rounded-xl placeholder-slate-450 focus:outline-none focus:border-blue-500/50 text-xs h-10 transition-all dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-600"
+                        value={signUpData.confirmPassword}
+                        onChange={handleSignUpChange}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSignUpSubmit()}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-2 top-2.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 focus:outline-none"
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="relative group">
+                    <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 dark:text-slate-500" />
+                    <input
+                      name="phone"
+                      type="tel"
+                      placeholder="Phone number (Optional)"
+                      className="w-full pl-9 pr-3 py-2 bg-slate-100 border border-slate-200 text-slate-900 rounded-xl placeholder-slate-450 focus:outline-none focus:border-blue-500/50 text-xs h-10 transition-all dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-600"
+                      value={signUpData.phone}
+                      onChange={handleSignUpChange}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleSignUpSubmit}
+                  disabled={loading}
+                  className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl shadow-lg shadow-blue-500/25 h-10 text-xs font-semibold transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+                >
+                  {loading ? "Creating account..." : "Create Account"}
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-slate-200 dark:border-white/10" />
+                </div>
+                <div className="relative flex justify-center text-[10px] uppercase">
+                  <span className="bg-white dark:bg-[#0c0d21] px-3 text-slate-550 dark:text-slate-500">
+                    Or continue with
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={handleGoogleSignIn}
+                disabled={isGoogleLoading}
+                className="w-full flex items-center justify-center border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-xl h-10 text-xs transition-all cursor-pointer disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
+              >
+                <LogIn className="w-4 h-4 mr-2 text-blue-500 dark:text-blue-400" />
+                Google Account
+              </button>
+            </div>
+          </div>
+
+          {/* Sliding Overlay Container */}
+          <div
+            className={`absolute top-0 h-full w-1/2 bg-gradient-to-br from-blue-600 to-indigo-600 transition-all duration-700 ease-in-out flex flex-col items-center justify-center text-white p-10 ${
+              isLogin
+                ? "left-1/2 rounded-l-[60px]"
+                : "left-0 rounded-r-[60px]"
+            }`}
+          >
+            <div className="text-center space-y-5 max-w-xs">
+              {isLogin ? (
+                <>
+                  <h2 className="text-3xl font-bold tracking-tight text-white">New to Luminous?</h2>
+                  <p className="text-blue-100 text-sm leading-relaxed">
+                    Create an account with your personal details to access courses, quizzes, and live recordings
+                  </p>
+                  <button
+                    onClick={toggleMode}
+                    className="px-8 py-2.5 rounded-full border-2 border-white/40 text-white font-bold text-xs hover:bg-white/10 transition-all cursor-pointer active:scale-95"
+                  >
+                    SIGN UP
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-3xl font-bold tracking-tight text-white">Already Registered?</h2>
+                  <p className="text-blue-100 text-sm leading-relaxed">
+                    Log in with your existing credentials to access your LMS dashboard
+                  </p>
+                  <button
+                    onClick={toggleMode}
+                    className="px-8 py-2.5 rounded-full border-2 border-white/40 text-white font-bold text-xs hover:bg-white/10 transition-all cursor-pointer active:scale-95"
+                  >
+                    SIGN IN
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
-      </motion.div>
 
-      {/* Decorative corner element */}
-      <div className="absolute top-10 right-10 z-0 opacity-20 pointer-events-none hidden lg:block">
-        <div className="w-64 h-64 border-2 border-blue-500/30 rounded-full flex items-center justify-center animate-[spin_20s_linear_infinite]">
-          <div className="w-48 h-48 border-2 border-indigo-500/20 rounded-full"></div>
+        {/* Mobile Form Layout (single panel stacked card) */}
+        <div className="lg:hidden w-full max-w-md mx-auto">
+          
+          {/* Mobile branding header */}
+          <div className="text-center mb-6 space-y-2">
+            <div className="mx-auto relative w-14 h-14">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl blur opacity-60" />
+              <img
+                src="/logo.jpg"
+                alt="Luminous Logo"
+                className="relative rounded-2xl w-14 h-14 object-cover animate-pulse"
+              />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+              {isLogin ? "Welcome Back" : "Get Started"}
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400 text-xs">
+              {isLogin
+                ? "Sign in to access your dashboard"
+                : "Create your student account today"}
+            </p>
+          </div>
+
+          <div className="bg-white border border-slate-200 p-5 sm:p-8 rounded-3xl space-y-5 shadow-xl dark:bg-white/5 dark:border-white/10 dark:shadow-2xl dark:backdrop-blur-xl">
+            <div className="space-y-1.5 text-center">
+              <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                {isLogin ? "Sign In" : "Create Account"}
+              </h3>
+            </div>
+
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-450 dark:text-red-400 px-4 py-2 rounded-xl flex items-center gap-3 text-xs">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {isLogin ? (
+                /* Mobile Login Inputs */
+                <div className="space-y-3">
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-3.5 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 dark:text-slate-500" />
+                    <input
+                      type="email"
+                      placeholder="Email address"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-100 border border-slate-200 text-slate-900 rounded-xl placeholder-slate-450 focus:outline-none focus:border-blue-500/50 text-sm h-11 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-600"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-3.5 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 dark:text-slate-500" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password"
+                      className="w-full pl-11 pr-10 py-3 bg-slate-100 border border-slate-200 text-slate-900 rounded-xl placeholder-slate-450 focus:outline-none focus:border-blue-500/50 text-sm h-11 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-600"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleLoginSubmit()}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-2.5 text-slate-550 hover:text-slate-700 dark:text-slate-500 focus:outline-none"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <div className="text-right">
+                    <Link href="/login/forget" className="text-xs font-bold text-blue-600 hover:text-blue-500 transition-colors dark:text-blue-500 dark:hover:text-blue-400">
+                      Forgot Password?
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                /* Mobile Register Inputs */
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="relative group">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-slate-400 dark:text-slate-500" />
+                      <input
+                        name="firstName"
+                        type="text"
+                        placeholder="First name"
+                        className="w-full pl-9 pr-3 py-2.5 bg-slate-100 border border-slate-200 text-slate-900 rounded-xl placeholder-slate-450 focus:outline-none focus:border-blue-500/50 text-xs h-10 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-600"
+                        value={signUpData.firstName}
+                        onChange={handleSignUpChange}
+                      />
+                    </div>
+                    <div className="relative group">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-slate-400 dark:text-slate-500" />
+                      <input
+                        name="lastName"
+                        type="text"
+                        placeholder="Last name"
+                        className="w-full pl-9 pr-3 py-2.5 bg-slate-100 border border-slate-200 text-slate-900 rounded-xl placeholder-slate-450 focus:outline-none focus:border-blue-500/50 text-xs h-10 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-600"
+                        value={signUpData.lastName}
+                        onChange={handleSignUpChange}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="relative group">
+                    <Mail className="absolute left-3.5 top-3 h-4 w-4 text-slate-400 dark:text-slate-500" />
+                    <input
+                      name="email"
+                      type="email"
+                      placeholder="Email address"
+                      className="w-full pl-9 pr-3 py-2.5 bg-slate-100 border border-slate-200 text-slate-900 rounded-xl placeholder-slate-450 focus:outline-none focus:border-blue-500/50 text-xs h-10 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-600"
+                      value={signUpData.email}
+                      onChange={handleSignUpChange}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="relative group">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400 dark:text-slate-500" />
+                      <input
+                        name="password"
+                        type={showSignUpPassword ? "text" : "password"}
+                        placeholder="Password"
+                        className="w-full pl-9 pr-8 py-2.5 bg-slate-100 border border-slate-200 text-slate-900 rounded-xl placeholder-slate-450 focus:outline-none focus:border-blue-500/50 text-xs h-10 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-600"
+                        value={signUpData.password}
+                        onChange={handleSignUpChange}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                        className="absolute right-2 top-2.5 text-slate-500 focus:outline-none"
+                      >
+                        {showSignUpPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                    <div className="relative group">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400 dark:text-slate-500" />
+                      <input
+                        name="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Confirm"
+                        className="w-full pl-9 pr-8 py-2.5 bg-slate-100 border border-slate-200 text-slate-900 rounded-xl placeholder-slate-450 focus:outline-none focus:border-blue-500/50 text-xs h-10 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-600"
+                        value={signUpData.confirmPassword}
+                        onChange={handleSignUpChange}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSignUpSubmit()}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-2 top-2.5 text-slate-500 focus:outline-none"
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="relative group">
+                    <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-400 dark:text-slate-500" />
+                    <input
+                      name="phone"
+                      type="tel"
+                      placeholder="Phone number (Optional)"
+                      className="w-full pl-9 pr-3 py-2.5 bg-slate-100 border border-slate-200 text-slate-900 rounded-xl placeholder-slate-450 focus:outline-none focus:border-blue-500/50 text-xs h-10 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-slate-600"
+                      value={signUpData.phone}
+                      onChange={handleSignUpChange}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={isLogin ? handleLoginSubmit : handleSignUpSubmit}
+                disabled={loading}
+                className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl shadow-lg shadow-blue-500/25 h-11 font-semibold transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+              >
+                {loading
+                  ? isLogin
+                    ? "Signing in..."
+                    : "Creating account..."
+                  : isLogin
+                    ? "Sign In"
+                    : "Create Account"}
+                <ArrowRight className="w-4 h-4 animate-pulse" />
+              </button>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-slate-200 dark:border-white/10" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white dark:bg-[#0c0d21] px-3 text-slate-550 dark:text-slate-500">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleGoogleSignIn}
+              disabled={isGoogleLoading}
+              className="w-full flex items-center justify-center border border-slate-200 bg-white text-slate-700 hover:bg-slate-550 hover:text-slate-950 rounded-xl h-11 text-xs transition-all cursor-pointer disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
+            >
+              <LogIn className="w-4 h-4 mr-2 text-blue-500 dark:text-blue-400" />
+              Google Account
+            </button>
+
+            <p className="text-center text-sm text-slate-500 dark:text-slate-400">
+              {isLogin ? (
+                <>
+                  Don&apos;t have an account?{" "}
+                  <button
+                    onClick={toggleMode}
+                    className="text-blue-600 hover:text-blue-500 font-bold transition-colors cursor-pointer bg-transparent border-none p-0 inline-block focus:outline-none dark:text-blue-400 dark:hover:text-blue-350"
+                  >
+                    Sign up
+                  </button>
+                </>
+              ) : (
+                <>
+                  Already have an account?{" "}
+                  <button
+                    onClick={toggleMode}
+                    className="text-blue-600 hover:text-blue-500 font-bold transition-colors cursor-pointer bg-transparent border-none p-0 inline-block focus:outline-none dark:text-blue-400 dark:hover:text-blue-350"
+                  >
+                    Sign in
+                  </button>
+                </>
+              )}
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -276,7 +755,11 @@ function LoginPageContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#030014] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+      </div>
+    }>
       <LoginPageContent />
     </Suspense>
   );

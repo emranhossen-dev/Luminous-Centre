@@ -83,12 +83,6 @@ export default function CurriculumPage({ params }: { params: Promise<{ slug: str
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <button
-            onClick={handleBack}
-            className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-6 h-6 text-gray-400" />
-          </button>
           <div>
             <h1 className="text-3xl font-bold text-white">Course Curriculum</h1>
             <p className="text-gray-400">{courseTitle}</p>

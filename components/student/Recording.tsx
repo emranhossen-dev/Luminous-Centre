@@ -99,53 +99,61 @@ export default function Recording() {
               className="bg-slate-900/50 rounded-2xl border border-white/5 overflow-hidden hover:border-emerald-500/30 transition-all group"
             >
               <div className="flex flex-col md:flex-row gap-6 p-6">
-                <div className="relative w-full md:w-40 h-24 rounded-xl overflow-hidden shrink-0">
-                  <img 
-                    src={recording.thumbnailUrl || '/placeholder.jpg'} 
-                    className="w-full h-full object-cover" 
-                    alt={recording.title} 
-                  />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                    <PlayCircle className="text-white" size={32} />
-                  </div>
-                </div>
-                
-                <div className="flex-1 space-y-3">
-                  <div>
-                    <h3 className="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors">
-                      {recording.title}
-                    </h3>
-                    <p className="text-sm text-slate-500">{recording.courseTitle}</p>
-                    <p className="text-sm text-slate-400">by {recording.instructor}</p>
+                  <div className="relative w-full md:w-40 h-24 rounded-xl overflow-hidden shrink-0 cursor-pointer" onClick={() => window.open(recording.videoUrl, '_blank')}>
+                    <img 
+                      src={recording.thumbnailUrl || '/placeholder.jpg'} 
+                      className="w-full h-full object-cover" 
+                      alt={recording.title} 
+                    />
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <PlayCircle className="text-white" size={32} />
+                    </div>
                   </div>
                   
-                  <div className="flex items-center gap-4 text-sm text-slate-500">
-                    <div className="flex items-center gap-1">
-                      <Calendar size={14} />
-                      {new Date(recording.recordedAt).toLocaleDateString()}
+                  <div className="flex-1 space-y-3">
+                    <div>
+                      <h3 className="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors cursor-pointer" onClick={() => window.open(recording.videoUrl, '_blank')}>
+                        {recording.title}
+                      </h3>
+                      <p className="text-sm text-slate-500">{recording.courseTitle}</p>
+                      <p className="text-sm text-slate-400">by {recording.instructor || 'Mentor'}</p>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Clock size={14} />
-                      {recording.duration}
+                    
+                    <div className="flex items-center gap-4 text-sm text-slate-500">
+                      <div className="flex items-center gap-1">
+                        <Calendar size={14} />
+                        {new Date(recording.recordedAt).toLocaleDateString()}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock size={14} />
+                        {recording.duration || 'N/A'}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <PlayCircle size={14} />
+                        {recording.views || 0} views
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <PlayCircle size={14} />
-                      {recording.views} views
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-3 pt-2">
-                    <button className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl transition-all flex items-center gap-2">
-                      <PlayCircle size={16} />
-                      Watch Now
-                    </button>
-                    {recording.downloadUrl && (
-                      <button className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold rounded-xl transition-all flex items-center gap-2">
-                        <Download size={16} />
-                        Download
+                    <div className="flex items-center gap-3 pt-2">
+                      <button 
+                        onClick={() => window.open(recording.videoUrl, '_blank')}
+                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl transition-all flex items-center gap-2"
+                      >
+                        <PlayCircle size={16} />
+                        Watch Now
                       </button>
-                    )}
-                  </div>
+                      {recording.downloadUrl && (
+                        <a 
+                          href={recording.downloadUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold rounded-xl transition-all flex items-center gap-2"
+                        >
+                          <Download size={16} />
+                          Download
+                        </a>
+                      )}
+                    </div>
                 </div>
               </div>
             </motion.div>

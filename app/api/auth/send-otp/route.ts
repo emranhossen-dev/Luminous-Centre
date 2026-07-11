@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
 
     // Generate a 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log('[SEND-OTP] Generated OTP:', otp, 'for email:', email);
     
     // OTP validity: 15 minutes from now
     const expires = new Date(Date.now() + 15 * 60 * 1000);
@@ -65,16 +66,28 @@ export async function POST(req: NextRequest) {
       </div>
     `;
 
-    await sendEmail({
+    const emailResult = await sendEmail({
       to: email,
       subject: 'Password Reset OTP - Luminous Skills',
       html: otpEmailHtml
     });
+    if (!emailResult.success) {
+      console.error('[SEND-OTP] Email sending failed:', emailResult.error);
+      return NextResponse.json({ 
+        error: `Email sending failed: ${emailResult.error}` 
+      }, { status: 500 });
+    }
 
-    return NextResponse.json({ 
+    const responseData: any = { 
       success: true, 
       message: 'OTP sent to your email.' 
-    });
+    };
+
+    if (process.env.NODE_ENV === 'development') {
+      responseData.otp = otp;
+    }
+
+    return NextResponse.json(responseData);
 
   } catch (error: any) {
     console.error('Send OTP error:', error);

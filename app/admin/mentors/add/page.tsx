@@ -57,12 +57,6 @@ export default function AddMentorPage() {
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
-        <Link 
-          href="/admin/mentors" 
-          className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-full transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
         <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Add New Mentor</h1>
       </div>
 

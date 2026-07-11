@@ -9,9 +9,9 @@ export const dynamic = 'force-dynamic';
 export default async function StudentDetailsPage({
   params
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
-  const { id } = params;
+  const { id } = await params;
 
   let student: any = null;
   let enrollments: any[] = [];
@@ -45,9 +45,6 @@ export default async function StudentDetailsPage({
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/admin/students" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
         <h1 className="text-3xl font-bold tracking-tight">Student Details</h1>
       </div>
 

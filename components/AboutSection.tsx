@@ -26,7 +26,7 @@ const AboutSection = () => {
         <div className="absolute top-1/2 right-[-5%] w-[30%] h-[30%] bg-indigo-600/12 rounded-full blur-[100px] animate-blob animation-delay-4000"></div>
       </div>
 
-      <div className="container mx-auto px-6 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+      <div className="w-full px-4 md:px-8 lg:px-12 xl:px-16 relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
         
         {/* LEFT SIDE: Image Container */}
         <motion.div 

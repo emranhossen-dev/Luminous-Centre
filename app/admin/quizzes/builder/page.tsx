@@ -76,9 +76,6 @@ export default function QuizBuilderPage() {
     <div className="p-6 max-w-5xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/admin/quizzes" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
           <h1 className="text-3xl font-bold tracking-tight">Quiz Builder</h1>
         </div>
         <div className="flex items-center gap-2">

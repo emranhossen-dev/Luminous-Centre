@@ -28,8 +28,8 @@ export default function Sidebar() {
     if (user.roleName === 'admin') return true;
     // Wildcard permissions
     if (user.permissions?.includes('*')) return true;
-    // Dashboard is default access for all logged in staff
-    if (itemId === 'dashboard') return true;
+    // Dashboard and profile are default access for all logged in staff
+    if (itemId === 'dashboard' || itemId === 'profile') return true;
     
     // Check specific module permission
     return user.permissions?.includes(itemId);

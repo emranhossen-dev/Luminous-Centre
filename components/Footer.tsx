@@ -30,7 +30,7 @@ const Footer = () => {
     return (
         <footer className="bg-[#05060f] border-t border-white/10">
             {/* Main Footer Content */}
-            <div className="container mx-auto px-6 py-16">
+            <div className="w-full px-4 md:px-8 lg:px-12 xl:px-16 py-16">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 text-center md:text-left">
                     
                     {/* Institute Information */}
@@ -148,7 +148,7 @@ const Footer = () => {
 
             {/* Bottom Footer */}
             <div className="border-t border-white/10">
-                <div className="container mx-auto px-6 py-6">
+                <div className="w-full px-4 md:px-8 lg:px-12 xl:px-16 py-6">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-2 text-gray-400 text-sm">
                             <span>© {currentYear} Luminous Skill Development Training Center.</span>
