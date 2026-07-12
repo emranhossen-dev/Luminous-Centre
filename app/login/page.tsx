@@ -8,6 +8,7 @@ import { GoogleOAuth } from '@/lib/google-oauth';
 import { Mail, Lock, ArrowRight, LogIn, Eye, EyeOff, User, Phone, AlertCircle } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Swal from 'sweetalert2';
 
 function LoginPageContent() {
   const searchParams = useSearchParams();
@@ -94,36 +95,50 @@ function LoginPageContent() {
         const redirect = searchParams.get('redirect');
         const course = searchParams.get('course');
 
-        if (redirect === 'enroll') {
-          router.push('/courses');
-          return;
-        } else if (redirect === 'course' && course) {
-          router.push(`/courses/${course}`);
-          return;
-        }
+        toast.success('Successfully logged in! Redirecting... 🎉');
 
-        // Redirect based on role
-        switch (data.user.roleName) {
-          case 'admin':
-          case 'manager':
-          case 'employee':
-            router.push('/admin/dashboard');
-            break;
-          case 'mentor':
-            router.push('/mentor');
-            break;
-          case 'student':
-            router.push('/student');
-            break;
-          default:
-            router.push('/');
-            break;
-        }
+        setTimeout(() => {
+          if (redirect === 'enroll') {
+            router.push('/courses');
+            return;
+          } else if (redirect === 'course' && course) {
+            router.push(`/courses/${course}`);
+            return;
+          }
+
+          // Redirect based on role
+          switch (data.user.roleName) {
+            case 'admin':
+            case 'manager':
+            case 'employee':
+              router.push('/admin/dashboard');
+              break;
+            case 'mentor':
+              router.push('/mentor');
+              break;
+            case 'student':
+              router.push('/student');
+              break;
+            default:
+              router.push('/');
+              break;
+          }
+        }, 1500);
       } else {
-        setError(data.error || 'Login failed');
+        Swal.fire({
+          title: 'Login Failed!',
+          text: data.error || 'Invalid email or password. Please verify your credentials.',
+          icon: 'error',
+          confirmButtonColor: '#3b82f6'
+        });
       }
     } catch (err) {
-      setError('Network error. Please try again.');
+      Swal.fire({
+        title: 'Error!',
+        text: 'Network error. Please try again.',
+        icon: 'error',
+        confirmButtonColor: '#3b82f6'
+      });
     } finally {
       setLoading(false);
     }

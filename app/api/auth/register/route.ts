@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { hashPassword, generateToken, generateRefreshToken, logActivity } from '@/lib/auth';
+import { sendEmail } from '@/lib/email';
 
 export async function POST(req: NextRequest) {
   try {
@@ -95,6 +96,41 @@ export async function POST(req: NextRequest) {
     `, [email, passwordHash, firstName, lastName, phone, roleId]);
 
     const newUser = result.rows[0];
+
+    // If role is student, send a welcome email
+    if (role === 'student') {
+      const welcomeHtml = `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); color: #1e293b;">
+          <div style="text-align: center; margin-bottom: 25px;">
+            <div style="display: inline-block; background-color: #2563eb; color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 20px; letter-spacing: 0.5px;">Luminous Skill Development Training Center</div>
+          </div>
+          <h2 style="color: #0f172a; font-size: 20px; font-weight: bold; margin-bottom: 15px;">Welcome to Luminous Skill Development Training Center!</h2>
+          <p style="font-size: 14px; line-height: 1.6; color: #475569;">Hello <strong>${firstName} ${lastName}</strong>,</p>
+          <p style="font-size: 14px; line-height: 1.6; color: #475569;">Thank you for registering on our platform! We are thrilled to welcome you to the <strong>Luminous Skill Development Training Center</strong> community.</p>
+          <p style="font-size: 14px; line-height: 1.6; color: #475569;">Your account has been successfully created. You can now log in to enroll in our premium courses, access learning materials, and track your educational progress.</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login" style="background-color: #2563eb; color: white; padding: 12px 24px; border-radius: 12px; font-weight: bold; font-size: 14px; text-decoration: none; display: inline-block; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
+              Login to Your Dashboard
+            </a>
+          </div>
+          
+          <p style="font-size: 13px; line-height: 1.6; color: #475569;">
+            If you have any questions or require assistance, please feel free to reply to this email or reach out to our student support team.
+          </p>
+          <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 25px 0;" />
+          <p style="font-size: 11px; text-align: center; color: #94a3b8; margin: 0;">
+            Luminous Skill Development Training Center.
+          </p>
+        </div>
+      `;
+
+      sendEmail({
+        to: email,
+        subject: 'Welcome to Luminous Skill Development Training Center! 🎉',
+        html: welcomeHtml
+      }).catch(err => console.error('[REGISTER-WELCOME-EMAIL] Error sending welcome email:', err));
+    }
 
     // If role is mentor, insert into mentors table to sync
     if (role === 'mentor') {

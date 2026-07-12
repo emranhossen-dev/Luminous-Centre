@@ -6,11 +6,11 @@ export async function POST(req: NextRequest) {
   try {
     const { email, otp, newPassword } = await req.json();
 
-    if (!email || !otp || !newPassword) {
-      return NextResponse.json({ error: 'Email, OTP code, and new password are required' }, { status: 400 });
+    if (!email || !otp) {
+      return NextResponse.json({ error: 'Email and OTP code are required' }, { status: 400 });
     }
 
-    if (newPassword.length < 6) {
+    if (newPassword && newPassword.length < 6) {
       return NextResponse.json({ error: 'New password must be at least 6 characters long' }, { status: 400 });
     }
 
@@ -35,6 +35,14 @@ export async function POST(req: NextRequest) {
     const expiryTime = new Date(user.resetTokenExpires);
     if (expiryTime < new Date()) {
       return NextResponse.json({ error: 'OTP code has expired' }, { status: 400 });
+    }
+
+    // If newPassword is not provided, we are only verifying OTP code validity (Step 2)
+    if (!newPassword) {
+      return NextResponse.json({
+        success: true,
+        message: 'OTP verified successfully.'
+      });
     }
 
     // Hash new password

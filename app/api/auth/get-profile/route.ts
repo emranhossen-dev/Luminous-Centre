@@ -17,7 +17,6 @@ export async function GET(req: NextRequest) {
     } catch (e) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
-
     // Fetch full user details
     const userResult = await query(`
       SELECT 
@@ -37,11 +36,14 @@ export async function GET(req: NextRequest) {
         u.notifications_marketing as "notificationsMarketing",
         u.notifications_course_updates as "notificationsCourseUpdates",
         u.designation,
+        COALESCE(u.bio, m.bio) as "bio",
+        m.skills as "skills",
         r.name as "roleName",
         u.created_at as "createdAt",
         u.last_login as "lastLogin"
       FROM users u
       JOIN roles r ON u.role_id = r.id
+      LEFT JOIN mentors m ON LOWER(u.email) = LOWER(m.email)
       WHERE u.id = $1 AND u.is_active = true
     `, [decoded.userId]);
 

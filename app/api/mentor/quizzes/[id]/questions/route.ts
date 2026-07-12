@@ -67,55 +67,70 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     }
 
     const { id } = await context.params;
-    const { question, questionType, marks, explanation, options } = await req.json();
+    const body = await req.json();
 
-    if (!question || !questionType || !options || !Array.isArray(options)) {
-      return NextResponse.json({ error: 'Missing required question fields' }, { status: 400 });
+    const questionsToInsert = Array.isArray(body) ? body : (body.questions && Array.isArray(body.questions) ? body.questions : [body]);
+
+    // Validate all questions first
+    for (const q of questionsToInsert) {
+      if (!q.question || !q.options || !Array.isArray(q.options)) {
+        return NextResponse.json({ error: 'Missing required question fields in one or more questions' }, { status: 400 });
+      }
     }
 
     const result = await transaction(async (client) => {
-      // 1. Insert question
-      const questionQuery = `
-        INSERT INTO quiz_questions (quiz_id, question, question_type, marks, explanation)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING id
-      `;
-      const qRes = await client.query(questionQuery, [
-        id,
-        question,
-        questionType,
-        parseFloat(marks) || 1.0,
-        explanation || ''
-      ]);
-      const questionId = qRes.rows[0].id;
+      // 1. Delete existing questions (cascade deletes options automatically)
+      await client.query('DELETE FROM quiz_questions WHERE quiz_id = $1', [id]);
 
-      // 2. Insert options
-      const insertedOptions = [];
-      for (const opt of options) {
-        const optionQuery = `
-          INSERT INTO quiz_options (question_id, option_text, is_correct)
-          VALUES ($1, $2, $3)
-          RETURNING *
+      const insertedQuestions = [];
+
+      for (let i = 0; i < questionsToInsert.length; i++) {
+        const q = questionsToInsert[i];
+        // 2. Insert question
+        const questionQuery = `
+          INSERT INTO quiz_questions (quiz_id, question, question_type, marks, explanation, sort_order)
+          VALUES ($1, $2, $3, $4, $5, $6)
+          RETURNING id
         `;
-        const oRes = await client.query(optionQuery, [
-          questionId,
-          opt.optionText,
-          Boolean(opt.isCorrect)
+        const qRes = await client.query(questionQuery, [
+          id,
+          q.question,
+          q.questionType || 'mcq',
+          parseFloat(q.marks) || 1.0,
+          q.explanation || '',
+          i
         ]);
-        insertedOptions.push(oRes.rows[0]);
+        const questionId = qRes.rows[0].id;
+
+        // 3. Insert options
+        const insertedOptions = [];
+        for (const opt of q.options) {
+          const optionQuery = `
+            INSERT INTO quiz_options (question_id, option_text, is_correct)
+            VALUES ($1, $2, $3)
+            RETURNING *
+          `;
+          const oRes = await client.query(optionQuery, [
+            questionId,
+            opt.optionText,
+            Boolean(opt.isCorrect)
+          ]);
+          insertedOptions.push(oRes.rows[0]);
+        }
+
+        insertedQuestions.push({ questionId, options: insertedOptions });
       }
 
-      return { questionId, insertedOptions };
+      return insertedQuestions;
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Question added successfully',
-      questionId: result.questionId,
-      options: result.insertedOptions
+      message: `${questionsToInsert.length} question(s) synced successfully`,
+      questions: result
     });
   } catch (error: any) {
-    console.error('Create quiz question error:', error);
-    return NextResponse.json({ error: 'Failed to add question', details: error.message }, { status: 500 });
+    console.error('Sync quiz questions error:', error);
+    return NextResponse.json({ error: 'Failed to sync questions', details: error.message }, { status: 500 });
   }
 }

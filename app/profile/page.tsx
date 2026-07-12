@@ -34,7 +34,9 @@ export default function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [roleName, setRoleName] = useState('');
   const [lastLogin, setLastLogin] = useState('');
-  // Password States
+  const [bio, setBio] = useState('');
+  const [skills, setSkills] = useState('');
+
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
@@ -96,6 +98,8 @@ export default function ProfilePage() {
         setAvatarUrl(p.avatarUrl || '');
         setRoleName(p.roleName || '');
         setLastLogin(p.lastLogin || '');
+        setBio(p.bio || '');
+        setSkills(p.skills ? (Array.isArray(p.skills) ? p.skills.join(', ') : p.skills) : '');
         setLanguage(p.language || 'bn');
         setTimezone(p.timezone || 'Asia/Dhaka');
         setTheme(p.theme || 'dark');
@@ -144,7 +148,9 @@ export default function ProfilePage() {
           gender,
           address,
           designation,
-          avatarUrl
+          avatarUrl,
+          bio,
+          skills
         })
       });
       const data = await res.json();
@@ -448,6 +454,33 @@ export default function ProfilePage() {
                         />
                       </div>
                     </div>
+
+                    {/* Mentor Biography */}
+                    {roleName === 'mentor' && (
+                      <>
+                        <div className="space-y-2 md:col-span-2">
+                          <label className="text-xs font-bold text-[#9CA3AF] uppercase tracking-wider">Expert Skills (comma-separated)</label>
+                          <input
+                            type="text"
+                            value={skills}
+                            onChange={(e) => setSkills(e.target.value)}
+                            className="w-full px-4 py-2.5 bg-[#0B1120] border border-[#1F2937] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/50 text-sm text-[#F9FAFB] placeholder-gray-600 transition-all"
+                            placeholder="React, Next.js, TypeScript, Node.js"
+                          />
+                        </div>
+
+                        <div className="space-y-2 md:col-span-2">
+                          <label className="text-xs font-bold text-[#9CA3AF] uppercase tracking-wider">Biography / Professional Profile</label>
+                          <textarea
+                            rows={4}
+                            value={bio}
+                            onChange={(e) => setBio(e.target.value)}
+                            className="w-full px-4 py-2.5 bg-[#0B1120] border border-[#1F2937] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/50 text-sm text-[#F9FAFB] placeholder-gray-600 transition-all"
+                            placeholder="Describe your professional career, expertise, and teaching background..."
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   <div className="border-t border-[#1F2937] pt-6 flex justify-end">

@@ -61,14 +61,14 @@ export async function POST(req: NextRequest) {
         </p>
         <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 25px 0;" />
         <p style="font-size: 11px; text-align: center; color: #94a3b8; margin: 0;">
-          Luminous Skill Development Center.
+          Luminous Skill Development Training Center.
         </p>
       </div>
     `;
 
     const emailResult = await sendEmail({
       to: email,
-      subject: 'Password Reset OTP - Luminous Skills',
+      subject: 'Password Reset OTP - Luminous Skill Development Training Center',
       html: otpEmailHtml
     });
     if (!emailResult.success) {

@@ -13,6 +13,7 @@ import Link from 'next/link';
 const mentorSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
   phone: z.string().optional(),
   designation: z.string().min(2, 'Designation is required'),
   experience: z.string().optional(),
@@ -82,6 +83,17 @@ export default function AddMentorPage() {
               placeholder="john@example.com"
             />
             {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Password *</label>
+            <input 
+              {...register('password')} 
+              type="password"
+              className="flex h-10 w-full rounded-md border border-gray-300 dark:border-slate-800 bg-transparent dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
+              placeholder="••••••••"
+            />
+            {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
           </div>
 
           <div className="space-y-2">

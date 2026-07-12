@@ -1,3 +1,5 @@
+import nodemailer from 'nodemailer';
+
 export interface SendEmailParams {
   to: string;
   subject: string;
@@ -5,18 +7,20 @@ export interface SendEmailParams {
 }
 
 /**
- * Sends an email using the Resend API via a direct fetch HTTP POST request.
- * Does not require installing third-party npm packages.
+ * Sends an email using SMTP transport via nodemailer.
  */
 export async function sendEmail({ to, subject, html }: SendEmailParams) {
-  const apiKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.FROM_EMAIL || 'Luminous Skills <onboarding@resend.dev>';
+  const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
+  const port = parseInt(process.env.EMAIL_PORT || '587', 10);
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASSWORD;
+  const fromEmail = process.env.FROM_EMAIL || `"Luminous Skills" <${user}>`;
 
   console.log(`[EMAIL-SENDER] Attempting to send email to: ${to}, Subject: "${subject}"`);
 
-  if (!apiKey) {
+  if (!user || !pass) {
     console.warn('================================================================');
-    console.warn('WARNING: RESEND_API_KEY is not configured in .env file.');
+    console.warn('WARNING: EMAIL_USER or EMAIL_PASSWORD is not configured in .env file.');
     console.warn(`An email WOULD have been sent from: ${fromEmail}`);
     console.warn(`To: ${to}`);
     console.warn(`Subject: ${subject}`);
@@ -27,37 +31,34 @@ export async function sendEmail({ to, subject, html }: SendEmailParams) {
     // Return success true in development to allow flows to complete without crashing
     return { 
       success: true, 
-      warning: 'RESEND_API_KEY not configured, logged to console.',
+      warning: 'EMAIL_USER or EMAIL_PASSWORD not configured, logged to console.',
       loggedToConsole: true 
     };
   }
 
   try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+    const transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465, // true for port 465 (SSL), false for port 587 (TLS/STARTTLS)
+      auth: {
+        user,
+        pass,
       },
-      body: JSON.stringify({
-        from: fromEmail,
-        to: [to],
-        subject: subject,
-        html: html,
-      }),
     });
 
-    const data = await res.json();
+    const info = await transporter.sendMail({
+      from: fromEmail,
+      to,
+      subject,
+      html,
+    });
 
-    if (res.ok) {
-      console.log(`[EMAIL-SENDER] Email sent successfully via Resend. ID: ${data.id}`);
-      return { success: true, data };
-    } else {
-      console.error('[EMAIL-SENDER] Resend API error response:', data);
-      return { success: false, error: data.message || 'Resend API returned an error' };
-    }
+    console.log(`[EMAIL-SENDER] Email sent successfully via SMTP. Message ID: ${info.messageId}`);
+    return { success: true, data: info };
   } catch (error: any) {
-    console.error('[EMAIL-SENDER] Network error sending email:', error);
-    return { success: false, error: error.message || 'Network error occurred' };
+    console.error('[EMAIL-SENDER] Error sending email via SMTP:', error);
+    return { success: false, error: error.message || 'Error occurred during SMTP transfer' };
   }
 }
+

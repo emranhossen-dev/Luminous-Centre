@@ -3,6 +3,7 @@
 import React from 'react';
 import StudentLayout from '@/components/student/StudentLayout';
 import { useLayout } from '@/contexts/LayoutContext';
+import { usePathname } from 'next/navigation';
 
 export default function StudentLayoutWrapper({
   children,
@@ -10,8 +11,9 @@ export default function StudentLayoutWrapper({
   children: React.ReactNode;
 }) {
   const { hideNavbarAndFooter } = useLayout();
+  const pathname = usePathname();
 
-  if (hideNavbarAndFooter) {
+  if (hideNavbarAndFooter || pathname === '/student') {
     return <>{children}</>;
   }
 

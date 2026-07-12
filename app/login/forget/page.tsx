@@ -11,7 +11,7 @@ import 'react-toastify/dist/ReactToastify.css';
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [otp, setOtp] = useState('');
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [newPassword, setNewPassword] = useState('');
@@ -68,7 +68,8 @@ export default function ForgotPasswordPage() {
     const newDigits = [...otpDigits];
     newDigits[index] = char;
     setOtpDigits(newDigits);
-    setOtp(newDigits.join(''));
+    const updatedOtp = newDigits.join('');
+    setOtp(updatedOtp);
 
     // Move to next input box
     if (char && index < 5) {
@@ -107,14 +108,44 @@ export default function ForgotPasswordPage() {
     inputRefs.current[focusIdx]?.focus();
   };
 
-  // Verify OTP and Reset Password Submission
-  const handleVerifyOtp = async (e: React.FormEvent) => {
+  // Step 2: Verify OTP Only Submission
+  const handleVerifyOtpOnly = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (otp.length !== 6) {
       setError('Please enter the 6-digit OTP code.');
       return;
     }
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setSuccess('OTP verified successfully! Please enter your new password below.');
+        setStep(3);
+      } else {
+        setError(data.error || 'Invalid OTP code.');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 3: Reset Password Submission
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
 
     if (newPassword.length < 6) {
       setError('New password must be at least 6 characters long.');
@@ -147,7 +178,7 @@ export default function ForgotPasswordPage() {
           router.push('/login');
         }, 2000);
       } else {
-        setError(data.error || 'Invalid OTP code or password reset failed.');
+        setError(data.error || 'Password reset failed.');
       }
     } catch (err) {
       setError('Network error. Please try again.');
@@ -183,12 +214,14 @@ export default function ForgotPasswordPage() {
             <GraduationCap className="w-6 h-6 text-white" />
           </div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-            {step === 1 ? 'Recover Password' : 'Verify OTP'}
+            {step === 1 ? 'Recover Password' : step === 2 ? 'Verify OTP' : 'Set New Password'}
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">
             {step === 1 
               ? 'Enter your registered email address to receive a secure OTP code.' 
-              : 'Enter the 6-digit OTP code and set your new password.'
+              : step === 2
+              ? 'Enter the 6-digit OTP code sent to your email.'
+              : 'Choose a strong new password for your account.'
             }
           </p>
         </div>
@@ -225,7 +258,7 @@ export default function ForgotPasswordPage() {
 
         {/* Step Forms */}
         <AnimatePresence mode="wait">
-          {step === 1 ? (
+          {step === 1 && (
             /* STEP 1: Email Form */
             <motion.div
               key="step1"
@@ -265,8 +298,10 @@ export default function ForgotPasswordPage() {
                 </button>
               </form>
             </motion.div>
-          ) : (
-            /* STEP 2: OTP & New Password Form */
+          )}
+
+          {step === 2 && (
+            /* STEP 2: OTP Form */
             <motion.div
               key="step2"
               initial={{ opacity: 0, y: 10 }}
@@ -274,7 +309,7 @@ export default function ForgotPasswordPage() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <form onSubmit={handleVerifyOtp} className="space-y-5">
+              <form onSubmit={handleVerifyOtpOnly} className="space-y-6">
                 
                 {/* Premium 6-Box OTP Input */}
                 <div className="space-y-2">
@@ -302,6 +337,28 @@ export default function ForgotPasswordPage() {
                   </div>
                 </div>
 
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold py-3 px-4 rounded-xl transition shadow-lg hover:shadow-blue-500/25 duration-300 flex items-center justify-center gap-2 group cursor-pointer active:scale-[0.99] mt-6"
+                >
+                  {loading ? 'Verifying...' : 'Verify OTP Code'}
+                </button>
+              </form>
+            </motion.div>
+          )}
+
+          {step === 3 && (
+            /* STEP 3: Password Form */
+            <motion.div
+              key="step3"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <form onSubmit={handleResetPassword} className="space-y-5">
+                
                 <div className="space-y-2">
                   <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">
                     New Password

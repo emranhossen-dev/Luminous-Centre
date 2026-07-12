@@ -1,12 +1,42 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import StudentSidebar from '@/components/student/StudentSidebar';
+import StudentTopNav from '@/components/student/StudentTopNav';
+
+// Import tab content components
 import Dashboard from '@/components/student/Dashboard';
 import MyCourses from '@/components/student/MyCourses';
+import ClassJoining from '@/components/student/ClassJoining';
+import Recording from '@/components/student/Recording';
+import Resources from '@/components/student/Resources';
+import Assignments from '@/components/student/Assignments';
+import { StudentQuizzesList } from './quiz/page';
+import BuildMyCV from '@/components/student/BuildMyCV';
 
 export default function StudentPage() {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Sync state with URL params
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab) {
+        setActiveTab(tab);
+      } else {
+        setActiveTab('dashboard');
+      }
+    };
+
+    handleUrlChange();
+
+    window.addEventListener('popstate', handleUrlChange);
+    return () => window.removeEventListener('popstate', handleUrlChange);
+  }, []);
 
   useEffect(() => {
     checkEnrollmentStatus();
@@ -40,6 +70,45 @@ export default function StudentPage() {
     );
   }
 
-  // Show Dashboard for enrolled students, MyCourses for unenrolled students
-  return isEnrolled ? <Dashboard /> : <MyCourses />;
+  return (
+    <div className="min-h-screen bg-[#0a0f18] flex relative overflow-hidden">
+      {/* Mobile Drawer Overlay Backdrop */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <StudentSidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
+      
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-hidden">
+        {/* Top Navigation */}
+        <StudentTopNav 
+          onMenuToggle={() => setSidebarOpen(true)}
+        />
+        
+        {/* Page Content */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-4 sm:p-6 max-w-7xl mx-auto w-full">
+            {activeTab === 'dashboard' && (isEnrolled ? <Dashboard /> : <MyCourses />)}
+            {activeTab === 'class-joining' && <ClassJoining />}
+            {activeTab === 'my-courses' && <MyCourses />}
+            {activeTab === 'recording' && <Recording />}
+            {activeTab === 'resources' && <Resources />}
+            {activeTab === 'assignments' && <Assignments />}
+            {activeTab === 'quiz' && <StudentQuizzesList />}
+            {activeTab === 'build-my-cv' && <BuildMyCV />}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
 }

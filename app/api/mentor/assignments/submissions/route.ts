@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, getUserById } from '@/lib/auth';
 import { query } from '@/lib/database';
 import { ensureLMSFeaturesSchema } from '@/lib/lms-features';
+import { sendEmail } from '@/lib/email';
 
 // GET /api/mentor/assignments/submissions - Get submissions for an assignment
 export async function GET(req: NextRequest) {
@@ -137,7 +138,66 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Submission not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, message: 'Submission graded successfully', graded: result.rows[0] });
+    const gradedSubmission = result.rows[0];
+
+    // Query details for student notification email
+    const detailsResult = await query(
+      `SELECT u.email, u.first_name as "firstName", u.last_name as "lastName", a.title as "assignmentTitle", a.max_marks as "maxMarks"
+       FROM assignment_submissions s
+       JOIN users u ON s.user_id = u.id
+       JOIN assignments a ON s.assignment_id = a.id
+       WHERE s.id = $1`,
+      [submissionId]
+    );
+
+    if (detailsResult.rows.length > 0) {
+      const details = detailsResult.rows[0];
+      
+      const gradedHtml = `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); color: #1e293b;">
+          <div style="text-align: center; margin-bottom: 25px;">
+            <div style="display: inline-block; background-color: #2563eb; color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 20px; letter-spacing: 0.5px;">Luminous Skill Development Training Center</div>
+          </div>
+          <h2 style="color: #0f172a; font-size: 20px; font-weight: bold; margin-bottom: 15px;">Assignment Graded</h2>
+          <p style="font-size: 14px; line-height: 1.6; color: #475569;">Hello <strong>${details.firstName} ${details.lastName}</strong>,</p>
+          <p style="font-size: 14px; line-height: 1.6; color: #475569;">Your submission for the assignment <strong>${details.assignmentTitle}</strong> has been graded by the mentor.</p>
+          
+          <div style="background-color: #f8fafc; border: 1px solid #f1f5f9; padding: 20px; border-radius: 16px; margin: 25px 0;">
+            <p style="margin: 0 0 10px 0; font-size: 16px; color: #0f172a;">
+              <strong>Marks Obtained:</strong> <span style="color: #2563eb; font-weight: bold; font-size: 18px;">${marksObtained}</span> / ${details.maxMarks}
+            </p>
+            ${mentorFeedback ? `
+              <p style="margin: 10px 0 0 0; font-size: 14px; color: #475569;">
+                <strong>Mentor Feedback:</strong> <br/>
+                <span style="font-style: italic; color: #334155;">"${mentorFeedback}"</span>
+              </p>
+            ` : ''}
+          </div>
+          
+          <p style="font-size: 14px; line-height: 1.6; color: #475569;">You can log in to your student dashboard to view complete details of your assignment grades and performance.</p>
+          <div style="text-align: center; margin: 25px 0;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/student" style="background-color: #2563eb; color: white; padding: 12px 24px; border-radius: 12px; font-weight: bold; font-size: 14px; text-decoration: none; display: inline-block;">
+              View Dashboard
+            </a>
+          </div>
+          
+          <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 25px 0;" />
+          <p style="font-size: 11px; text-align: center; color: #94a3b8; margin: 0;">
+            Luminous Skill Development Training Center.
+          </p>
+        </div>
+      `;
+
+      if (details.email) {
+        sendEmail({
+          to: details.email,
+          subject: `Assignment Graded: ${details.assignmentTitle} - Luminous Skills`,
+          html: gradedHtml
+        }).catch(err => console.error('[ASSIGNMENT-GRADED-EMAIL] Error sending grading email:', err));
+      }
+    }
+
+    return NextResponse.json({ success: true, message: 'Submission graded successfully', graded: gradedSubmission });
   } catch (error: any) {
     console.error('Grade submission error:', error);
     return NextResponse.json({ error: 'Failed to grade submission', details: error.message }, { status: 500 });

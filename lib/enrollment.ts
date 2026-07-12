@@ -66,10 +66,34 @@ export async function detectEnrollmentUserColumn(): Promise<EnrollmentUserColumn
   return cachedEnrollmentUserColumn;
 }
 
+export async function syncUserToStudentTable(userId: number): Promise<string> {
+  const userRes = await query(`SELECT email, first_name, last_name, phone FROM users WHERE id = $1`, [userId]);
+  if (userRes.rows.length === 0) return '';
+  
+  const user = userRes.rows[0];
+  const name = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+  const email = user.email.toLowerCase();
+  
+  const studentRes = await query(`SELECT id FROM students WHERE email = $1`, [email]);
+  if (studentRes.rows.length > 0) {
+    return studentRes.rows[0].id;
+  }
+  
+  const insertRes = await query(
+    `INSERT INTO students (name, email, phone, status)
+     VALUES ($1, $2, $3, 'active')
+     RETURNING id`,
+    [name || 'Student', email, user.phone || null]
+  );
+  return insertRes.rows[0].id;
+}
+
 export async function createEnrollmentIfMissing(userId: number, courseId: number): Promise<void> {
-  const userColumn = await detectEnrollmentUserColumn();
+  const studentUuid = await syncUserToStudentTable(userId);
+
+  // Check if enrollment already exists
   const existing = await query(
-    `SELECT id FROM enrollments WHERE ${userColumn} = $1 AND course_id = $2`,
+    `SELECT id FROM enrollments WHERE user_id = $1 AND course_id = $2`,
     [userId, courseId]
   );
 
@@ -77,9 +101,29 @@ export async function createEnrollmentIfMissing(userId: number, courseId: number
     return;
   }
 
+  // Detect which columns are present in enrollments table
+  const columnsRes = await query(
+    `SELECT column_name FROM information_schema.columns WHERE table_name = 'enrollments'`
+  );
+  const cols = new Set(columnsRes.rows.map((r: any) => r.column_name));
+
+  const insertFields = ['course_id', 'enrollment_date', 'status', 'completion_percentage'];
+  const insertValues: any[] = [courseId, new Date(), 'active', 0];
+
+  if (cols.has('user_id')) {
+    insertFields.push('user_id');
+    insertValues.push(userId);
+  }
+  if (cols.has('student_id') && studentUuid) {
+    insertFields.push('student_id');
+    insertValues.push(studentUuid);
+  }
+
+  const fieldPlaceholders = insertFields.map((_, idx) => `$${idx + 1}`);
+
   await query(
-    `INSERT INTO enrollments (${userColumn}, course_id, enrollment_date, status, completion_percentage)
-     VALUES ($1, $2, CURRENT_TIMESTAMP, $3, $4)`,
-    [userId, courseId, 'active', 0]
+    `INSERT INTO enrollments (${insertFields.join(', ')})
+     VALUES (${fieldPlaceholders.join(', ')})`,
+    insertValues
   );
 }

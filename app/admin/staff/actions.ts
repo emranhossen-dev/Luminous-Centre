@@ -102,6 +102,25 @@ export async function createStaff(data: StaffData) {
     const res = await pool.query(query, values);
     const newStaffId = res.rows[0].id;
 
+    // Sync to mentors table if the role is mentor
+    try {
+      const roleNameRes = await pool.query('SELECT name FROM roles WHERE id = $1', [data.roleId]);
+      const roleName = roleNameRes.rows[0]?.name;
+      if (roleName === 'mentor') {
+        const fullName = `${data.firstName} ${data.lastName}`.trim();
+        await pool.query(`
+          INSERT INTO mentors (name, email, phone, designation, status)
+          VALUES ($1, $2, $3, $4, 'active')
+          ON CONFLICT (email) DO UPDATE SET
+            name = EXCLUDED.name,
+            phone = EXCLUDED.phone,
+            designation = EXCLUDED.designation
+        `, [fullName, data.email.toLowerCase(), data.phone || null, data.designation || null]);
+      }
+    } catch (syncError) {
+      console.error('Failed to sync staff member to mentors table:', syncError);
+    }
+
     // Send welcome email with login details
     try {
       const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login`;
@@ -201,8 +220,29 @@ export async function updateStaff(id: number, data: StaffData) {
 
     queryStr += ` WHERE id = $${paramCounter}`;
     values.push(id);
-
     await pool.query(queryStr, values);
+
+    // Sync to mentors table if the role is mentor, or delete from mentors if changed from mentor
+    try {
+      const roleNameRes = await pool.query('SELECT name FROM roles WHERE id = $1', [data.roleId]);
+      const roleName = roleNameRes.rows[0]?.name;
+      if (roleName === 'mentor') {
+        const fullName = `${data.firstName} ${data.lastName}`.trim();
+        await pool.query(`
+          INSERT INTO mentors (name, email, phone, designation, status)
+          VALUES ($1, $2, $3, $4, 'active')
+          ON CONFLICT (email) DO UPDATE SET
+            name = EXCLUDED.name,
+            phone = EXCLUDED.phone,
+            designation = EXCLUDED.designation
+        `, [fullName, data.email.toLowerCase(), data.phone || null, data.designation || null]);
+      } else {
+        // If changed to another role, delete from mentors to keep synced
+        await pool.query('DELETE FROM mentors WHERE email = $1', [data.email.toLowerCase()]);
+      }
+    } catch (syncError) {
+      console.error('Failed to sync updated staff member to mentors table:', syncError);
+    }
 
     // Log audit trail
     await logAudit(
@@ -248,9 +288,23 @@ export async function toggleStaffStatus(id: number, currentStatus: boolean) {
 // Delete staff user
 export async function deleteStaff(id: number) {
   try {
-    // Check references first or perform logical deletion by changing role or setting status.
-    // To prevent database error, we do physical delete. If referencing objects exist, DB throws error,
-    // which is caught and returned.
+    // Get user details
+    const userRes = await pool.query('SELECT email FROM users WHERE id = $1', [id]);
+    if (userRes.rows.length > 0) {
+      const email = userRes.rows[0].email;
+      
+      // Nullify references in courses table pointing to this mentor
+      const mentorRes = await pool.query('SELECT id FROM mentors WHERE email = $1', [email]);
+      if (mentorRes.rows.length > 0) {
+        const mentorId = mentorRes.rows[0].id;
+        await pool.query('UPDATE courses SET mentor_id = NULL WHERE mentor_id = $1', [mentorId]);
+      }
+      
+      // Delete from mentors table
+      await pool.query('DELETE FROM mentors WHERE email = $1', [email]);
+    }
+    
+    // Delete from users table
     await pool.query('DELETE FROM users WHERE id = $1', [id]);
 
     await logAudit('0', 'DELETE_STAFF_USER', 'STAFF_MODULE', id.toString());
@@ -258,6 +312,6 @@ export async function deleteStaff(id: number) {
     return { success: true };
   } catch (error: any) {
     console.error('Error in deleteStaff:', error);
-    return { success: false, error: 'Could not delete staff. They might have related records (e.g. courses, enrollments). Try deactivating them instead.' };
+    return { success: false, error: 'Could not delete staff: ' + error.message };
   }
 }

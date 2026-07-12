@@ -2,19 +2,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell, LogOut, Settings } from 'lucide-react';
+import { Bell, LogOut, Settings, Menu } from 'lucide-react';
 import Link from 'next/link';
 
 interface StudentTopNavProps {
   studentName?: string;
   studentProfile?: string;
   notifications?: number;
+  onMenuToggle?: () => void;
 }
 
 export default function StudentTopNav({ 
   studentName = "Student Name", 
   studentProfile = "",
-  notifications = 0 
+  notifications = 0,
+  onMenuToggle
 }: StudentTopNavProps) {
   const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
@@ -40,8 +42,17 @@ export default function StudentTopNav({
 
   return (
     <div className="h-16 bg-slate-900 border-b border-white/5 flex items-center justify-between px-6 sticky top-0 z-40">
-      {/* Left side - empty for balance */}
-      <div className="flex-1"></div>
+      {/* Left side - Hamburger toggle for mobile, empty spacer on desktop */}
+      <div className="flex-1 flex items-center">
+        {onMenuToggle && (
+          <button
+            onClick={onMenuToggle}
+            className="lg:hidden p-2 -ml-2 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer animate-pulse-subtle"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+        )}
+      </div>
 
       {/* Right side - Profile and Notifications */}
       <div className="flex items-center gap-4">

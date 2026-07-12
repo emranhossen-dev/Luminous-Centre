@@ -7,7 +7,7 @@ import { notFound, useRouter } from 'next/navigation';
 import { 
   BookOpen, Users, Award, FileText, Plus, CheckCircle, XCircle, 
   Search, Eye, Settings, HelpCircle, ChevronRight, LogOut, Loader2, Save,
-  PlayCircle
+  PlayCircle, Sun, Moon
 } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -76,7 +76,39 @@ interface Question {
 export default function MentorDashboard() {
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'students' | 'quizzes' | 'attempts' | 'recordings' | 'assignments'>('overview');
+
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") as "dark" | "light";
+    if (savedTheme) {
+      setTheme(savedTheme);
+      document.documentElement.classList.toggle("light", savedTheme === "light");
+      document.documentElement.classList.toggle("dark", savedTheme === "dark");
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+    document.documentElement.classList.toggle("light", newTheme === "light");
+    document.documentElement.classList.toggle("dark", newTheme === "dark");
+  };
+  const [activeTab, rawSetActiveTab] = useState<'overview' | 'courses' | 'students' | 'quizzes' | 'attempts' | 'recordings' | 'assignments'>('overview');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('mentorActiveTab');
+    if (saved) {
+      rawSetActiveTab(saved as any);
+    }
+  }, []);
+
+  const setActiveTab = (tab: any) => {
+    rawSetActiveTab(tab);
+    localStorage.setItem('mentorActiveTab', tab);
+  };
+
   const [courses, setCourses] = useState<Course[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -88,12 +120,132 @@ export default function MentorDashboard() {
     totalQuizzes: 0,
     totalAttempts: 0
   });
-
   // Modal states
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
-  
+  const [isBulkMode, setIsBulkMode] = useState(false);
+  const [bulkText, setBulkText] = useState('');
+  const [questionsList, setQuestionsList] = useState<any[]>([]);
+
+  const openQuestionModal = async (quiz: any) => {
+    setSelectedQuiz(quiz);
+    setIsQuestionModalOpen(true);
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/mentor/quizzes/${quiz.id}/questions`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const list = data.questions || [];
+        if (list.length === 0) {
+          list.push({
+            question: '',
+            questionType: 'mcq',
+            marks: 1.0,
+            explanation: '',
+            options: [
+              { optionText: '', isCorrect: true },
+              { optionText: '', isCorrect: false },
+              { optionText: '', isCorrect: false },
+              { optionText: '', isCorrect: false }
+            ]
+          });
+        }
+        setQuestionsList(list);
+      } else {
+        setQuestionsList([]);
+      }
+    } catch (e) {
+      console.error(e);
+      setQuestionsList([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const parseBulkQuestions = (text: string) => {
+    const trimmed = text.trim();
+    if (trimmed.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed.map((item: any) => ({
+            question: item.question || 'Untitled Question',
+            questionType: item.questionType || 'mcq',
+            marks: Number(item.marks || 1.0),
+            explanation: item.explanation || '',
+            options: (item.options || []).map((o: any) => ({
+              optionText: typeof o === 'string' ? o : (o.optionText || o.text || ''),
+              isCorrect: typeof o === 'string' ? false : Boolean(o.isCorrect || o.correct)
+            }))
+          }));
+        }
+      } catch (e) {
+        throw new Error('Invalid JSON format: ' + (e as Error).message);
+      }
+    }
+
+    // Parse custom Text Format
+    const questions: any[] = [];
+    const blocks = trimmed.split(/(?:\r?\n){2,}/); // split by blank lines
+    
+    for (const block of blocks) {
+      if (!block.trim()) continue;
+      const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+      let questionText = '';
+      const options: any[] = [];
+      let explanation = '';
+      let marks = 1.0;
+
+      for (const line of lines) {
+        const lower = line.toLowerCase();
+        if (lower.startsWith('question:') || lower.startsWith('q:')) {
+          questionText = line.replace(/^(question:|q:)\s*/i, '').trim();
+        } else if (lower.startsWith('explanation:')) {
+          explanation = line.replace(/^explanation:\s*/i, '').trim();
+        } else if (lower.startsWith('marks:')) {
+          marks = parseFloat(line.replace(/^marks:\s*/i, '')) || 1.0;
+        } else if (line.match(/^\d+\.\s/)) {
+          questionText = line.replace(/^\d+\.\s*/, '').trim();
+        } else {
+          const isCorrect = line.startsWith('*') || line.startsWith('[x]') || line.startsWith('(x)');
+          let cleanText = line;
+          if (isCorrect) {
+            cleanText = line.replace(/^(\*|\[x\]|\(x\))\s*/i, '').trim();
+          }
+          cleanText = cleanText.replace(/^[a-d\d][\)\.]\s*/i, '').trim();
+          
+          options.push({
+            optionText: cleanText,
+            isCorrect
+          });
+        }
+      }
+
+      if (questionText) {
+        questions.push({
+          question: questionText,
+          questionType: 'mcq',
+          marks,
+          explanation,
+          options: options.length > 0 ? options : [
+            { optionText: 'True', isCorrect: true },
+            { optionText: 'False', isCorrect: false }
+          ]
+        });
+      }
+    }
+
+    if (questions.length === 0) {
+      throw new Error('No valid questions found. Please check your format.');
+    }
+
+    return questions;
+  };
+
   // Search & filter states
   const [studentSearch, setStudentSearch] = useState('');
   const [courseFilter, setCourseFilter] = useState('');
@@ -250,29 +402,54 @@ export default function MentorDashboard() {
       toast.error('An error occurred. Please try again.');
     }
   };
+  const handleParseAndLoad = () => {
+    if (!bulkText.trim()) {
+      toast.error('Please paste some text/JSON first.');
+      return;
+    }
+    try {
+      const parsed = parseBulkQuestions(bulkText);
+      setQuestionsList(prev => {
+        const filtered = prev.filter(q => q.question.trim() !== '');
+        return [...filtered, ...parsed];
+      });
+      setIsBulkMode(false); // Switch tab automatically!
+      setBulkText(''); // Clear input
+      toast.success(`Loaded ${parsed.length} questions into the manual editor! Feel free to edit or add more.`);
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to parse questions.');
+    }
+  };
 
   const handleAddQuestion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedQuiz) return;
 
-    if (!newQuestion.question) {
-      toast.error('Question text is required');
+    if (questionsList.length === 0) {
+      toast.error('Please add at least one question.');
       return;
     }
 
-    // Validate options
-    const emptyOption = newQuestion.options.some(o => !o.optionText);
-    if (emptyOption) {
-      toast.error('Please fill in all option fields');
-      return;
+    // Validate all questions in questionsList
+    for (let i = 0; i < questionsList.length; i++) {
+      const q = questionsList[i];
+      if (!q.question.trim()) {
+        toast.error(`Question #${i + 1} text is empty.`);
+        return;
+      }
+      const emptyOption = q.options.some((o: any) => !o.optionText.trim());
+      if (emptyOption) {
+        toast.error(`Please fill in all option fields for Question #${i + 1}.`);
+        return;
+      }
+      const hasCorrect = q.options.some((o: any) => o.isCorrect);
+      if (!hasCorrect) {
+        toast.error(`Please select a correct option for Question #${i + 1}.`);
+        return;
+      }
     }
 
-    const hasCorrect = newQuestion.options.some(o => o.isCorrect);
-    if (!hasCorrect) {
-      toast.error('Please select at least one correct option');
-      return;
-    }
-
+    setLoading(true);
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`/api/mentor/quizzes/${selectedQuiz.id}/questions`, {
@@ -281,33 +458,22 @@ export default function MentorDashboard() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(newQuestion)
+        body: JSON.stringify(questionsList)
       });
 
       const data = await response.json();
       if (response.ok) {
-        toast.success('Question added successfully! 📝');
+        toast.success('All questions updated and saved successfully! 📝');
         setIsQuestionModalOpen(false);
-        // Reset question form
-        setNewQuestion({
-          question: '',
-          questionType: 'mcq',
-          marks: 1.0,
-          explanation: '',
-          options: [
-            { optionText: '', isCorrect: true },
-            { optionText: '', isCorrect: false },
-            { optionText: '', isCorrect: false },
-            { optionText: '', isCorrect: false }
-          ]
-        });
         fetchMentorData();
       } else {
-        toast.error(data.error || 'Failed to add question');
+        toast.error(data.error || 'Failed to save questions');
       }
     } catch (error) {
-      console.error('Add question failed:', error);
+      console.error('Save questions failed:', error);
       toast.error('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -330,31 +496,38 @@ export default function MentorDashboard() {
   if (isAuthorized === false) {
     return null;
   }
-
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 flex flex-col font-sans">
       <ToastContainer position="top-right" autoClose={3000} theme="dark" />
       
       {/* Top Navigation */}
-      <header className="h-16 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-40">
+      <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-40">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20">
             L
           </div>
-          <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+          <span className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-transparent dark:bg-gradient-to-r dark:from-white dark:to-slate-400 dark:bg-clip-text">
             Luminous LMS
           </span>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3 bg-slate-800/50 border border-slate-700/50 px-3 py-1.5 rounded-xl">
+          <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 px-3 py-1.5 rounded-xl">
             <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white text-xs">
               M
             </div>
             <div className="text-left hidden md:block">
-              <p className="text-xs font-bold leading-none text-slate-200">Mentor Portal</p>
+              <p className="text-xs font-bold leading-none text-slate-700 dark:text-slate-200">Mentor Portal</p>
             </div>
           </div>
-          <Link href="/login" className="p-2 bg-slate-800/80 hover:bg-red-950/30 hover:text-red-400 rounded-xl transition border border-slate-700/50 flex items-center gap-2 text-xs font-semibold text-slate-400">
+          <button
+            onClick={toggleTheme}
+            type="button"
+            className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 rounded-xl transition border border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-350 cursor-pointer"
+            title="Toggle theme"
+          >
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+          <Link href="/login" className="p-2 bg-slate-105 hover:bg-red-500/10 hover:text-red-650 dark:bg-slate-800/80 dark:hover:bg-red-950/30 dark:hover:text-red-400 rounded-xl transition border border-slate-200 dark:border-slate-700/50 flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-400">
             <LogOut className="w-4 h-4" /> Sign Out
           </Link>
         </div>
@@ -362,16 +535,15 @@ export default function MentorDashboard() {
 
       {/* Main Body */}
       <div className="flex-1 flex flex-col md:flex-row">
-        
-        {/* Sidebar Nav */}
-        <aside className="w-full md:w-64 border-r border-slate-800 bg-slate-950/40 p-4 flex flex-col gap-2">
+                {/* Sidebar Nav */}
+        <aside className="w-full md:w-64 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 p-4 flex flex-col gap-2">
           <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-500 px-3 mb-2">Main Menu</p>
           <button 
             onClick={() => setActiveTab('overview')} 
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
               activeTab === 'overview' 
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10' 
-                : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-100'
             }`}
           >
             <Settings className="w-5 h-5" /> Dashboard
@@ -763,17 +935,13 @@ export default function MentorDashboard() {
                               <span>QUESTIONS: <span className="text-blue-400">{quiz.questionsCount}</span></span>
                             </div>
                           </div>
-
                           <div className="flex items-center gap-3 self-end md:self-center">
-                            <button
-                              onClick={() => {
-                                setSelectedQuiz(quiz);
-                                setIsQuestionModalOpen(true);
-                              }}
+                            <Link
+                              href={`/mentor/quizzes/${quiz.id}/questions`}
                               className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-slate-700/50 cursor-pointer"
                             >
                               <Plus className="w-3.5 h-3.5" /> Add Question
-                            </button>
+                            </Link>
                           </div>
                         </div>
                       ))
@@ -986,125 +1154,7 @@ export default function MentorDashboard() {
         </div>
       )}
 
-      {/* MODAL 2: ADD QUESTION */}
-      {isQuestionModalOpen && selectedQuiz && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col"
-          >
-            <div className="p-6 border-b border-slate-800 flex-shrink-0">
-              <h3 className="text-xl font-extrabold text-white">Add MCQ Question</h3>
-              <p className="text-xs text-slate-400 mt-1">Quiz: <span className="text-blue-400 font-bold">{selectedQuiz.title}</span></p>
-            </div>
-            
-            <form onSubmit={handleAddQuestion} className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar-main">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Question Text *</label>
-                <input 
-                  type="text"
-                  required
-                  placeholder="e.g., Which of the following is not a HTML5 semantic element?"
-                  value={newQuestion.question}
-                  onChange={e => setNewQuestion(prev => ({ ...prev, question: e.target.value }))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 placeholder:text-slate-700 transition"
-                />
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Question Type</label>
-                  <select
-                    value={newQuestion.questionType}
-                    onChange={e => setNewQuestion(prev => ({ ...prev, questionType: e.target.value }))}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-3 text-sm text-white outline-none focus:border-blue-500 transition"
-                  >
-                    <option value="mcq">Multiple Choice (MCQ)</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Marks / Score *</label>
-                  <input 
-                    type="number"
-                    step="0.5"
-                    min="0.5"
-                    required
-                    value={newQuestion.marks}
-                    onChange={e => setNewQuestion(prev => ({ ...prev, marks: parseFloat(e.target.value) || 1.0 }))}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition"
-                  />
-                </div>
-              </div>
-
-              {/* Options Section */}
-              <div className="space-y-3 pt-3">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wide flex items-center justify-between">
-                  <span>Options (Select the correct one)</span>
-                </label>
-                
-                {newQuestion.options.map((option, idx) => (
-                  <div key={idx} className="flex items-center gap-3 bg-slate-950/40 p-3 border border-slate-800 rounded-xl">
-                    <input 
-                      type="radio"
-                      name="correct-option"
-                      checked={option.isCorrect}
-                      onChange={() => {
-                        const updated = newQuestion.options.map((o, oIdx) => ({
-                          ...o,
-                          isCorrect: oIdx === idx
-                        }));
-                        setNewQuestion(prev => ({ ...prev, options: updated }));
-                      }}
-                      className="w-4 h-4 text-blue-600 focus:ring-0 cursor-pointer"
-                    />
-                    <input 
-                      type="text"
-                      required
-                      placeholder={`Option ${String.fromCharCode(65 + idx)} text...`}
-                      value={option.optionText}
-                      onChange={e => {
-                        const updated = [...newQuestion.options];
-                        updated[idx].optionText = e.target.value;
-                        setNewQuestion(prev => ({ ...prev, options: updated }));
-                      }}
-                      className="flex-1 bg-transparent border-none text-sm text-white focus:outline-none focus:ring-0 p-0"
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Explanation / Feedback</label>
-                <textarea 
-                  placeholder="Explain why the option is correct (shown to students post-quiz)..."
-                  value={newQuestion.explanation}
-                  onChange={e => setNewQuestion(prev => ({ ...prev, explanation: e.target.value }))}
-                  rows={2}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 placeholder:text-slate-700 transition"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800/60 flex-shrink-0">
-                <button 
-                  type="button"
-                  onClick={() => setIsQuestionModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-xl text-xs font-bold transition border border-slate-700/30 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-blue-500/20 cursor-pointer"
-                >
-                  Save Question
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 }
