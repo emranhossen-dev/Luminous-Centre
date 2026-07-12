@@ -24,7 +24,7 @@ const menuItems = [
   { id: 'assignments', label: 'Assignments', icon: FileText, href: '/student?tab=assignments' },
   { id: 'quiz', label: 'Quiz / Assessments', icon: HelpCircle, href: '/student?tab=quiz' },
   { id: 'build-my-cv', label: 'Build My CV', icon: FileText, href: '/student?tab=build-my-cv' },
-  { id: 'profile', label: 'My Profile', icon: User, href: '/profile' },
+  { id: 'profile', label: 'My Profile', icon: User, href: '/student/profile' },
 ];
 
 interface StudentSidebarProps {

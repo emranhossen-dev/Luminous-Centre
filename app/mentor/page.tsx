@@ -7,12 +7,13 @@ import { notFound, useRouter } from 'next/navigation';
 import { 
   BookOpen, Users, Award, FileText, Plus, CheckCircle, XCircle, 
   Search, Eye, Settings, HelpCircle, ChevronRight, LogOut, Loader2, Save,
-  PlayCircle, Sun, Moon
+  PlayCircle, Sun, Moon, User
 } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import MentorRecordings from '@/components/mentor/MentorRecordings';
 import MentorAssignments from '@/components/mentor/MentorAssignments';
+import ProfileComponent from '@/components/ProfileComponent';
 
 interface Course {
   id: number;
@@ -95,18 +96,27 @@ export default function MentorDashboard() {
     document.documentElement.classList.toggle("light", newTheme === "light");
     document.documentElement.classList.toggle("dark", newTheme === "dark");
   };
-  const [activeTab, rawSetActiveTab] = useState<'overview' | 'courses' | 'students' | 'quizzes' | 'attempts' | 'recordings' | 'assignments'>('overview');
+  const [activeTab, rawSetActiveTab] = useState<'overview' | 'courses' | 'students' | 'quizzes' | 'attempts' | 'recordings' | 'assignments' | 'profile'>('overview');
 
   useEffect(() => {
-    const saved = localStorage.getItem('mentorActiveTab');
-    if (saved) {
-      rawSetActiveTab(saved as any);
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    if (tabParam) {
+      rawSetActiveTab(tabParam as any);
+    } else {
+      const saved = localStorage.getItem('mentorActiveTab');
+      if (saved) {
+        rawSetActiveTab(saved as any);
+      }
     }
   }, []);
 
   const setActiveTab = (tab: any) => {
     rawSetActiveTab(tab);
     localStorage.setItem('mentorActiveTab', tab);
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', tab);
+    window.history.pushState(null, '', url.pathname + url.search);
   };
 
   const [courses, setCourses] = useState<Course[]>([]);
@@ -608,6 +618,16 @@ export default function MentorDashboard() {
           >
             <FileText className="w-5 h-5" /> Assignments
           </button>
+          <button 
+            onClick={() => setActiveTab('profile')} 
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+              activeTab === 'profile' 
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10' 
+                : 'text-slate-450 hover:bg-slate-800/50 hover:text-slate-100'
+            }`}
+          >
+            <User className="w-5 h-5" /> My Profile
+          </button>
         </aside>
 
         {/* Dashboard Content */}
@@ -1047,6 +1067,18 @@ export default function MentorDashboard() {
                   exit={{ opacity: 0, y: -15 }}
                 >
                   <MentorAssignments />
+                </motion.div>
+              )}
+
+              {/* TAB 8: PROFILE */}
+              {activeTab === 'profile' && (
+                <motion.div 
+                  key="profile" 
+                  initial={{ opacity: 0, y: 15 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  exit={{ opacity: 0, y: -15 }}
+                >
+                  <ProfileComponent />
                 </motion.div>
               )}
 

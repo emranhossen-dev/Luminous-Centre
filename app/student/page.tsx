@@ -13,6 +13,7 @@ import Resources from '@/components/student/Resources';
 import Assignments from '@/components/student/Assignments';
 import { StudentQuizzesList } from './quiz/page';
 import BuildMyCV from '@/components/student/BuildMyCV';
+import ProfileComponent from '@/components/ProfileComponent';
 
 export default function StudentPage() {
   const [isEnrolled, setIsEnrolled] = useState(false);
@@ -106,6 +107,7 @@ export default function StudentPage() {
             {activeTab === 'assignments' && <Assignments />}
             {activeTab === 'quiz' && <StudentQuizzesList />}
             {activeTab === 'build-my-cv' && <BuildMyCV />}
+            {activeTab === 'profile' && <ProfileComponent />}
           </div>
         </main>
       </div>

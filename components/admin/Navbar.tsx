@@ -18,6 +18,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAdminTheme } from '@/contexts/AdminThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
 
 export default function Navbar() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -254,9 +255,9 @@ export default function Navbar() {
                     <p className={`text-sm font-bold ${themeClasses.text.primary}`}>Admin User</p>
                     <p className={`text-xs ${themeClasses.text.muted}`}>admin@luminous.com</p>
                   </div>
-                  <button className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl ${themeClasses.dropdownItem} text-sm transition-colors`}>
+                  <Link href="/admin/profile" onClick={() => setIsProfileOpen(false)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl ${themeClasses.dropdownItem} text-sm transition-colors`}>
                     <User className={`w-4 h-4 ${themeClasses.text.secondary}`} /> My Profile
-                  </button>
+                  </Link>
                   <button className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl ${themeClasses.dropdownItem} text-sm transition-colors`}>
                     <Settings className={`w-4 h-4 ${themeClasses.text.secondary}`} /> Security Settings
                   </button>

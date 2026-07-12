@@ -31,5 +31,5 @@ export const menuItems: MenuItem[] = [
   { id: 'quizzes', label: 'Quiz Center', icon: HelpCircle, href: '/admin/quizzes' },
   { id: 'assignments', label: 'Assignments', icon: FileText, href: '/admin/assignments' },
   { id: 'settings', label: 'Platform Settings', icon: Settings, href: '/admin/settings' },
-  { id: 'profile', label: 'My Profile', icon: User, href: '/profile' },
+  { id: 'profile', label: 'My Profile', icon: User, href: '/admin/profile' },
 ];
