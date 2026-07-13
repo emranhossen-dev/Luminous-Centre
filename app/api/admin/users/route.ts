@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, getUserById } from '@/lib/auth';
 import { query } from '@/lib/database';
 import { logActivity } from '@/lib/auth';
+import { detectEnrollmentUserColumn } from '@/lib/enrollment';
 
 // GET /api/admin/users - Get all users with pagination
 export async function GET(req: NextRequest, context: { params: Promise<{}> }) {
@@ -176,28 +177,46 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
       );
     }
 
-    // Check if user has enrollments
-    const enrollmentCheck = await query(
-      'SELECT COUNT(*) as count FROM enrollments WHERE user_id = $1',
-      [id]
-    );
+    const targetUserEmail = userResult.rows[0].email;
+    const targetUserId = parseInt(id);
 
-    if (parseInt(enrollmentCheck.rows[0].count) > 0) {
-      return NextResponse.json(
-        { error: 'Cannot delete user with active enrollments' },
-        { status: 400 }
-      );
+    // Detect correct student/user column in enrollments
+    const userColumn = await detectEnrollmentUserColumn();
+
+    // 1. Delete matching activity_logs
+    await query('DELETE FROM activity_logs WHERE user_id = $1', [targetUserId]);
+
+    // 2. Delete matching enrollments
+    await query(`DELETE FROM enrollments WHERE ${userColumn} = $1`, [targetUserId]);
+
+    // 3. Delete matching course_enrollment_requests
+    await query('DELETE FROM course_enrollment_requests WHERE user_id = $1', [targetUserId]);
+
+    // 4. Nullify created_by in courses table
+    await query('UPDATE courses SET created_by = NULL WHERE created_by = $1', [targetUserId]);
+
+    // 5. Clean up mentor details if this user is a mentor
+    const mentorRes = await query('SELECT id FROM mentors WHERE email = $1', [targetUserEmail.toLowerCase()]);
+    if (mentorRes.rows.length > 0) {
+      const mentorId = mentorRes.rows[0].id;
+      // Nullify course references pointing to this mentor
+      await query('UPDATE courses SET mentor_id = NULL WHERE mentor_id = $1', [mentorId]);
+      // Delete from mentors table
+      await query('DELETE FROM mentors WHERE id = $1', [mentorId]);
     }
 
-    // Delete user (cascade will handle related records)
-    await query('DELETE FROM users WHERE id = $1', [id]);
+    // 6. Clean up student details if this user is a student
+    await query('DELETE FROM students WHERE email = $1', [targetUserEmail.toLowerCase()]);
+
+    // Delete user (now safe from FK violations)
+    await query('DELETE FROM users WHERE id = $1', [targetUserId]);
 
     // Log activity
     await logActivity(
       user.id,
       'admin.users.delete',
       'user',
-      parseInt(id)
+      targetUserId
     );
 
     return NextResponse.json({

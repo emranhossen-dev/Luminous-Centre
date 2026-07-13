@@ -37,7 +37,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="bn" className={`${inter.variable} ${hindSiliguri.variable}`}>
-      <body className="font-sans bg-[#0b0c17] text-white antialiased selection:bg-[#2e31e1] selection:text-white transition-colors duration-300">
+      <body className="font-sans antialiased selection:bg-[#2e31e1] selection:text-white transition-colors duration-300">
         <LoadingProvider>
           <AuthProvider>
             <LayoutProvider>

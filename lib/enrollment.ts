@@ -23,6 +23,8 @@ export async function ensurePaymentSchema(): Promise<void> {
       bkash_payment_id VARCHAR(120),
       bkash_reference VARCHAR(120),
       gateway_response JSONB,
+      promo_code VARCHAR(100),
+      whatsapp_number VARCHAR(20),
       admin_note TEXT,
       reviewed_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
       reviewed_at TIMESTAMP,

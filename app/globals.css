@@ -25,8 +25,15 @@
   }
   
   body {
-    /* bg-[#0b0c17] matches your previous background preference */
-    @apply bg-[#0b0c17] text-white antialiased min-h-screen overflow-x-hidden;
+    @apply bg-white text-slate-900 antialiased min-h-screen overflow-x-hidden transition-colors duration-300;
+  }
+  
+  html.dark body {
+    @apply bg-[#0b0c17] text-white;
+  }
+
+  html.blue body {
+    @apply bg-blue-50 text-blue-900;
   }
 
   /* Professional Minimal Scrollbar */

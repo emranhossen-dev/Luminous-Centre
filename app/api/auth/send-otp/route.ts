@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
-import { sendEmail } from '@/lib/email';
+import { sendEmail, getEmailTemplate } from '@/lib/email';
 
 export async function POST(req: NextRequest) {
   try {
@@ -41,17 +41,15 @@ export async function POST(req: NextRequest) {
       WHERE id = $3
     `, [otp, expires, user.id]);
 
-    const otpEmailHtml = `
-      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); color: #1e293b;">
-        <div style="text-align: center; margin-bottom: 25px;">
-          <div style="display: inline-block; background-color: #2563eb; color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 20px; letter-spacing: 0.5px;">Luminous Skills</div>
-        </div>
-        <h2 style="color: #0f172a; font-size: 20px; font-weight: bold; margin-bottom: 15px;">Your Password Reset OTP</h2>
-        <p style="font-size: 14px; line-height: 1.6; color: #475569;">Hello <strong>${user.firstName} ${user.lastName}</strong>,</p>
-        <p style="font-size: 14px; line-height: 1.6; color: #475569;">You requested a password reset for your Luminous Skills account. Please use the following One-Time Password (OTP) to reset your password:</p>
+    const otpEmailHtml = getEmailTemplate({
+      title: 'Password Reset OTP - Luminous Centre',
+      heading: 'Your Password Reset OTP',
+      bodyHtml: `
+        <p>Hello <strong>${user.firstName} ${user.lastName}</strong>,</p>
+        <p>You requested a password reset for your Luminous Centre account. Please use the following One-Time Password (OTP) to reset your password:</p>
         
-        <div style="text-align: center; margin: 30px 0;">
-          <div style="display: inline-block; background-color: #f1f5f9; border: 1px dashed #cbd5e1; color: #2563eb; font-size: 32px; font-weight: 800; letter-spacing: 8px; padding: 16px 32px; border-radius: 16px;">
+        <div style="text-align: center; margin: 35px 0;">
+          <div style="display: inline-block; background-color: #f1f5f9; border: 1px dashed #cbd5e1; color: #2563eb; font-size: 36px; font-weight: 800; letter-spacing: 8px; padding: 16px 32px; border-radius: 16px; font-family: monospace;">
             ${otp}
           </div>
         </div>
@@ -59,16 +57,12 @@ export async function POST(req: NextRequest) {
         <p style="font-size: 12px; color: #e11d48; font-weight: 500; margin-top: 20px;">
           * Note: This OTP is valid for 15 minutes. If you did not request a password reset, please ignore this email.
         </p>
-        <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 25px 0;" />
-        <p style="font-size: 11px; text-align: center; color: #94a3b8; margin: 0;">
-          Luminous Skill Development Training Center.
-        </p>
-      </div>
-    `;
+      `
+    });
 
     const emailResult = await sendEmail({
       to: email,
-      subject: 'Password Reset OTP - Luminous Skill Development Training Center',
+      subject: 'Password Reset OTP - Luminous Centre',
       html: otpEmailHtml
     });
     if (!emailResult.success) {

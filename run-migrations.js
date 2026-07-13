@@ -138,6 +138,14 @@ async function runMigration() {
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     )`);
 
+    console.log('12. Upgrading activity_logs foreign key constraint...');
+    try {
+      await pool.query(`ALTER TABLE activity_logs DROP CONSTRAINT IF EXISTS activity_logs_user_id_fkey`);
+      await pool.query(`ALTER TABLE activity_logs ADD CONSTRAINT activity_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE`);
+    } catch (e) {
+      console.warn("Failed to upgrade activity_logs constraint in migrations:", e);
+    }
+
     console.log('SUCCESS: All missing tables created and foreign keys integrated!');
   } catch (err) {
     console.error('Migration failed:', err);

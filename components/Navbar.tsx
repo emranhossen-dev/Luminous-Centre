@@ -35,7 +35,7 @@ export default function Navbar() {
   const [sidebar, setSidebar] = useState(false);
   const [coursesOpen, setCoursesOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">("light");
   const { user, logout } = useAuth();
   const router = useRouter();
 

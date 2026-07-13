@@ -19,8 +19,9 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
     if (savedTheme) {
       setTheme(savedTheme);
     }
-    // Apply theme to document element for global styles
     document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.classList.toggle('light', theme === 'light');
+    document.documentElement.classList.toggle('blue', theme === 'blue');
     document.documentElement.classList.toggle('admin-dark', theme === 'dark');
     document.documentElement.classList.toggle('admin-blue', theme === 'blue');
     document.documentElement.classList.toggle('admin-light', theme === 'light');

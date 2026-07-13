@@ -5,9 +5,10 @@ import { motion } from 'framer-motion';
 import {
   User, Phone, Mail, CreditCard, Calendar, Filter,
   Search, Eye, Edit2, Save, X, CheckCircle, Clock,
-  AlertCircle, Users, FileText, Loader2
+  AlertCircle, Users, FileText, Loader2, Trash2, BookOpen, MessageCircle
 } from 'lucide-react';
 import { useLoading } from '@/contexts/LoadingContext';
+import Swal from 'sweetalert2';
 
 type EnrollmentStatus = 'applied' | 'waiting' | 'admitted' | 'rejected' | 'next_batch';
 type PaymentStatus = 'pending' | 'verified' | 'failed';
@@ -29,6 +30,8 @@ interface Enrollment {
   course_category: string;
   course_price: number;
   batch_name: string;
+  promo_code?: string;
+  whatsapp_number?: string;
   admin_note: string;
   created_at: string;
   reviewed_at: string;
@@ -46,6 +49,11 @@ export default function EnrollmentsPage() {
   const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
   const [editingNote, setEditingNote] = useState(false);
   const [noteText, setNoteText] = useState('');
+
+  // Edit Modal states
+  const [selectedEnrollmentForEdit, setSelectedEnrollmentForEdit] = useState<Enrollment | null>(null);
+  const [editFormState, setEditFormState] = useState<Partial<Enrollment>>({});
+  const [savingEdit, setSavingEdit] = useState(false);
 
   // Course Direct Assignment Modal state
   const [assignModalOpen, setAssignModalOpen] = useState(false);
@@ -165,6 +173,117 @@ export default function EnrollmentsPage() {
       setEnrollments([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteEnrollment = async (requestId: number, studentName: string) => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `Do you want to delete the enrollment for "${studentName}"? This will also revoke their active course access.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#3b82f6',
+      confirmButtonText: 'Yes, delete!',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const token = localStorage.getItem('adminToken');
+        const response = await fetch(`/api/admin/enrollment-requests/${requestId}`, {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          Swal.fire({
+            title: 'Deleted!',
+            text: 'Enrollment has been deleted.',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+          });
+          setEnrollments(prev => prev.filter(e => e.id !== requestId));
+        } else {
+          const data = await response.json();
+          Swal.fire('Error!', data.error || 'Failed to delete enrollment.', 'error');
+        }
+      } catch (err) {
+        Swal.fire('Error!', 'A network error occurred.', 'error');
+      }
+    }
+  };
+
+  const handleSaveEditEnrollment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedEnrollmentForEdit) return;
+
+    try {
+      setSavingEdit(true);
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`/api/admin/enhanced-enrollments/${selectedEnrollmentForEdit.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          full_name: editFormState.full_name,
+          email: editFormState.email,
+          mobile_number: editFormState.mobile_number,
+          whatsapp_number: editFormState.whatsapp_number,
+          course_title: editFormState.course_title,
+          course_category: editFormState.course_category,
+          batch_name: editFormState.batch_name,
+          amount: editFormState.amount ? parseFloat(editFormState.amount as any) : 0,
+          promo_code: editFormState.promo_code,
+          enrollment_status: editFormState.enrollment_status,
+          payment_status: editFormState.payment_status
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Swal.fire({
+          title: 'Saved!',
+          text: 'Enrollment details updated successfully.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false
+        });
+        setEnrollments(prev =>
+          prev.map(e =>
+            e.id === selectedEnrollmentForEdit.id
+              ? {
+                  ...e,
+                  full_name: editFormState.full_name || e.full_name,
+                  email: editFormState.email || e.email,
+                  mobile_number: editFormState.mobile_number || e.mobile_number,
+                  whatsapp_number: editFormState.whatsapp_number !== undefined ? editFormState.whatsapp_number : e.whatsapp_number,
+                  course_title: editFormState.course_title || e.course_title,
+                  course_category: editFormState.course_category || e.course_category,
+                  batch_name: editFormState.batch_name || e.batch_name,
+                  amount: editFormState.amount ? parseFloat(editFormState.amount as any) : e.amount,
+                  promo_code: editFormState.promo_code !== undefined ? editFormState.promo_code : e.promo_code,
+                  enrollment_status: editFormState.enrollment_status || e.enrollment_status,
+                  payment_status: editFormState.payment_status || e.payment_status
+                }
+              : e
+          )
+        );
+        setSelectedEnrollmentForEdit(null);
+      } else {
+        Swal.fire('Error!', data.error || 'Failed to update enrollment.', 'error');
+      }
+    } catch (error) {
+      console.error('Error saving enrollment:', error);
+      Swal.fire('Error!', 'An error occurred while saving enrollment.', 'error');
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -488,16 +607,14 @@ export default function EnrollmentsPage() {
           transition={{ delay: 0.25 }}
           className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10"
         >
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto w-full max-w-full">
+            <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/10">
                   <th className="text-left p-4 text-gray-300 font-medium">Student</th>
-                  <th className="text-left p-4 text-gray-300 font-medium">Course</th>
-                  <th className="text-left p-4 text-gray-300 font-medium">Amount</th>
+                  <th className="text-left p-4 text-gray-300 font-medium">Contact</th>
+                  <th className="text-left p-4 text-gray-300 font-medium">Course Details</th>
                   <th className="text-left p-4 text-gray-300 font-medium">Status</th>
-                  <th className="text-left p-4 text-gray-300 font-medium">Payment</th>
-                  <th className="text-left p-4 text-gray-300 font-medium">Date</th>
                   <th className="text-left p-4 text-gray-300 font-medium">Actions</th>
                 </tr>
               </thead>
@@ -505,28 +622,76 @@ export default function EnrollmentsPage() {
                 {filteredEnrollments.map((enrollment) => (
                   <tr key={enrollment.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="p-4">
-                      <div>
-                        <p className="text-white font-medium">{enrollment.full_name}</p>
-                        <p className="text-gray-400 text-sm">{enrollment.email}</p>
-                        <p className="text-gray-400 text-sm">{enrollment.mobile_number}</p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+                          {enrollment.full_name?.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-white font-medium truncate max-w-[150px]" title={enrollment.full_name}>
+                            {enrollment.full_name}
+                          </p>
+                          <p className="text-gray-400 text-xs">ID: #{enrollment.id}</p>
+                        </div>
                       </div>
                     </td>
+                    
                     <td className="p-4">
-                      <div>
-                        <p className="text-white font-medium">{enrollment.course_title}</p>
-                        <p className="text-gray-400 text-sm">{enrollment.course_category}</p>
-                        <p className="text-gray-400 text-sm">{enrollment.batch_name}</p>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-gray-300 text-sm">
+                          <Mail className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate max-w-[180px]" title={enrollment.email}>
+                            {enrollment.email}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-300 text-sm">
+                          <Phone className="w-3 h-3 flex-shrink-0" />
+                          <span>{enrollment.mobile_number}</span>
+                        </div>
+                        {enrollment.whatsapp_number && (
+                          <div className="flex items-center gap-2 text-gray-300 text-sm">
+                            <MessageCircle className="w-3 h-3 flex-shrink-0" />
+                            <span>{enrollment.whatsapp_number}</span>
+                          </div>
+                        )}
+                        <div className="text-xs text-gray-400 font-medium pt-1">
+                          Applied: {new Date(enrollment.created_at).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </div>
                       </div>
                     </td>
+                    
                     <td className="p-4">
-                      <p className="text-white font-medium">{enrollment.amount} {enrollment.currency}</p>
-                      <p className="text-gray-400 text-sm">ID: {enrollment.transaction_id}</p>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                          <span className="text-white font-medium truncate max-w-[200px]" title={enrollment.course_title}>
+                            {enrollment.course_title}
+                          </span>
+                        </div>
+                        <div className="text-xs text-purple-300">
+                          Category: {enrollment.course_category} | Batch: {enrollment.batch_name}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-white font-semibold bg-white/10 px-2 py-0.5 rounded text-xs">
+                            {enrollment.amount} {enrollment.currency}
+                          </span>
+                          {enrollment.promo_code && (
+                            <span className="text-yellow-400 font-bold bg-yellow-500/10 border border-yellow-500/20 px-2 py-0.5 rounded text-xs">
+                              Promo: {enrollment.promo_code}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </td>
+                    
                     <td className="p-4">
                       <select
                         value={enrollment.enrollment_status}
                         onChange={(e) => updateEnrollmentStatus(enrollment.id, e.target.value as EnrollmentStatus)}
-                        className={`px-3 py-1 rounded-lg text-sm font-medium border ${
+                        className={`px-3 py-1 rounded-lg text-sm font-medium border bg-black text-white focus:ring-1 focus:ring-blue-500 ${
                           enrollment.enrollment_status === 'applied' ? 'bg-blue-600/20 text-blue-400 border-blue-600/20' :
                           enrollment.enrollment_status === 'waiting' ? 'bg-yellow-600/20 text-yellow-400 border-yellow-600/20' :
                           enrollment.enrollment_status === 'admitted' ? 'bg-green-600/20 text-green-400 border-green-600/20' :
@@ -534,44 +699,45 @@ export default function EnrollmentsPage() {
                           'bg-purple-600/20 text-purple-400 border-purple-600/20'
                         }`}
                       >
-                        <option value="applied">Applied</option>
-                        <option value="waiting">Waiting</option>
-                        <option value="admitted">Admitted</option>
-                        <option value="rejected">Rejected</option>
-                        <option value="next_batch">Next Batch</option>
+                        <option value="applied" className="bg-gray-800">Applied</option>
+                        <option value="waiting" className="bg-gray-800">Waiting</option>
+                        <option value="admitted" className="bg-gray-800">Admitted</option>
+                        <option value="rejected" className="bg-gray-800">Rejected</option>
+                        <option value="next_batch" className="bg-gray-800">Next Batch</option>
                       </select>
                     </td>
+                    
                     <td className="p-4">
-                      <select
-                        value={enrollment.payment_status}
-                        onChange={(e) => updatePaymentStatus(enrollment.id, e.target.value as PaymentStatus)}
-                        className={`px-3 py-1 rounded-lg text-sm font-medium border ${
-                          enrollment.payment_status === 'pending' ? 'bg-yellow-600/20 text-yellow-400 border-yellow-600/20' :
-                          enrollment.payment_status === 'verified' ? 'bg-green-600/20 text-green-400 border-green-600/20' :
-                          'bg-red-600/20 text-red-400 border-red-600/20'
-                        }`}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="verified">Verified</option>
-                        <option value="failed">Failed</option>
-                      </select>
-                    </td>
-                    <td className="p-4">
-                      <p className="text-gray-300 text-sm">
-                        {new Date(enrollment.created_at).toLocaleDateString()}
-                      </p>
-                    </td>
-                    <td className="p-4">
-                      <button
-                        onClick={() => {
-                          setSelectedEnrollment(enrollment);
-                          setNoteText(enrollment.admin_note || '');
-                          setEditingNote(false);
-                        }}
-                        className="p-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-600/20 rounded-lg text-blue-400 transition-colors"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedEnrollment(enrollment);
+                            setNoteText(enrollment.admin_note || '');
+                            setEditingNote(false);
+                          }}
+                          className="p-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-600/20 rounded-lg text-blue-400 transition-colors"
+                          title="View Details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedEnrollmentForEdit(enrollment);
+                            setEditFormState({ ...enrollment });
+                          }}
+                          className="p-2 bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-600/20 rounded-lg text-yellow-400 transition-colors"
+                          title="Edit Enrollment"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteEnrollment(enrollment.id, enrollment.full_name)}
+                          className="p-2 bg-red-600/20 hover:bg-red-600/30 border border-red-600/20 rounded-lg text-red-400 transition-colors"
+                          title="Delete Enrollment"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -626,6 +792,12 @@ export default function EnrollmentsPage() {
                       <Phone className="w-4 h-4 text-gray-400" />
                       <p className="text-white">{selectedEnrollment.mobile_number}</p>
                     </div>
+                    {selectedEnrollment.whatsapp_number && (
+                      <div className="flex items-center gap-3">
+                        <MessageCircle className="w-4 h-4 text-emerald-400" />
+                        <p className="text-white">{selectedEnrollment.whatsapp_number}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -636,6 +808,14 @@ export default function EnrollmentsPage() {
                     <p className="text-white"><span className="text-gray-400">Category:</span> {selectedEnrollment.course_category}</p>
                     <p className="text-white"><span className="text-gray-400">Batch:</span> {selectedEnrollment.batch_name}</p>
                     <p className="text-white"><span className="text-gray-400">Price:</span> {selectedEnrollment.amount} {selectedEnrollment.currency}</p>
+                    {selectedEnrollment.promo_code && (
+                      <p className="text-white">
+                        <span className="text-gray-400">Promo Code:</span>{' '}
+                        <span className="text-yellow-400 font-bold bg-yellow-500/10 border border-yellow-500/20 px-2 py-0.5 rounded text-xs ml-1 font-semibold">
+                          {selectedEnrollment.promo_code}
+                        </span>
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -709,6 +889,183 @@ export default function EnrollmentsPage() {
                   </div>
                 )}
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Edit Enrollment Details Modal */}
+        {selectedEnrollmentForEdit && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 flex items-center justify-center p-4"
+            onClick={() => setSelectedEnrollmentForEdit(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-white/5 backdrop-blur-2xl rounded-3xl p-8 border border-white/10 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-start mb-6">
+                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                  <Edit2 className="w-6 h-6 text-yellow-400" />
+                  Edit Enrollment Details
+                </h2>
+                <button
+                  onClick={() => setSelectedEnrollmentForEdit(null)}
+                  className="p-2 bg-white/10 hover:bg-white/20 rounded-lg text-gray-400 hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveEditEnrollment} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Student Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormState.full_name || ''}
+                    onChange={(e) => setEditFormState({ ...editFormState, full_name: e.target.value })}
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm font-semibold"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Email Address</label>
+                    <input
+                      type="email"
+                      required
+                      value={editFormState.email || ''}
+                      onChange={(e) => setEditFormState({ ...editFormState, email: e.target.value })}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Mobile Number</label>
+                    <input
+                      type="text"
+                      required
+                      value={editFormState.mobile_number || ''}
+                      onChange={(e) => setEditFormState({ ...editFormState, mobile_number: e.target.value })}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">WhatsApp Number</label>
+                    <input
+                      type="text"
+                      value={editFormState.whatsapp_number || ''}
+                      onChange={(e) => setEditFormState({ ...editFormState, whatsapp_number: e.target.value })}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Course Title</label>
+                    <input
+                      type="text"
+                      required
+                      value={editFormState.course_title || ''}
+                      onChange={(e) => setEditFormState({ ...editFormState, course_title: e.target.value })}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Course Category</label>
+                    <input
+                      type="text"
+                      required
+                      value={editFormState.course_category || ''}
+                      onChange={(e) => setEditFormState({ ...editFormState, course_category: e.target.value })}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Price (Amount)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      value={editFormState.amount || 0}
+                      onChange={(e) => setEditFormState({ ...editFormState, amount: parseFloat(e.target.value) || 0 })}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Promo Code</label>
+                    <input
+                      type="text"
+                      value={editFormState.promo_code || ''}
+                      onChange={(e) => setEditFormState({ ...editFormState, promo_code: e.target.value })}
+                      placeholder="None"
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Batch Name</label>
+                    <input
+                      type="text"
+                      value={editFormState.batch_name || ''}
+                      onChange={(e) => setEditFormState({ ...editFormState, batch_name: e.target.value })}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Enrollment Status</label>
+                    <select
+                      value={editFormState.enrollment_status || 'applied'}
+                      onChange={(e) => setEditFormState({ ...editFormState, enrollment_status: e.target.value as any })}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm font-semibold"
+                    >
+                      <option value="applied" className="bg-gray-800">Applied</option>
+                      <option value="waiting" className="bg-gray-800">Waiting</option>
+                      <option value="admitted" className="bg-gray-800">Admitted</option>
+                      <option value="rejected" className="bg-gray-800">Rejected</option>
+                      <option value="next_batch" className="bg-gray-800">Next Batch</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Payment Status</label>
+                    <select
+                      value={editFormState.payment_status || 'pending'}
+                      onChange={(e) => setEditFormState({ ...editFormState, payment_status: e.target.value as any })}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm font-semibold"
+                    >
+                      <option value="pending" className="bg-gray-800">Pending</option>
+                      <option value="verified" className="bg-gray-800">Verified</option>
+                      <option value="failed" className="bg-gray-800">Failed</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-6 border-t border-white/5">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedEnrollmentForEdit(null)}
+                    className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-gray-400 hover:text-white text-sm font-bold rounded-xl transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingEdit}
+                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-sm font-bold rounded-xl transition flex items-center gap-1.5"
+                  >
+                    {savingEdit ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </motion.div>
         )}

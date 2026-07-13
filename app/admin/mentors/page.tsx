@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Search, Plus, Filter, MoreVertical, Edit, Trash2, Eye, UserX, UserCheck } from 'lucide-react';
+import { Search, Plus, Filter, MoreVertical, Edit, Trash2, Eye, UserX, UserCheck, Users } from 'lucide-react';
 import pool from '@/lib/database';
 import MentorsTableClient from '@/components/admin/MentorsTableClient';
 
@@ -56,67 +56,84 @@ export default async function MentorsPage({
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Mentors</h1>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+            <div className="p-3 bg-blue-600/20 rounded-xl">
+              <Users className="w-6 h-6 text-blue-400" />
+            </div>
+            Mentors Management
+          </h1>
+          <p className="text-gray-400 mt-2">Manage and track course instructors</p>
+        </div>
         <Link 
           href="/admin/mentors/add"
-          className="bg-blue-600 text-white hover:bg-blue-700 inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 transition-colors shadow-sm"
+          className="bg-blue-600 hover:bg-blue-500 text-white inline-flex items-center justify-center rounded-xl text-sm font-bold h-11 px-5 transition-all shadow-lg hover:shadow-blue-500/20"
         >
           <Plus className="mr-2 h-4 w-4" /> Add Mentor
         </Link>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm">
-        <form className="flex w-full sm:w-auto gap-4 items-center" method="GET">
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white/5 p-4 rounded-xl border border-white/10 backdrop-blur-sm">
+        <form className="flex flex-col sm:flex-row w-full gap-4 items-center" method="GET">
           <div className="relative w-full sm:w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500 dark:text-slate-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
               name="search"
               defaultValue={search}
               placeholder="Search mentors..."
-              className="flex h-10 w-full rounded-md border border-gray-300 dark:border-slate-800 bg-transparent dark:bg-slate-950 px-3 py-2 pl-9 text-sm placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-sm"
             />
           </div>
           
-          <select 
-            name="status" 
-            defaultValue={statusFilter}
-            className="h-10 rounded-md border border-gray-300 dark:border-slate-800 bg-transparent dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-100"
-          >
-            <option value="" className="dark:bg-slate-900">All Statuses</option>
-            <option value="active" className="dark:bg-slate-900">Active</option>
-            <option value="suspended" className="dark:bg-slate-900">Suspended</option>
-          </select>
+          <div className="flex flex-wrap w-full sm:w-auto gap-4 items-center">
+            <div className="relative">
+              <select 
+                name="status" 
+                defaultValue={statusFilter}
+                className="appearance-none pl-4 pr-10 py-2.5 bg-slate-950 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent cursor-pointer text-sm"
+              >
+                <option value="" className="bg-gray-800">All Statuses</option>
+                <option value="active" className="bg-gray-800">Active</option>
+                <option value="suspended" className="bg-gray-800">Suspended</option>
+                <option value="inactive" className="bg-gray-800">Inactive</option>
+              </select>
+            </div>
 
-          <select 
-            name="sort" 
-            defaultValue={sort}
-            className="h-10 rounded-md border border-gray-300 dark:border-slate-800 bg-transparent dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-100"
-          >
-            <option value="created_at" className="dark:bg-slate-900">Join Date</option>
-            <option value="rating" className="dark:bg-slate-900">Rating</option>
-          </select>
+            <div className="relative">
+              <select 
+                name="sort" 
+                defaultValue={sort}
+                className="appearance-none pl-4 pr-10 py-2.5 bg-slate-950 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent cursor-pointer text-sm"
+              >
+                <option value="created_at" className="bg-gray-800">Join Date</option>
+                <option value="rating" className="bg-gray-800">Rating</option>
+              </select>
+            </div>
 
-          <button type="submit" className="h-10 px-4 py-2 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-200 rounded-md text-sm font-medium transition-colors">
-            Apply
-          </button>
+            <button type="submit" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-bold transition-all cursor-pointer">
+              Apply Filter
+            </button>
+          </div>
         </form>
       </div>
 
       <MentorsTableClient initialMentors={mentors} />
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-600 dark:text-slate-400">
-            Showing <span className="font-medium dark:text-slate-200">{(page - 1) * limit + 1}</span> to <span className="font-medium dark:text-slate-200">{Math.min(page * limit, total)}</span> of <span className="font-medium dark:text-slate-200">{total}</span> results
+        <div className="flex items-center justify-between pt-4 border-t border-white/5">
+          <p className="text-sm text-gray-400">
+            Showing <span className="font-semibold text-white">{(page - 1) * limit + 1}</span> to <span className="font-semibold text-white">{Math.min(page * limit, total)}</span> of <span className="font-semibold text-white">{total}</span> results
           </p>
           <div className="flex gap-2">
             {page > 1 && (
               <Link 
                 href={`?page=${page - 1}&search=${search}&status=${statusFilter}&sort=${sort}`}
-                className="px-3 py-1 border border-gray-200 dark:border-slate-800 rounded hover:bg-gray-50 dark:hover:bg-slate-800/50 text-gray-700 dark:text-slate-300 text-sm transition-colors"
+                className="px-4 py-2 border border-white/10 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white text-sm font-semibold transition"
               >
                 Previous
               </Link>
@@ -124,7 +141,7 @@ export default async function MentorsPage({
             {page < totalPages && (
               <Link 
                 href={`?page=${page + 1}&search=${search}&status=${statusFilter}&sort=${sort}`}
-                className="px-3 py-1 border border-gray-200 dark:border-slate-800 rounded hover:bg-gray-50 dark:hover:bg-slate-800/50 text-gray-700 dark:text-slate-300 text-sm transition-colors"
+                className="px-4 py-2 border border-white/10 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white text-sm font-semibold transition"
               >
                 Next
               </Link>

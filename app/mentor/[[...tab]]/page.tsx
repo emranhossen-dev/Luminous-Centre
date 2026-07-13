@@ -74,7 +74,9 @@ interface Question {
   }[];
 }
 
-export default function MentorDashboard() {
+export default function MentorDashboard({ params }: { params: Promise<{ tab?: string[] }> }) {
+  const resolvedParams = React.use(params);
+  const tabParam = resolvedParams.tab?.[0] || 'overview';
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
@@ -96,27 +98,36 @@ export default function MentorDashboard() {
     document.documentElement.classList.toggle("light", newTheme === "light");
     document.documentElement.classList.toggle("dark", newTheme === "dark");
   };
-  const [activeTab, rawSetActiveTab] = useState<'overview' | 'courses' | 'students' | 'quizzes' | 'attempts' | 'recordings' | 'assignments' | 'profile'>('overview');
+  const [activeTab, rawSetActiveTab] = useState<'overview' | 'courses' | 'students' | 'quizzes' | 'attempts' | 'recordings' | 'assignments' | 'profile'>(tabParam as any);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tabParam = params.get('tab');
     if (tabParam) {
       rawSetActiveTab(tabParam as any);
-    } else {
-      const saved = localStorage.getItem('mentorActiveTab');
-      if (saved) {
-        rawSetActiveTab(saved as any);
-      }
     }
+  }, [tabParam]);
+
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const pathname = window.location.pathname;
+      const parts = pathname.split('/');
+      const tabFromPath = parts[2];
+      if (tabFromPath) {
+        rawSetActiveTab(tabFromPath as any);
+      } else {
+        rawSetActiveTab('overview');
+      }
+    };
+
+    handleUrlChange();
+    window.addEventListener('popstate', handleUrlChange);
+    return () => window.removeEventListener('popstate', handleUrlChange);
   }, []);
 
   const setActiveTab = (tab: any) => {
     rawSetActiveTab(tab);
     localStorage.setItem('mentorActiveTab', tab);
-    const url = new URL(window.location.href);
-    url.searchParams.set('tab', tab);
-    window.history.pushState(null, '', url.pathname + url.search);
+    const path = tab === 'overview' ? '/mentor' : `/mentor/${tab}`;
+    window.history.pushState(null, '', path);
   };
 
   const [courses, setCourses] = useState<Course[]>([]);

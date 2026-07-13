@@ -3,8 +3,9 @@
 import pool from '@/lib/database';
 import { revalidatePath } from 'next/cache';
 import { hashPassword } from '@/lib/auth';
+import { detectEnrollmentUserColumn } from '@/lib/enrollment';
 import { logAudit } from '@/lib/audit';
-import { sendEmail } from '@/lib/email';
+import { sendEmail, getEmailTemplate } from '@/lib/email';
 
 export interface StaffData {
   firstName: string;
@@ -124,14 +125,12 @@ export async function createStaff(data: StaffData) {
     // Send welcome email with login details
     try {
       const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login`;
-      const welcomeHtml = `
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); color: #1e293b;">
-          <div style="text-align: center; margin-bottom: 25px;">
-            <div style="display: inline-block; background-color: #2563eb; color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 20px; letter-spacing: 0.5px;">Luminous Skills</div>
-          </div>
-          <h2 style="color: #0f172a; font-size: 20px; font-weight: bold; margin-bottom: 15px;">Welcome to Luminous Skill Development Center!</h2>
-          <p style="font-size: 14px; line-height: 1.6; color: #475569;">Hello <strong>${data.firstName} ${data.lastName}</strong>,</p>
-          <p style="font-size: 14px; line-height: 1.6; color: #475569;">Your administrative staff account has been created successfully. You can now log in using the details below:</p>
+      const welcomeHtml = getEmailTemplate({
+        title: 'Staff Account Created - Luminous Centre',
+        heading: 'Welcome to Luminous Centre!',
+        bodyHtml: `
+          <p>Hello <strong>${data.firstName} ${data.lastName}</strong>,</p>
+          <p>Your administrative staff account has been created successfully. You can now log in using the details below:</p>
           
           <div style="background-color: #f8fafc; padding: 20px; border-radius: 16px; margin: 25px 0; border: 1px solid #f1f5f9; font-size: 14px;">
             <p style="margin: 0 0 10px 0; color: #475569;"><strong>Login URL:</strong> <a href="${loginUrl}" style="color: #2563eb; text-decoration: none; font-weight: 500;">${loginUrl}</a></p>
@@ -142,16 +141,14 @@ export async function createStaff(data: StaffData) {
           <p style="font-size: 13px; color: #e11d48; font-weight: 500; margin-top: 20px;">
             * Important: Please log in and update your password immediately inside your profile settings for safety.
           </p>
-          <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 25px 0;" />
-          <p style="font-size: 11px; text-align: center; color: #94a3b8; margin: 0;">
-            Luminous Skill Development Center Training Management Platform.
-          </p>
-        </div>
-      `;
+        `,
+        ctaText: 'Log In to Dashboard',
+        ctaLink: loginUrl
+      });
 
       await sendEmail({
         to: data.email,
-        subject: 'Your Staff Account is Ready! - Luminous Skills',
+        subject: 'Your Staff Account is Ready! - Luminous Centre',
         html: welcomeHtml
       });
     } catch (mailError) {
@@ -302,7 +299,20 @@ export async function deleteStaff(id: number) {
       
       // Delete from mentors table
       await pool.query('DELETE FROM mentors WHERE email = $1', [email]);
+      // Delete from students table if they are registered as student
+      await pool.query('DELETE FROM students WHERE email = $1', [email.toLowerCase()]);
     }
+    
+    // Detect correct student/user column in enrollments
+    const userColumn = await detectEnrollmentUserColumn();
+
+    // Delete activity logs for the user to bypass the FK constraint
+    await pool.query('DELETE FROM activity_logs WHERE user_id = $1', [id]);
+    // Nullify course creation references
+    await pool.query('UPDATE courses SET created_by = NULL WHERE created_by = $1', [id]);
+    // Delete enrollments and enrollment requests
+    await pool.query(`DELETE FROM enrollments WHERE ${userColumn} = $1`, [id]);
+    await pool.query('DELETE FROM course_enrollment_requests WHERE user_id = $1', [id]);
     
     // Delete from users table
     await pool.query('DELETE FROM users WHERE id = $1', [id]);

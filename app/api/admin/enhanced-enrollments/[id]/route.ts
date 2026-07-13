@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import jwt from 'jsonwebtoken';
-import { sendEmail } from '@/lib/email';
+import { sendEmail, getEmailTemplate } from '@/lib/email';
 
 export async function PATCH(
   request: NextRequest,
@@ -58,6 +58,51 @@ export async function PATCH(
       updateValues.push(body.admin_note);
     }
 
+    if (body.full_name !== undefined) {
+      updateFields.push(`full_name = $${paramIndex++}`);
+      updateValues.push(body.full_name);
+    }
+
+    if (body.email !== undefined) {
+      updateFields.push(`email = $${paramIndex++}`);
+      updateValues.push(body.email);
+    }
+
+    if (body.mobile_number !== undefined) {
+      updateFields.push(`mobile_number = $${paramIndex++}`);
+      updateValues.push(body.mobile_number);
+    }
+
+    if (body.whatsapp_number !== undefined) {
+      updateFields.push(`whatsapp_number = $${paramIndex++}`);
+      updateValues.push(body.whatsapp_number);
+    }
+
+    if (body.course_title !== undefined) {
+      updateFields.push(`course_title = $${paramIndex++}`);
+      updateValues.push(body.course_title);
+    }
+
+    if (body.course_category !== undefined) {
+      updateFields.push(`course_category = $${paramIndex++}`);
+      updateValues.push(body.course_category);
+    }
+
+    if (body.batch_name !== undefined) {
+      updateFields.push(`batch_name = $${paramIndex++}`);
+      updateValues.push(body.batch_name);
+    }
+
+    if (body.amount !== undefined) {
+      updateFields.push(`amount = $${paramIndex++}`);
+      updateValues.push(body.amount);
+    }
+
+    if (body.promo_code !== undefined) {
+      updateFields.push(`promo_code = $${paramIndex++}`);
+      updateValues.push(body.promo_code);
+    }
+
     // Always update reviewed_by and reviewed_at when making changes
     updateFields.push(`reviewed_by = $${paramIndex++}`);
     updateValues.push(decoded.userId || decoded.id);
@@ -85,6 +130,43 @@ export async function PATCH(
       return NextResponse.json({ error: 'Enrollment not found' }, { status: 404 });
     }
 
+    // Sync student info to users/students table if email/name/phone was updated
+    if (body.full_name !== undefined || body.email !== undefined || body.mobile_number !== undefined) {
+      const currentRequest = result.rows[0];
+      const userId = currentRequest.user_id;
+      
+      if (userId) {
+        // Fetch old email to update students table properly
+        const oldUserRes = await query('SELECT email FROM users WHERE id = $1', [userId]);
+        const oldEmail = oldUserRes.rows[0]?.email;
+
+        // Split full name
+        const nameParts = (body.full_name || currentRequest.full_name || '').trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+        const newEmail = (body.email || currentRequest.email || '').toLowerCase();
+        const newPhone = body.mobile_number || currentRequest.mobile_number || null;
+
+        // Update users table
+        await query(
+          `UPDATE users 
+           SET first_name = $1, last_name = $2, email = $3, phone = $4 
+           WHERE id = $5`,
+          [firstName, lastName, newEmail, newPhone, userId]
+        );
+
+        // Update students table if exists
+        if (oldEmail) {
+          await query(
+            `UPDATE students 
+             SET name = $1, email = $2, phone = $3 
+             WHERE email = $4`,
+            [`${firstName} ${lastName}`.trim(), newEmail, newPhone, oldEmail.toLowerCase()]
+          );
+        }
+      }
+    }
+
     const enrollmentRequest = result.rows[0];
 
     // If enrollment is approved / admitted, create active course enrollment record & sync student profile
@@ -105,17 +187,15 @@ export async function PATCH(
       const details = detailResult.rows[0];
       const isApproved = enrollmentRequest.enrollment_status === 'approved' || enrollmentRequest.enrollment_status === 'admitted';
       const emailSubject = isApproved
-        ? 'Course Enrollment Approved! - Luminous Skills' 
-        : 'Course Enrollment Update - Luminous Skills';
+        ? 'Course Enrollment Approved! - Luminous Centre' 
+        : 'Course Enrollment Update - Luminous Centre';
 
-      const statusHtml = `
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); color: #1e293b;">
-          <div style="text-align: center; margin-bottom: 25px;">
-            <div style="display: inline-block; background-color: #2563eb; color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 20px; letter-spacing: 0.5px;">Luminous Skill Development Training Center</div>
-          </div>
-          <h2 style="color: #0f172a; font-size: 20px; font-weight: bold; margin-bottom: 15px;">Enrollment Update</h2>
-          <p style="font-size: 14px; line-height: 1.6; color: #475569;">Hello <strong>${details.firstName} ${details.lastName}</strong>,</p>
-          <p style="font-size: 14px; line-height: 1.6; color: #475569;">Your enrollment status for the course <strong>${details.courseTitle}</strong> has been updated.</p>
+      const statusHtml = getEmailTemplate({
+        title: 'Enrollment Update - Luminous Centre',
+        heading: 'Enrollment Update',
+        bodyHtml: `
+          <p>Hello <strong>${details.firstName} ${details.lastName}</strong>,</p>
+          <p>Your enrollment status for the course <strong>${details.courseTitle}</strong> has been updated.</p>
           
           <div style="background-color: ${isApproved ? '#f0fdf4' : '#fef2f2'}; border: 1px solid ${isApproved ? '#bbf7d0' : '#fecaca'}; padding: 15px; border-radius: 12px; margin: 20px 0; color: ${isApproved ? '#166534' : '#991b1b'};">
             <p style="margin: 0; font-size: 15px; font-weight: bold;">
@@ -125,30 +205,20 @@ export async function PATCH(
           </div>
           
           ${isApproved ? `
-            <p style="font-size: 14px; line-height: 1.6; color: #475569;">You can now view your course on your student portal dashboard.</p>
-            <div style="text-align: center; margin: 25px 0;">
-              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/student/my-courses" style="background-color: #2563eb; color: white; padding: 12px 24px; border-radius: 12px; font-weight: bold; font-size: 14px; text-decoration: none; display: inline-block;">
-                Go to My Courses
-              </a>
-            </div>
+            <p>You can now view your course on your student portal dashboard.</p>
           ` : `
-            <p style="font-size: 14px; line-height: 1.6; color: #475569;">If you have any queries about this enrollment status, feel free to contact the training center administration.</p>
+            <p>If you have any queries about this enrollment status, feel free to contact the training center administration.</p>
           `}
-          
-          <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 25px 0;" />
-          <p style="font-size: 11px; text-align: center; color: #94a3b8; margin: 0;">
-            Luminous Skill Development Training Center.
-          </p>
-        </div>
-      `;
+        `,
+        ctaText: isApproved ? 'Go to My Courses' : undefined,
+        ctaLink: isApproved ? `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/student/my-courses` : undefined
+      });
 
-      if (details.email) {
-        sendEmail({
-          to: details.email,
-          subject: emailSubject,
-          html: statusHtml
-        }).catch(err => console.error('[ENHANCED-ENROLLMENT-STATUS-EMAIL] Error sending status email:', err));
-      }
+      sendEmail({
+        to: details.email,
+        subject: emailSubject,
+        html: statusHtml
+      }).catch(err => console.error('[ENROLLMENT-UPDATE-EMAIL] Error sending status email:', err));
     }
 
     return NextResponse.json({

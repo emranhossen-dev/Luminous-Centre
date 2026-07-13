@@ -80,14 +80,11 @@ export default function StudentSidebar({
           const Icon = item.icon;
 
           const handleClick = (e: React.MouseEvent) => {
-            if (item.id === 'profile') {
-              if (onClose) onClose();
-              return;
-            }
             if (setActiveTab) {
               e.preventDefault();
               setActiveTab(item.id);
-              window.history.pushState(null, '', `/student?tab=${item.id}`);
+              const path = item.id === 'dashboard' ? '/student' : `/student/${item.id}`;
+              window.history.pushState(null, '', path);
               if (onClose) onClose();
             }
           };

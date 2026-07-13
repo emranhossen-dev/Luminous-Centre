@@ -11,23 +11,38 @@ import ClassJoining from '@/components/student/ClassJoining';
 import Recording from '@/components/student/Recording';
 import Resources from '@/components/student/Resources';
 import Assignments from '@/components/student/Assignments';
-import { StudentQuizzesList } from './quiz/page';
+import StudentQuizzesList from '@/components/student/StudentQuizzesList';
 import BuildMyCV from '@/components/student/BuildMyCV';
 import ProfileComponent from '@/components/ProfileComponent';
 
-export default function StudentPage() {
+interface StudentPageProps {
+  params: Promise<{ tab?: string[] }>;
+}
+
+export default function StudentPage({ params }: StudentPageProps) {
+  const resolvedParams = React.use(params);
+  const tabParam = resolvedParams.tab?.[0] || 'dashboard';
+
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState(tabParam);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Sync state with URL params
+  // Sync state when tabParam changes from Next.js routing
+  useEffect(() => {
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
+  // Sync state with browser back/forward (popstate)
   useEffect(() => {
     const handleUrlChange = () => {
-      const params = new URLSearchParams(window.location.search);
-      const tab = params.get('tab');
-      if (tab) {
-        setActiveTab(tab);
+      const pathname = window.location.pathname;
+      const parts = pathname.split('/');
+      const tabFromPath = parts[2];
+      if (tabFromPath) {
+        setActiveTab(tabFromPath);
       } else {
         setActiveTab('dashboard');
       }

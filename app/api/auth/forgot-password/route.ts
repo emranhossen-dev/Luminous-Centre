@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
-import { sendEmail } from '@/lib/email';
+import { sendEmail, getEmailTemplate } from '@/lib/email';
 import crypto from 'crypto';
 
 export async function POST(req: NextRequest) {
@@ -48,20 +48,12 @@ export async function POST(req: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const resetUrl = `${appUrl}/auth/reset-password?token=${token}`;
 
-    const resetHtml = `
-      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); color: #1e293b;">
-        <div style="text-align: center; margin-bottom: 25px;">
-          <div style="display: inline-block; background-color: #2563eb; color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 20px; letter-spacing: 0.5px;">Luminous Skills</div>
-        </div>
-        <h2 style="color: #0f172a; font-size: 20px; font-weight: bold; margin-bottom: 15px;">Reset Your Password</h2>
-        <p style="font-size: 14px; line-height: 1.6; color: #475569;">Hello <strong>${user.firstName} ${user.lastName}</strong>,</p>
-        <p style="font-size: 14px; line-height: 1.6; color: #475569;">We received a request to reset the password for your Luminous Skills account. Click the button below to set a new password:</p>
-        
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${resetUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; border-radius: 12px; font-weight: bold; font-size: 14px; text-decoration: none; display: inline-block; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
-            Reset Password
-          </a>
-        </div>
+    const resetHtml = getEmailTemplate({
+      title: 'Reset Password - Luminous Centre',
+      heading: 'Reset Your Password',
+      bodyHtml: `
+        <p>Hello <strong>${user.firstName} ${user.lastName}</strong>,</p>
+        <p>We received a request to reset the password for your Luminous Centre account. Click the button below to set a new password:</p>
         
         <p style="font-size: 13px; line-height: 1.6; color: #475569;">
           Or copy and paste this link in your browser:
@@ -71,18 +63,16 @@ export async function POST(req: NextRequest) {
         </p>
         
         <p style="font-size: 12px; color: #e11d48; font-weight: 500; margin-top: 20px;">
-          * Note: This password reset link is valid for 1 hour. If you did not request this reset, please ignore this email or contact support.
+          * Note: This password reset link is valid for 1 hour. If you did not request this reset, please ignore this email.
         </p>
-        <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 25px 0;" />
-        <p style="font-size: 11px; text-align: center; color: #94a3b8; margin: 0;">
-          Luminous Skill Development Center.
-        </p>
-      </div>
-    `;
+      `,
+      ctaText: 'Reset Password',
+      ctaLink: resetUrl
+    });
 
     await sendEmail({
       to: email,
-      subject: 'Reset Password Request - Luminous Skills',
+      subject: 'Reset Password Request - Luminous Centre',
       html: resetHtml
     });
 

@@ -119,7 +119,7 @@ export async function POST() {
     await query(`
       CREATE TABLE IF NOT EXISTS activity_logs (
         id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         action VARCHAR(255) NOT NULL,
         resource_type VARCHAR(100),
         resource_id INTEGER,
@@ -129,6 +129,18 @@ export async function POST() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // Ensure constraint is ON DELETE CASCADE
+    try {
+      await query(`ALTER TABLE activity_logs DROP CONSTRAINT IF EXISTS activity_logs_user_id_fkey`);
+      await query(`
+        ALTER TABLE activity_logs 
+        ADD CONSTRAINT activity_logs_user_id_fkey 
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      `);
+    } catch (e) {
+      console.warn("Failed to upgrade activity_logs constraint in setup-database route:", e);
+    }
 
     // Create indexes
     await query(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);`);

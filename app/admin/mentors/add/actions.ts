@@ -4,7 +4,8 @@ import pool from '@/lib/database';
 import { revalidatePath } from 'next/cache';
 import { logAudit } from '@/lib/audit';
 import { hashPassword } from '@/lib/auth';
-import { sendEmail } from '@/lib/email';
+import { detectEnrollmentUserColumn } from '@/lib/enrollment';
+import { sendEmail, getEmailTemplate } from '@/lib/email';
 
 export async function createMentor(data: any) {
   try {
@@ -92,20 +93,40 @@ export async function createMentor(data: any) {
       const res = await client.query(query, values);
       const mentorId = res.rows[0].id;
 
+      // Assign selected courses to this mentor
+      if (data.assignedCourseIds && data.assignedCourseIds.length > 0) {
+        await client.query(
+          `UPDATE courses SET mentor_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = ANY($2::int[])`,
+          [mentorId, data.assignedCourseIds]
+        );
+      }
+
+      // Fetch assigned course titles for email mention
+      let courseTitles: string[] = [];
+      if (data.assignedCourseIds && data.assignedCourseIds.length > 0) {
+        const courseRes = await client.query(
+          `SELECT title FROM courses WHERE id = ANY($1::int[])`,
+          [data.assignedCourseIds]
+        );
+        courseTitles = courseRes.rows.map(row => row.title);
+      }
+
       await client.query('COMMIT');
 
       // Send email invitation to newly created mentor
-      const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login`;
+      const loginUrl = 'https://www.luminouscentre.org/login';
       
-      const inviteHtml = `
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); color: #1e293b;">
-          <div style="text-align: center; margin-bottom: 25px;">
-            <div style="display: inline-block; background-color: #2563eb; color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 20px; letter-spacing: 0.5px;">Luminous Skill Development Training Center</div>
-          </div>
-          <h2 style="color: #0f172a; font-size: 20px; font-weight: bold; margin-bottom: 15px;">Welcome to the Mentor Team!</h2>
-          <p style="font-size: 14px; line-height: 1.6; color: #475569;">Hello <strong>${data.name}</strong>,</p>
-          <p style="font-size: 14px; line-height: 1.6; color: #475569;">You have been registered as a Mentor at the <strong>Luminous Skill Development Training Center</strong>!</p>
-          <p style="font-size: 14px; line-height: 1.6; color: #475569;">An account has been provisioned for you. You can log in to access the mentor portal, manage courses, view student submissions, and perform grading using the credentials below:</p>
+      const inviteHtml = getEmailTemplate({
+        title: 'Mentor Invitation - Luminous Centre',
+        heading: 'Welcome to the Mentor Team!',
+        bodyHtml: `
+          <p>Hello <strong>${data.name}</strong>,</p>
+          <p>You have been registered as a Mentor at the <strong>Luminous Centre</strong>!</p>
+          ${courseTitles.length > 0 
+            ? `<p>You have been assigned to instruct the following course(s): <strong>${courseTitles.join(', ')}</strong>.</p>` 
+            : ''
+          }
+          <p>An account has been provisioned for you. You can log in to access the mentor portal, manage courses, view student submissions, and perform grading using the credentials below:</p>
           
           <div style="background-color: #f8fafc; padding: 20px; border-radius: 16px; margin: 25px 0; border: 1px solid #f1f5f9; font-size: 14px;">
             <p style="margin: 0 0 10px 0; color: #475569;"><strong>Login URL:</strong> <a href="${loginUrl}" style="color: #2563eb; text-decoration: none; font-weight: 500;">${loginUrl}</a></p>
@@ -116,16 +137,14 @@ export async function createMentor(data: any) {
           <p style="font-size: 13px; color: #e11d48; font-weight: 500; margin-top: 20px;">
             * Important: Please reset your temporary password immediately upon your first login for security reasons.
           </p>
-          <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 25px 0;" />
-          <p style="font-size: 11px; text-align: center; color: #94a3b8; margin: 0;">
-            Luminous Skill Development Training Center.
-          </p>
-        </div>
-      `;
+        `,
+        ctaText: 'Access Mentor Portal',
+        ctaLink: loginUrl
+      });
 
       sendEmail({
         to: data.email.toLowerCase(),
-        subject: 'Mentor Invitation - Luminous Skill Development Training Center',
+        subject: 'Mentor Invitation - Luminous Centre',
         html: inviteHtml
       }).catch(err => console.error('[MENTOR-INVITATION-EMAIL] Error sending invitation email:', err));
 
@@ -275,11 +294,31 @@ export async function deleteMentor(id: number) {
       if (res.rows.length > 0) {
         const email = res.rows[0].email;
         
-        // Nullify course references
+        // Nullify course references pointing to this mentor
         await client.query('UPDATE courses SET mentor_id = NULL WHERE mentor_id = $1', [id]);
 
-        // Delete from users table
+        // Get user details
+        const userRes = await client.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
+        if (userRes.rows.length > 0) {
+          const userId = userRes.rows[0].id;
+          
+          // Detect correct student/user column in enrollments
+          const userColumn = await detectEnrollmentUserColumn();
+
+          // Delete activity logs for the user to bypass the FK constraint
+          await client.query('DELETE FROM activity_logs WHERE user_id = $1', [userId]);
+          // Nullify course creation references
+          await client.query('UPDATE courses SET created_by = NULL WHERE created_by = $1', [userId]);
+          // Delete enrollments and enrollment requests
+          await client.query(`DELETE FROM enrollments WHERE ${userColumn} = $1`, [userId]);
+          await client.query('DELETE FROM course_enrollment_requests WHERE user_id = $1', [userId]);
+        }
+
+        // Delete from users table (now safe from FK violations)
         await client.query('DELETE FROM users WHERE email = $1', [email.toLowerCase()]);
+        
+        // Delete from students table if they are registered as student
+        await client.query('DELETE FROM students WHERE email = $1', [email.toLowerCase()]);
       }
 
       // Delete from mentors table

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -30,6 +30,28 @@ type MentorFormValues = z.infer<typeof mentorSchema>;
 export default function AddMentorPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [courses, setCourses] = useState<{ id: number; title: string }[]>([]);
+  const [selectedCourseIds, setSelectedCourseIds] = useState<number[]>([]);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const token = localStorage.getItem('adminToken');
+        const response = await fetch('/api/admin/courses?limit=100', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setCourses(data.courses || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch courses:', err);
+      }
+    };
+    fetchCourses();
+  }, []);
 
   const { register, handleSubmit, formState: { errors } } = useForm<MentorFormValues>({
     resolver: zodResolver(mentorSchema),
@@ -41,7 +63,10 @@ export default function AddMentorPage() {
   const onSubmit = async (data: MentorFormValues) => {
     setIsSubmitting(true);
     try {
-      const result = await createMentor(data);
+      const result = await createMentor({
+        ...data,
+        assignedCourseIds: selectedCourseIds
+      });
       if (result.success) {
         toast.success('Mentor created successfully!');
         router.push('/admin/mentors');
@@ -144,6 +169,33 @@ export default function AddMentorPage() {
               placeholder="React, Node.js, Python"
             />
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Assign Courses to Mentor</label>
+          {courses.length === 0 ? (
+            <p className="text-sm text-gray-500 dark:text-slate-400">Loading active courses...</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-48 overflow-y-auto border border-gray-300 dark:border-slate-800 rounded-lg p-4 bg-transparent dark:bg-slate-950">
+              {courses.map(course => (
+                <label key={course.id} className="flex items-center gap-3 text-sm text-gray-755 dark:text-slate-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedCourseIds.includes(course.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedCourseIds([...selectedCourseIds, course.id]);
+                      } else {
+                        setSelectedCourseIds(selectedCourseIds.filter(id => id !== course.id));
+                      }
+                    }}
+                    className="rounded border-gray-300 dark:border-slate-800 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span>{course.title}</span>
+                </label>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { HelpCircle, Clock, Award, CheckCircle2, ChevronRight, Play, Loader2 } from 'lucide-react';
+import { HelpCircle, Clock, CheckCircle2, ChevronRight, Play, Loader2 } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -19,7 +19,7 @@ interface Quiz {
   attemptStatus: string | null;
 }
 
-export function StudentQuizzesList() {
+export default function StudentQuizzesList() {
   const router = useRouter();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
@@ -172,19 +172,6 @@ export function StudentQuizzesList() {
           })}
         </div>
       )}
-    </div>
-  );
-}
-
-export default function StudentQuizzesPage() {
-  const router = useRouter();
-  useEffect(() => {
-    router.replace('/student?tab=quiz');
-  }, [router]);
-
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a0f18]">
-      <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
     </div>
   );
 }
