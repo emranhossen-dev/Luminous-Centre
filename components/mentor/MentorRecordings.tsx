@@ -188,7 +188,14 @@ export default function MentorRecordings() {
           toast.error('Failed parsing response');
         }
       } else {
-        toast.error('Upload failed.');
+        let errMsg = 'Upload failed.';
+        try {
+          const res = JSON.parse(xhr.responseText);
+          if (res.error) {
+            errMsg = `${res.error}${res.details ? `: ${res.details}` : ''}`;
+          }
+        } catch (_) {}
+        toast.error(errMsg);
       }
     };
 

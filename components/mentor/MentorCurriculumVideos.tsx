@@ -293,7 +293,14 @@ export default function MentorCurriculumVideos({ course, onBack }: MentorCurricu
           toast.error('Failed to parse upload response.');
         }
       } else {
-        toast.error('Server error during video upload.');
+        let errMsg = 'Server error during video upload.';
+        try {
+          const res = JSON.parse(xhr.responseText);
+          if (res.error) {
+            errMsg = `${res.error}${res.details ? `: ${res.details}` : ''}`;
+          }
+        } catch (_) {}
+        toast.error(errMsg);
       }
     };
 
