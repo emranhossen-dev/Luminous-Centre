@@ -11,9 +11,8 @@ export default function StudentLayoutWrapper({
   children: React.ReactNode;
 }) {
   const { hideNavbarAndFooter } = useLayout();
-  const pathname = usePathname();
 
-  if (hideNavbarAndFooter || pathname === '/student') {
+  if (hideNavbarAndFooter) {
     return <>{children}</>;
   }
 

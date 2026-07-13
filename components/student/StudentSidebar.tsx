@@ -17,13 +17,13 @@ import {
 
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/student' },
-  { id: 'class-joining', label: 'Class Joining', icon: Video, href: '/student?tab=class-joining' },
-  { id: 'my-courses', label: 'My Courses', icon: BookOpen, href: '/student?tab=my-courses' },
-  { id: 'recording', label: 'Recording', icon: PlayCircle, href: '/student?tab=recording' },
-  { id: 'resources', label: 'Resources', icon: FolderOpen, href: '/student?tab=resources' },
-  { id: 'assignments', label: 'Assignments', icon: FileText, href: '/student?tab=assignments' },
-  { id: 'quiz', label: 'Quiz / Assessments', icon: HelpCircle, href: '/student?tab=quiz' },
-  { id: 'build-my-cv', label: 'Build My CV', icon: FileText, href: '/student?tab=build-my-cv' },
+  { id: 'class-joining', label: 'Class Joining', icon: Video, href: '/student/class-joining' },
+  { id: 'my-courses', label: 'My Courses', icon: BookOpen, href: '/student/my-courses' },
+  { id: 'recording', label: 'Recording', icon: PlayCircle, href: '/student/recording' },
+  { id: 'resources', label: 'Resources', icon: FolderOpen, href: '/student/resources' },
+  { id: 'assignments', label: 'Assignments', icon: FileText, href: '/student/assignments' },
+  { id: 'quiz', label: 'Quiz / Assessments', icon: HelpCircle, href: '/student/quiz' },
+  { id: 'build-my-cv', label: 'Build My CV', icon: FileText, href: '/student/build-my-cv' },
   { id: 'profile', label: 'My Profile', icon: User, href: '/student/profile' },
 ];
 
@@ -74,19 +74,11 @@ export default function StudentSidebar({
       {/* Sidebar Navigation */}
       <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar pb-6">
         {menuItems.map((item) => {
-          const isActive = setActiveTab
-            ? activeTab === item.id
-            : pathname === item.href || (pathname === '/student' && item.id === 'dashboard');
+          const isActive = pathname === item.href || (pathname === '/student' && item.id === 'dashboard');
           const Icon = item.icon;
 
-          const handleClick = (e: React.MouseEvent) => {
-            if (setActiveTab) {
-              e.preventDefault();
-              setActiveTab(item.id);
-              const path = item.id === 'dashboard' ? '/student' : `/student/${item.id}`;
-              window.history.pushState(null, '', path);
-              if (onClose) onClose();
-            }
+          const handleClick = () => {
+            if (onClose) onClose();
           };
 
           return (
