@@ -115,6 +115,9 @@ export default function MyCourses() {
   };
 
   const filteredCourses = courses.filter(course => {
+    // Only show courses that the student is actively enrolled in
+    if (!enrolledCourseIds.has(course.id)) return false;
+
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          course.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || course.category === selectedCategory;
