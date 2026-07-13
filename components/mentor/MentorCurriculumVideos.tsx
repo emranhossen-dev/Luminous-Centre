@@ -101,8 +101,9 @@ export default function MentorCurriculumVideos({ course, onBack }: MentorCurricu
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/courses/${course.id}/curriculum`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const response = await fetch(`/api/admin/courses/${course.id}/curriculum?t=${Date.now()}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        cache: 'no-store'
       });
       if (response.ok) {
         const data = await response.json();

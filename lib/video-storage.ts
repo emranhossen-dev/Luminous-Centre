@@ -1,6 +1,7 @@
 import { query } from './database';
 import { getGramJSClient, getChannelId } from './gramjs-client';
 import { Api } from 'telegram';
+import { CustomFile } from 'telegram/client/uploads.js';
 import bigInt from 'big-integer';
 
 export interface VideoUploadResult {
@@ -31,16 +32,25 @@ export class MTProtoStorageProvider implements VideoStorageProvider {
 
     const client = await getGramJSClient();
 
+    const customFile = new CustomFile(fileName, fileBuffer.length, '', fileBuffer);
+
+    console.log('[MTPROTO-STORAGE] Direct upload to Telegram storage (uploadFile)...');
+    const fileHandle = await client.uploadFile({
+      file: customFile,
+      workers: 4,
+      maxBufferSize: 2 * 1024 * 1024 * 1024,
+    } as any);
+
+    console.log('[MTPROTO-STORAGE] Sending uploaded file message to channel...');
     const message = await client.sendFile(channelId, {
-      file: fileBuffer,
+      file: fileHandle,
       caption: title,
       forceDocument: false,
       supportsStreaming: true,
       attributes: [
         new Api.DocumentAttributeFilename({ fileName }),
       ],
-      maxBufferSize: 2 * 1024 * 1024 * 1024,
-    } as any);
+    });
 
     const messageId = message.id;
     console.log(`[MTPROTO-STORAGE] Upload successful! Channel message_id: ${messageId}`);
