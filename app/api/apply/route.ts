@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { sendEmail, getEmailTemplate } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
   try {
@@ -67,6 +68,24 @@ export async function POST(request: NextRequest) {
     `, [fullName, mobileNo, email, course, category, whatsappNo]);
 
     const application = result.rows[0];
+
+    // Send application confirmation/welcome email
+    const welcomeHtml = getEmailTemplate({
+      title: 'Application Received - Luminous Centre',
+      heading: 'We Have Received Your Application!',
+      bodyHtml: `
+        <p>Hello <strong>${fullName}</strong>,</p>
+        <p>Thank you for your interest in <strong>Luminous Centre</strong>. We have successfully received your course application for: <strong>${course}</strong> (${category}).</p>
+        <p>Our training center administration is currently reviewing your details. We will contact you or update your application status shortly.</p>
+        <p>If you have any questions, feel free to reply to this email.</p>
+      `
+    });
+
+    sendEmail({
+      to: email,
+      subject: 'Your Course Application Received - Luminous Centre',
+      html: welcomeHtml
+    }).catch(err => console.error('[APPLY-EMAIL] Error sending welcome/confirmation email:', err));
 
     return NextResponse.json({
       success: true,

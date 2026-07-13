@@ -26,7 +26,9 @@ export async function PATCH(
 
     // Check if user is admin
     const adminCheck = await query(
-      'SELECT role FROM users WHERE id = $1',
+      `SELECT r.name as role FROM users u 
+       JOIN roles r ON u.role_id = r.id 
+       WHERE u.id = $1`,
       [decoded.userId || decoded.id]
     );
 

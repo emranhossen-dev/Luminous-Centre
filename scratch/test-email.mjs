@@ -1,31 +1,31 @@
+import fs from 'fs';
 
-const apiKey = process.env.RESEND_API_KEY;
-const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev';
-
-console.log('Testing Resend with key:', apiKey);
-console.log('From Email:', fromEmail);
+// Parse .env first
+try {
+  const envText = fs.readFileSync('.env', 'utf8');
+  for (const line of envText.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const firstEq = trimmed.indexOf('=');
+    if (firstEq === -1) continue;
+    const key = trimmed.substring(0, firstEq).trim();
+    const val = trimmed.substring(firstEq + 1).trim();
+    process.env[key] = val;
+  }
+} catch (e) {}
 
 async function run() {
   try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        from: fromEmail,
-        to: ['emranhossen.dev@gmail.com'], // Try sending to a test Gmail address
-        subject: 'Test Email from Antigravity',
-        html: '<p>This is a test email to verify Resend credentials.</p>',
-      }),
+    const { sendEmail } = await import('../lib/email.js');
+    console.log('Sending test email...');
+    const result = await sendEmail({
+      to: 'dev.emranhossen@gmail.com',
+      subject: 'Test Email from Luminous LMS',
+      html: '<p>This is a test email from Luminous LMS to confirm SMTP settings work.</p>'
     });
-
-    const data = await res.json();
-    console.log('Response Status:', res.status);
-    console.log('Response Body:', data);
-  } catch (error) {
-    console.error('Error:', error);
+    console.log('Send result:', result);
+  } catch (err) {
+    console.error('Email Send Error:', err);
   }
 }
 
