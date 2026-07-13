@@ -287,7 +287,24 @@ export default function EnrollmentsPage() {
     }
   };
 
-  const updateEnrollmentStatus = async (enrollmentId: number, status: EnrollmentStatus) => {
+  const updateEnrollmentStatus = async (enrollmentId: number, status: EnrollmentStatus, studentName: string) => {
+    const result = await Swal.fire({
+      title: 'Change Status?',
+      text: `Are you sure you want to change the enrollment status of "${studentName}" to "${status.toUpperCase()}"?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3b82f6',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Yes, change it!',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) {
+      // Re-fetch data to reset dropdown state to previous value
+      fetchData();
+      return;
+    }
+
     try {
       const token = localStorage.getItem('adminToken');
       const response = await fetch(`/api/admin/enhanced-enrollments/${enrollmentId}`, {
@@ -300,10 +317,23 @@ export default function EnrollmentsPage() {
       });
 
       if (response.ok) {
+        Swal.fire({
+          title: 'Updated!',
+          text: `Enrollment status updated to "${status.toUpperCase()}" successfully.`,
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false
+        });
+        fetchData();
+      } else {
+        const data = await response.json();
+        Swal.fire('Error!', data.error || 'Failed to update status.', 'error');
         fetchData();
       }
     } catch (error) {
       console.error('Error updating enrollment status:', error);
+      Swal.fire('Error!', 'A network error occurred.', 'error');
+      fetchData();
     }
   };
 
@@ -690,7 +720,7 @@ export default function EnrollmentsPage() {
                     <td className="p-4">
                       <select
                         value={enrollment.enrollment_status}
-                        onChange={(e) => updateEnrollmentStatus(enrollment.id, e.target.value as EnrollmentStatus)}
+                        onChange={(e) => updateEnrollmentStatus(enrollment.id, e.target.value as EnrollmentStatus, enrollment.full_name)}
                         className={`px-3 py-1 rounded-lg text-sm font-medium border bg-black text-white focus:ring-1 focus:ring-blue-500 ${
                           enrollment.enrollment_status === 'applied' ? 'bg-blue-600/20 text-blue-400 border-blue-600/20' :
                           enrollment.enrollment_status === 'waiting' ? 'bg-yellow-600/20 text-yellow-400 border-yellow-600/20' :
