@@ -141,7 +141,7 @@ export async function PATCH(
         });
 
         await sendEmail({
-          to: appData.email,
+          to: targetEmail,
           subject: 'Your Admission is Approved! - Luminous Centre',
           html: welcomeHtml
         });
@@ -152,13 +152,13 @@ export async function PATCH(
           title: 'Admission Approved - Luminous Centre',
           heading: 'Congratulations! Your Admission is Approved',
           bodyHtml: `
-            <p>Hello <strong>${appData.full_name}</strong>,</p>
-            <p>We are excited to inform you that your application for the course <strong>${appData.course}</strong> has been approved and you have been admitted!</p>
+            <p>Hello <strong>${targetFullName}</strong>,</p>
+            <p>We are excited to inform you that your application for the course <strong>${targetCourse}</strong> has been approved and you have been admitted!</p>
             <p>Since you already have a registered account on our portal, you can log in directly using your existing credentials:</p>
             
             <div style="background-color: #f8fafc; padding: 20px; border-radius: 16px; margin: 25px 0; border: 1px solid #f1f5f9; font-size: 14px;">
               <p style="margin: 0 0 10px 0; color: #475569;"><strong>Login URL:</strong> <a href="${loginUrl}" style="color: #2563eb; text-decoration: none; font-weight: 500;">${loginUrl}</a></p>
-              <p style="margin: 0; color: #475569;"><strong>Username / Email:</strong> ${appData.email}</p>
+              <p style="margin: 0; color: #475569;"><strong>Username / Email:</strong> ${targetEmail}</p>
             </div>
             
             <p style="font-size: 13px; color: #475569; margin-top: 20px;">
@@ -170,7 +170,7 @@ export async function PATCH(
         });
 
         await sendEmail({
-          to: appData.email,
+          to: targetEmail,
           subject: 'Admission Approved! - Luminous Centre',
           html: welcomeHtml
         });
