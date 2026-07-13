@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { PlayCircle, Plus, Edit, Trash2, Calendar, Clock, Loader2, Save } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { PlayCircle, Plus, Edit, Trash2, Calendar, Clock, Loader2, Save, Upload, BookOpen, ChevronDown, ChevronRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 interface Course {
@@ -38,6 +39,10 @@ export default function MentorRecordings() {
   const [duration, setDuration] = useState('');
   const [recordedAt, setRecordedAt] = useState('');
   const [saving, setSaving] = useState(false);
+  const [uploadMode, setUploadMode] = useState<'url' | 'file'>('url');
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRecordingsAndCourses();
@@ -75,18 +80,37 @@ export default function MentorRecordings() {
 
   const handleOpenAdd = () => {
     setEditingRecording(null);
-    setCourseId(courses[0]?.id?.toString() || '');
-    setTitle('');
+    const defaultCourseId = courses[0]?.id?.toString() || '';
+    setCourseId(defaultCourseId);
+    
+    // Auto-calculate next class number for prefilled title
+    const courseRecs = recordings.filter(r => r.courseId === Number(defaultCourseId));
+    const nextClassNum = courseRecs.length + 1;
+    setTitle(`Class ${nextClassNum}: `);
+
     setVideoUrl('');
     setThumbnailUrl('');
     setDownloadUrl('');
     setDuration('');
+    setUploadMode('url');
+    setUploading(false);
+    setUploadProgress(0);
+    setUploadError(null);
     // Format current local time for datetime-local input (YYYY-MM-DDThh:mm)
     const now = new Date();
     const offset = now.getTimezoneOffset() * 60000;
     const localISOTime = new Date(now.getTime() - offset).toISOString().slice(0, 16);
     setRecordedAt(localISOTime);
     setModalOpen(true);
+  };
+
+  const handleCourseChange = (selectedId: string) => {
+    setCourseId(selectedId);
+    if (!editingRecording) {
+      const courseRecs = recordings.filter(r => r.courseId === Number(selectedId));
+      const nextClassNum = courseRecs.length + 1;
+      setTitle(`Class ${nextClassNum}: `);
+    }
   };
 
   const handleOpenEdit = (rec: Recording) => {
@@ -97,11 +121,83 @@ export default function MentorRecordings() {
     setThumbnailUrl(rec.thumbnailUrl || '');
     setDownloadUrl(rec.downloadUrl || '');
     setDuration(rec.duration || '');
+    setUploadMode(rec.videoUrl.includes('/api/videos/stream/') ? 'file' : 'url');
+    setUploading(false);
+    setUploadProgress(0);
+    setUploadError(null);
     const localTime = new Date(rec.recordedAt);
     const offset = localTime.getTimezoneOffset() * 60000;
     const formatted = new Date(localTime.getTime() - offset).toISOString().slice(0, 16);
     setRecordedAt(formatted);
     setModalOpen(true);
+  };
+
+  const handleDirectUpload = (file: File) => {
+    const allowedExtensions = ['.mp4', '.mkv', '.mov'];
+    const fileName = file.name.toLowerCase();
+    const lastDotIndex = fileName.lastIndexOf('.');
+    const ext = lastDotIndex !== -1 ? fileName.substring(lastDotIndex) : '';
+
+    if (!allowedExtensions.includes(ext)) {
+      toast.error(`Invalid video format "${ext}". Only mp4, mkv, and mov are allowed.`);
+      return;
+    }
+
+    const MAX_SIZE = 2 * 1024 * 1024 * 1024; // 2 GB MTProto Limit
+    if (file.size > MAX_SIZE) {
+      toast.error('File size exceeds the 2 GB MTProto upload limit.');
+      return;
+    }
+
+    setUploading(true);
+    setUploadProgress(0);
+    setUploadError(null);
+
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('video', file);
+    formData.append('course_id', courseId || courses[0]?.id?.toString() || '');
+    formData.append('title', title || file.name.replace(/\.[^/.]+$/, ""));
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/admin/videos/upload');
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percent = Math.round((event.loaded / event.total) * 100);
+        setUploadProgress(percent);
+      }
+    };
+
+    xhr.onload = () => {
+      setUploading(false);
+      if (xhr.status === 200) {
+        try {
+          const res = JSON.parse(xhr.responseText);
+          if (res.success && res.video) {
+            toast.success('Video uploaded to Telegram storage successfully!');
+            setVideoUrl(`/api/videos/stream/${res.video.id}`);
+            if (!title) {
+              setTitle(res.video.title);
+            }
+          } else {
+            toast.error(res.error || 'Upload failed');
+          }
+        } catch (_) {
+          toast.error('Failed parsing response');
+        }
+      } else {
+        toast.error('Upload failed.');
+      }
+    };
+
+    xhr.onerror = () => {
+      setUploading(false);
+      toast.error('Network error during upload.');
+    };
+
+    xhr.send(formData);
   };
 
   const handleDelete = async (id: number) => {
@@ -205,69 +301,79 @@ export default function MentorRecordings() {
           <h3 className="text-lg font-semibold text-slate-300 mb-2">No recordings uploaded yet</h3>
           <p className="text-slate-500">Click the button above to upload your first class session recording.</p>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {recordings.map((recording) => (
-            <div
-              key={recording.id}
-              className="bg-slate-900 border border-slate-800/80 rounded-2xl p-6 flex gap-6 hover:border-slate-700 transition"
-            >
-              <div className="relative w-32 h-20 bg-slate-950 rounded-xl overflow-hidden shrink-0 flex items-center justify-center border border-slate-800">
-                {recording.thumbnailUrl ? (
-                  <img src={recording.thumbnailUrl} className="w-full h-full object-cover" alt="" />
-                ) : (
-                  <PlayCircle className="w-8 h-8 text-slate-700" />
-                )}
-              </div>
+      ) : (() => {
+        // Group by course
+        const grouped: { courseTitle: string; courseId: number; items: typeof recordings }[] = [];
+        const cmap: Record<number, typeof grouped[0]> = {};
+        recordings.forEach(r => {
+          const cid = (r as any).courseId || 0;
+          if (!cmap[cid]) {
+            cmap[cid] = { courseTitle: r.courseTitle, courseId: cid, items: [] };
+            grouped.push(cmap[cid]);
+          }
+          cmap[cid].items.push(r);
+        });
 
-              <div className="flex-1 space-y-3 min-w-0">
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
-                    {recording.courseTitle}
-                  </span>
-                  <h3 className="text-md font-bold text-white truncate mt-0.5" title={recording.title}>
-                    {recording.title}
-                  </h3>
-                </div>
-
-                <div className="flex flex-wrap gap-4 text-xs font-semibold text-slate-500">
-                  <div className="flex items-center gap-1">
-                    <Calendar size={13} />
-                    {new Date(recording.recordedAt).toLocaleDateString()}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock size={13} />
-                    {recording.duration || 'N/A'}
+        return (
+          <div className="space-y-5">
+            {grouped.map((group) => (
+              <motion.div key={group.courseId} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-900/40 border border-slate-800/80 rounded-2xl overflow-hidden">
+                {/* Course Header */}
+                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800/60">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center">
+                      <BookOpen className="w-4 h-4 text-blue-400" />
+                    </div>
+                    <div>
+                      <p className="text-white font-bold text-sm">{group.courseTitle}</p>
+                      <p className="text-slate-500 text-xs">{group.items.length} class{group.items.length !== 1 ? 'es' : ''} recorded</p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 pt-1">
-                  <a
-                    href={recording.videoUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-xs text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1"
-                  >
-                    Watch URL
-                  </a>
-                  <button
-                    onClick={() => handleOpenEdit(recording)}
-                    className="text-xs text-slate-400 hover:text-slate-200 font-bold flex items-center gap-1"
-                  >
-                    <Edit size={13} /> Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(recording.id)}
-                    className="text-xs text-red-500 hover:text-red-400 font-bold flex items-center gap-1"
-                  >
-                    <Trash2 size={13} /> Delete
-                  </button>
+                {/* Class List */}
+                <div className="divide-y divide-slate-800/50">
+                  {group.items.map((recording, idx) => (
+                    <div key={recording.id} className="flex items-center gap-4 px-5 py-4 hover:bg-slate-800/30 transition group">
+                      <div className="shrink-0 w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-black text-slate-300">
+                        {idx + 1}
+                      </div>
+                      <div className="relative shrink-0 w-20 h-14 bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center">
+                        {recording.thumbnailUrl ? (
+                          <img src={recording.thumbnailUrl} className="w-full h-full object-cover" alt="" />
+                        ) : (
+                          <PlayCircle className="w-6 h-6 text-slate-700" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-bold text-white truncate group-hover:text-blue-400 transition-colors" title={recording.title}>{recording.title}</h3>
+                        <div className="flex flex-wrap gap-3 text-xs font-semibold text-slate-500 mt-1">
+                          <span className="flex items-center gap-1"><Calendar size={11} />{new Date(recording.recordedAt).toLocaleDateString()}</span>
+                          {recording.duration && <span className="flex items-center gap-1"><Clock size={11} />{recording.duration}</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <a href={recording.videoUrl} target="_blank" rel="noreferrer"
+                          className="px-2.5 py-1.5 text-xs text-blue-400 hover:text-white hover:bg-blue-600 border border-blue-500/30 font-bold rounded-lg transition flex items-center gap-1">
+                          <PlayCircle size={12} /> Preview
+                        </a>
+                        <button onClick={() => handleOpenEdit(recording)}
+                          className="px-2.5 py-1.5 text-xs text-slate-400 hover:text-white hover:bg-slate-700 border border-slate-700 font-bold rounded-lg transition flex items-center gap-1">
+                          <Edit size={12} /> Edit
+                        </button>
+                        <button onClick={() => handleDelete(recording.id)}
+                          className="px-2.5 py-1.5 text-xs text-red-500 hover:text-white hover:bg-red-600 border border-red-500/30 font-bold rounded-lg transition flex items-center gap-1">
+                          <Trash2 size={12} /> Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+              </motion.div>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Add/Edit Modal */}
       {modalOpen && (
@@ -286,7 +392,7 @@ export default function MentorRecordings() {
                 </label>
                 <select
                   value={courseId}
-                  onChange={(e) => setCourseId(e.target.value)}
+                  onChange={(e) => handleCourseChange(e.target.value)}
                   required
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white outline-none focus:border-blue-500"
                 >
@@ -311,18 +417,91 @@ export default function MentorRecordings() {
                 />
               </div>
 
-              <div>
-                <label className="block text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1.5">
-                  Video URL (YouTube, Vimeo, Drive, etc.) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://..."
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  required
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder-slate-600 outline-none focus:border-blue-500"
-                />
+              <div className="space-y-3">
+                <div className="flex gap-4 border-b border-slate-800 pb-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setUploadMode('url')}
+                    className={`text-xs font-bold transition cursor-pointer ${uploadMode === 'url' ? 'text-blue-400 border-b-2 border-blue-500 pb-0.5' : 'text-slate-500'}`}
+                  >
+                    External Video Link
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUploadMode('file')}
+                    className={`text-xs font-bold transition cursor-pointer ${uploadMode === 'file' ? 'text-blue-400 border-b-2 border-blue-500 pb-0.5' : 'text-slate-500'}`}
+                  >
+                    Upload Direct Video
+                  </button>
+                </div>
+
+                {uploadMode === 'file' ? (
+                  <div className="space-y-2">
+                    <label className="block text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                      Upload Video File (MP4, MKV, MOV - Max 50MB)
+                    </label>
+                    
+                    {uploading ? (
+                      <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-xl space-y-2">
+                        <div className="flex items-center justify-between text-xs text-slate-400">
+                          <span>Uploading to Telegram Secure Storage...</span>
+                          <span className="font-bold">{uploadProgress}%</span>
+                        </div>
+                        <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                          <div className="bg-blue-600 h-full transition-all" style={{ width: `${uploadProgress}%` }} />
+                        </div>
+                      </div>
+                    ) : videoUrl.includes('/api/videos/stream/') ? (
+                      <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-green-400 text-xs font-semibold">
+                          <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
+                          <span>Video uploaded successfully!</span>
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            setVideoUrl('');
+                            setUploadMode('url');
+                          }}
+                          className="text-xs text-red-400 hover:text-red-300 font-bold cursor-pointer"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="flex flex-col items-center justify-center border border-dashed border-slate-850 hover:border-slate-800 bg-slate-950 rounded-xl p-6 cursor-pointer group transition">
+                          <Upload className="w-6 h-6 text-slate-500 group-hover:text-slate-400 mb-2" />
+                          <span className="text-xs text-slate-400 group-hover:text-white font-semibold">Click to select video file</span>
+                          <span className="text-[10px] text-slate-600 mt-1">Accepts MP4, MKV, MOV up to 50MB</span>
+                          <input
+                            type="file"
+                            accept=".mp4,.mkv,.mov"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleDirectUpload(file);
+                            }}
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1.5">
+                      Video URL (YouTube, Vimeo, Drive, etc.) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://..."
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                      required={uploadMode === 'url'}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder-slate-600 outline-none focus:border-blue-500"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">

@@ -41,7 +41,22 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
               json_build_object(
                 'id', ct.id,
                 'topic_name', ct.topic_name,
-                'order_index', ct.order_index
+                'order_index', ct.order_index,
+                'videos', COALESCE(
+                  (
+                    SELECT json_agg(
+                      json_build_object(
+                        'id', lv.id,
+                        'title', lv.title,
+                        'duration', lv.duration,
+                        'created_at', lv.created_at
+                      )
+                    )
+                    FROM lesson_videos lv
+                    WHERE lv.lesson_id = ct.id
+                  ),
+                  '[]'::json
+                )
               ) ORDER BY ct.order_index
             )
             FROM curriculum_topics ct
@@ -141,41 +156,86 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       `);
     }
 
-    // Delete existing curriculum for this course
-    await query('DELETE FROM curriculum_modules WHERE course_id = $1', [id]);
-
     // Update course subtitle if provided
     if (curriculum_subtitle !== undefined) {
       await query('UPDATE courses SET curriculum_subtitle = $1 WHERE id = $2', [curriculum_subtitle, id]);
     }
 
-    // Insert new modules
-    for (const module of modules) {
-      const moduleResult = await query(
-        'INSERT INTO curriculum_modules (course_id, title, order_index) VALUES ($1, $2, $3) RETURNING id',
-        [id, module.title, module.order_index]
-      );
-      const moduleId = moduleResult.rows[0].id;
+    // Incremental sync of modules and topics to preserve IDs and avoid breaking video associations
+    const existingModulesRes = await query(
+      'SELECT id FROM curriculum_modules WHERE course_id = $1',
+      [id]
+    );
+    const existingModuleIds = existingModulesRes.rows.map(r => r.id);
 
-      // Insert topics
+    const existingTopicsRes = await query(
+      `SELECT ct.id FROM curriculum_topics ct 
+       JOIN curriculum_modules cm ON ct.module_id = cm.id 
+       WHERE cm.course_id = $1`,
+      [id]
+    );
+    const existingTopicIds = existingTopicsRes.rows.map(r => r.id);
+
+    const sentModuleIds: number[] = [];
+    const sentTopicIds: number[] = [];
+
+    // Sync modules
+    for (const module of modules) {
+      let moduleId: number;
+      const isExistingModule = module.id && existingModuleIds.includes(Number(module.id));
+      
+      if (isExistingModule) {
+        await query(
+          'UPDATE curriculum_modules SET title = $1, order_index = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
+          [module.title, module.order_index, module.id]
+        );
+        moduleId = Number(module.id);
+        sentModuleIds.push(moduleId);
+      } else {
+        const moduleResult = await query(
+          'INSERT INTO curriculum_modules (course_id, title, order_index) VALUES ($1, $2, $3) RETURNING id',
+          [id, module.title, module.order_index]
+        );
+        moduleId = moduleResult.rows[0].id;
+      }
+
+      // Sync topics/classes for this module
       if (module.topics && module.topics.length > 0) {
         for (const topic of module.topics) {
-          await query(
-            'INSERT INTO curriculum_topics (module_id, topic_name, order_index) VALUES ($1, $2, $3)',
-            [moduleId, topic.topic_name, topic.order_index]
-          );
+          const isExistingTopic = topic.id && existingTopicIds.includes(Number(topic.id));
+          if (isExistingTopic) {
+            await query(
+              'UPDATE curriculum_topics SET topic_name = $1, order_index = $2 WHERE id = $3',
+              [topic.topic_name, topic.order_index, topic.id]
+            );
+            sentTopicIds.push(Number(topic.id));
+          } else {
+            const topicResult = await query(
+              'INSERT INTO curriculum_topics (module_id, topic_name, order_index) VALUES ($1, $2, $3) RETURNING id',
+              [moduleId, topic.topic_name, topic.order_index]
+            );
+            // If the local client state had an uploaded video associated before save
+            if (topic.temp_video_id) {
+              await query(
+                'UPDATE lesson_videos SET lesson_id = $1 WHERE id = $2',
+                [topicResult.rows[0].id, topic.temp_video_id]
+              );
+            }
+          }
         }
       }
+    }
 
-      // Insert achievements
-      if (module.achievements && module.achievements.length > 0) {
-        for (const achievement of module.achievements) {
-          await query(
-            'INSERT INTO curriculum_achievements (module_id, achievement_text, order_index) VALUES ($1, $2, $3)',
-            [moduleId, achievement.achievement_text, achievement.order_index]
-          );
-        }
-      }
+    // Delete removed topics & modules
+    const topicsToDelete = existingTopicIds.filter(id => !sentTopicIds.includes(id));
+    const modulesToDelete = existingModuleIds.filter(id => !sentModuleIds.includes(id));
+
+    if (topicsToDelete.length > 0) {
+      await query('DELETE FROM curriculum_topics WHERE id = ANY($1)', [topicsToDelete]);
+      await query('DELETE FROM lesson_videos WHERE lesson_id = ANY($1)', [topicsToDelete]);
+    }
+    if (modulesToDelete.length > 0) {
+      await query('DELETE FROM curriculum_modules WHERE id = ANY($1)', [modulesToDelete]);
     }
 
     // Log activity

@@ -91,15 +91,6 @@ export default function Navbar() {
                   <Menu size={14} className="text-white" />
                 </div>
               </button>
-
-              <div className="leading-tight">
-                <div className={`text-xs font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                  Luminous Skill Development
-                </div>
-                <div className={`text-[10px] ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Training Center
-                </div>
-              </div>
             </div>
 
             {/* DESKTOP LOGO */}
@@ -254,7 +245,7 @@ export default function Navbar() {
                         }}
                         className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors w-full text-left ${theme === 'dark'
                             ? 'text-red-400 hover:text-red-300 hover:bg-white/10'
-                            : 'text-red-600 hover:text-red-700 hover:bg-gray-50'
+                            : 'text-red-650 hover:text-red-700 hover:bg-gray-50'
                           }`}
                       >
                         <LogOut size={16} />
@@ -286,7 +277,8 @@ export default function Navbar() {
                       : 'linear-gradient(to right, #2563eb, #1d4ed8)'
                   }}
                 >
-                  Enroll Now
+                  <span className="hidden sm:inline">Enroll Now</span>
+                  <span className="inline sm:hidden">Enroll</span>
                 </button>
               </div>
             )}

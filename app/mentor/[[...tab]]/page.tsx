@@ -7,13 +7,14 @@ import { notFound, useRouter } from 'next/navigation';
 import { 
   BookOpen, Users, Award, FileText, Plus, CheckCircle, XCircle, 
   Search, Eye, Settings, HelpCircle, ChevronRight, LogOut, Loader2, Save,
-  PlayCircle, Sun, Moon, User
+  PlayCircle, Sun, Moon, User, Menu, X
 } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import MentorRecordings from '@/components/mentor/MentorRecordings';
 import MentorAssignments from '@/components/mentor/MentorAssignments';
 import ProfileComponent from '@/components/ProfileComponent';
+import MentorCurriculumVideos from '@/components/mentor/MentorCurriculumVideos';
 
 interface Course {
   id: number;
@@ -131,10 +132,12 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
   };
 
   const [courses, setCourses] = useState<Course[]>([]);
+  const [selectedCurriculumCourse, setSelectedCurriculumCourse] = useState<Course | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [stats, setStats] = useState({
     totalStudents: 0,
     totalCourses: 0,
@@ -328,7 +331,20 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
       });
       if (coursesRes.ok) {
         const cData = await coursesRes.json();
-        setCourses(cData.courses || []);
+        const coursesList = cData.courses || [];
+        setCourses(coursesList);
+
+        if (coursesList.length === 1) {
+          setSelectedCurriculumCourse(coursesList[0]);
+        } else if (coursesList.length > 1) {
+          const lastCourseId = localStorage.getItem('lastSelectedCourseId');
+          if (lastCourseId) {
+            const matched = coursesList.find((c: any) => c.id === parseInt(lastCourseId));
+            if (matched) {
+              setSelectedCurriculumCourse(matched);
+            }
+          }
+        }
       }
 
       // 2. Fetch students
@@ -506,6 +522,17 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
     return matchesSearch && matchesCourse;
   });
 
+  const sidebarLinks = [
+    { tab: 'overview', label: 'Dashboard', icon: Settings },
+    { tab: 'courses', label: 'My Courses', icon: BookOpen },
+    { tab: 'students', label: 'My Students', icon: Users },
+    { tab: 'quizzes', label: 'Quizzes', icon: HelpCircle },
+    { tab: 'attempts', label: 'Quiz Attempts', icon: Award },
+    { tab: 'recordings', label: 'Class Recordings', icon: PlayCircle },
+    { tab: 'assignments', label: 'Assignments', icon: FileText },
+    { tab: 'profile', label: 'My Profile', icon: User },
+  ];
+
   if (isAuthorized === null) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -518,12 +545,18 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
     return null;
   }
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 flex flex-col font-sans">
+    <div className="h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 flex flex-col font-sans">
       <ToastContainer position="top-right" autoClose={3000} theme="dark" />
       
       {/* Top Navigation */}
-      <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-40">
+      <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-40 shrink-0">
         <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="md:hidden p-1.5 hover:bg-slate-105 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350 transition cursor-pointer"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20">
             L
           </div>
@@ -555,91 +588,79 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
       </header>
 
       {/* Main Body */}
-      <div className="flex-1 flex flex-col md:flex-row">
-                {/* Sidebar Nav */}
-        <aside className="w-full md:w-64 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 p-4 flex flex-col gap-2">
+      <div className="flex-1 flex overflow-hidden min-w-0 flex-col md:flex-row relative">
+        
+        {/* Desktop Sidebar Nav */}
+        <aside className="hidden md:flex flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 p-4 gap-2 overflow-y-auto h-full shrink-0">
           <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-500 px-3 mb-2">Main Menu</p>
-          <button 
-            onClick={() => setActiveTab('overview')} 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-              activeTab === 'overview' 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10' 
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-100'
-            }`}
-          >
-            <Settings className="w-5 h-5" /> Dashboard
-          </button>
-          <button 
-            onClick={() => setActiveTab('courses')} 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-              activeTab === 'courses' 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10' 
-                : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'
-            }`}
-          >
-            <BookOpen className="w-5 h-5" /> My Courses
-          </button>
-          <button 
-            onClick={() => setActiveTab('students')} 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-              activeTab === 'students' 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10' 
-                : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'
-            }`}
-          >
-            <Users className="w-5 h-5" /> My Students
-          </button>
-          <button 
-            onClick={() => setActiveTab('quizzes')} 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-              activeTab === 'quizzes' 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10' 
-                : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'
-            }`}
-          >
-            <HelpCircle className="w-5 h-5" /> Quizzes
-          </button>
-          <button 
-            onClick={() => setActiveTab('attempts')} 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-              activeTab === 'attempts' 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10' 
-                : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'
-            }`}
-          >
-            <Award className="w-5 h-5" /> Quiz Attempts
-          </button>
-          <button 
-            onClick={() => setActiveTab('recordings')} 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-              activeTab === 'recordings' 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10' 
-                : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'
-            }`}
-          >
-            <PlayCircle className="w-5 h-5" /> Class Recordings
-          </button>
-          <button 
-            onClick={() => setActiveTab('assignments')} 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-              activeTab === 'assignments' 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10' 
-                : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'
-            }`}
-          >
-            <FileText className="w-5 h-5" /> Assignments
-          </button>
-          <button 
-            onClick={() => setActiveTab('profile')} 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-              activeTab === 'profile' 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10' 
-                : 'text-slate-450 hover:bg-slate-800/50 hover:text-slate-100'
-            }`}
-          >
-            <User className="w-5 h-5" /> My Profile
-          </button>
+          {sidebarLinks.map(link => (
+            <button 
+              key={link.tab}
+              onClick={() => { setSelectedCurriculumCourse(null); setActiveTab(link.tab as any); }} 
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all cursor-pointer ${
+                activeTab === link.tab 
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10' 
+                  : 'text-slate-700 dark:text-slate-350 hover:bg-slate-200 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <link.icon className="w-5 h-5 shrink-0" />
+              <span>{link.label}</span>
+            </button>
+          ))}
         </aside>
+
+        {/* Mobile Sidebar Slide-Over Drawer */}
+        <AnimatePresence>
+          {isMobileSidebarOpen && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsMobileSidebarOpen(false)}
+                className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs md:hidden"
+              />
+              
+              {/* Drawer Panel */}
+              <motion.aside
+                initial={{ x: '-100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '-100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="fixed inset-y-0 left-0 z-50 w-64 bg-slate-50 dark:bg-slate-950 p-4 border-r border-slate-200 dark:border-slate-800 flex flex-col gap-2 md:hidden shadow-2xl h-full"
+              >
+                <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <span className="font-extrabold text-xs text-slate-500 uppercase tracking-wider">Main Menu</span>
+                  <button 
+                    onClick={() => setIsMobileSidebarOpen(false)}
+                    className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-900 rounded-xl text-slate-400 hover:text-slate-100 transition cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                {sidebarLinks.map(link => (
+                  <button
+                    key={link.tab}
+                    onClick={() => {
+                      setSelectedCurriculumCourse(null);
+                      setActiveTab(link.tab as any);
+                      setIsMobileSidebarOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all cursor-pointer ${
+                      activeTab === link.tab
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10'
+                        : 'text-slate-700 dark:text-slate-350 hover:bg-slate-200 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <link.icon className="w-5 h-5 shrink-0" />
+                    <span>{link.label}</span>
+                  </button>
+                ))}
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>
 
         {/* Dashboard Content */}
         <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
@@ -782,42 +803,67 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
                   exit={{ opacity: 0, y: -15 }}
                   className="space-y-8"
                 >
-                  <div>
-                    <h2 className="text-3xl font-black text-white tracking-tight">Teaching Courses</h2>
-                    <p className="text-slate-400 font-medium">Courses where you are assigned as the mentor.</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {courses.length === 0 ? (
-                      <div className="col-span-full py-20 text-center text-slate-500 font-bold uppercase tracking-widest">
-                        No assigned courses found.
+                  {selectedCurriculumCourse ? (
+                    <MentorCurriculumVideos 
+                      course={selectedCurriculumCourse} 
+                      onBack={() => {
+                        if (courses.length > 1) {
+                          localStorage.removeItem('lastSelectedCourseId');
+                          setSelectedCurriculumCourse(null);
+                        } else {
+                          setActiveTab('overview');
+                        }
+                      }}
+                    />
+                  ) : (
+                    <>
+                      <div>
+                        <h2 className="text-3xl font-black text-white tracking-tight">Teaching Courses</h2>
+                        <p className="text-slate-400 font-medium">Courses where you are assigned as the mentor.</p>
                       </div>
-                    ) : (
-                      courses.map(course => (
-                        <div key={course.id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg hover:-translate-y-1 hover:border-slate-700 transition duration-300">
-                          <div className="h-44 bg-slate-800 relative">
-                            {course.thumbnailUrl ? (
-                              <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-slate-900 to-indigo-950 text-indigo-400 font-bold">
-                                No Thumbnail
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {courses.length === 0 ? (
+                          <div className="col-span-full py-20 text-center text-slate-500 font-bold uppercase tracking-widest">
+                            No assigned courses found.
+                          </div>
+                        ) : (
+                          courses.map(course => (
+                            <div key={course.id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg hover:-translate-y-1 hover:border-slate-700 transition duration-300">
+                              <div className="h-44 bg-slate-800 relative">
+                                {course.thumbnailUrl ? (
+                                  <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-slate-900 to-indigo-950 text-indigo-400 font-bold">
+                                    No Thumbnail
+                                  </div>
+                                )}
+                                <span className="absolute top-3 right-3 text-[10px] font-bold tracking-widest uppercase bg-slate-950/80 px-2.5 py-1 rounded-full text-slate-300 border border-slate-800/80">
+                                  {course.category}
+                                </span>
                               </div>
-                            )}
-                            <span className="absolute top-3 right-3 text-[10px] font-bold tracking-widest uppercase bg-slate-950/80 px-2.5 py-1 rounded-full text-slate-300 border border-slate-800/80">
-                              {course.category}
-                            </span>
-                          </div>
-                          <div className="p-6 space-y-4">
-                            <h4 className="font-extrabold text-white text-lg leading-tight h-12 overflow-hidden">{course.title}</h4>
-                            <div className="flex items-center justify-between text-xs font-bold text-slate-500 border-t border-slate-800/60 pt-4">
-                              <span>STUDENTS: <span className="text-white">{course.enrolledStudents}</span></span>
-                              <span>STATUS: <span className={`uppercase ${course.status === 'published' ? 'text-green-400' : 'text-yellow-400'}`}>{course.status}</span></span>
+                              <div className="p-6 space-y-4">
+                                <h4 className="font-extrabold text-white text-lg leading-tight h-12 overflow-hidden">{course.title}</h4>
+                                <div className="flex items-center justify-between text-xs font-bold text-slate-500 border-t border-slate-800/60 pt-4">
+                                  <span>STUDENTS: <span className="text-white">{course.enrolledStudents}</span></span>
+                                  <span>STATUS: <span className={`uppercase ${course.status === 'published' ? 'text-green-400' : 'text-yellow-400'}`}>{course.status}</span></span>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    setSelectedCurriculumCourse(course);
+                                    localStorage.setItem('lastSelectedCourseId', course.id.toString());
+                                  }}
+                                  className="w-full mt-4 py-2 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-white hover:text-blue-400 font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 transition duration-200 cursor-pointer"
+                                >
+                                  <PlayCircle className="w-4 h-4" /> Curriculum & Video Lessons
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
+                          ))
+                        )}
+                      </div>
+                    </>
+                  )}
                 </motion.div>
               )}
 
