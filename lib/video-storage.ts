@@ -39,7 +39,8 @@ export class MTProtoStorageProvider implements VideoStorageProvider {
       attributes: [
         new Api.DocumentAttributeFilename({ fileName }),
       ],
-    });
+      maxBufferSize: 2 * 1024 * 1024 * 1024,
+    } as any);
 
     const messageId = message.id;
     console.log(`[MTPROTO-STORAGE] Upload successful! Channel message_id: ${messageId}`);
