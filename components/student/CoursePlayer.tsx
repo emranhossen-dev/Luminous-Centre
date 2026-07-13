@@ -391,7 +391,7 @@ export default function CoursePlayer({ courseId, courseTitle, onBack }: CoursePl
           </div>
 
           {/* Info Toggle Buttons */}
-          <div className="flex items-center gap-2 px-1">
+          <div className="flex flex-wrap items-center gap-2 px-1">
             <button
               onClick={() => toggleInfoTab('notes')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
