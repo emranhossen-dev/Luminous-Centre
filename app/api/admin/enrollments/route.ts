@@ -109,7 +109,7 @@ async function postHandler(req: NextRequest, context: any, adminUser: any) {
     );
 
     // 5. Create actual active course enrollment
-    await createEnrollmentIfMissing(userId, courseId);
+    await createEnrollmentIfMissing(userId, courseId, payMethod);
 
     // 6. Log admin activity
     await logActivity(

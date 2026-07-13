@@ -224,7 +224,7 @@ export async function PATCH(
     // If enrollment is approved / admitted, create active course enrollment record & sync student profile
     if (userId && (enrollmentRequest.enrollment_status === 'admitted' || enrollmentRequest.enrollment_status === 'approved')) {
       const { createEnrollmentIfMissing } = await import('@/lib/enrollment');
-      await createEnrollmentIfMissing(userId, enrollmentRequest.course_id);
+      await createEnrollmentIfMissing(userId, enrollmentRequest.course_id, enrollmentRequest.payment_method || 'manual');
     }
 
     // Fetch details for email notification and send email

@@ -32,7 +32,7 @@ export async function finalizeBkashAfterRedirect(paymentID: string): Promise<Fin
     );
     if (done.rows.length > 0) {
       const row = done.rows[0] as { user_id: number; course_id: number };
-      await createEnrollmentIfMissing(row.user_id, row.course_id);
+      await createEnrollmentIfMissing(row.user_id, row.course_id, 'bkash');
       return { ok: true, reason: 'already_completed', userId: row.user_id };
     }
     return { ok: false, reason: 'payment_session_not_found' };
@@ -61,7 +61,7 @@ export async function finalizeBkashAfterRedirect(paymentID: string): Promise<Fin
        WHERE id = $3`,
       [trxID, JSON.stringify(exec), rec.id]
     );
-    await createEnrollmentIfMissing(rec.user_id, rec.course_id);
+    await createEnrollmentIfMissing(rec.user_id, rec.course_id, 'bkash');
     return { ok: true, reason: 'completed', userId: rec.user_id };
   }
 

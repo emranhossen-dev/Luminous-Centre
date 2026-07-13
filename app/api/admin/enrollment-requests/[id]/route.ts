@@ -19,7 +19,7 @@ async function patchHandler(
     }
 
     const requestResult = await query(
-      `SELECT r.id, r.user_id, r.course_id, u.email, u.first_name as "firstName", u.last_name as "lastName", c.title as "courseTitle"
+      `SELECT r.id, r.user_id, r.course_id, r.payment_method, u.email, u.first_name as "firstName", u.last_name as "lastName", c.title as "courseTitle"
        FROM course_enrollment_requests r
        JOIN users u ON r.user_id = u.id
        JOIN courses c ON r.course_id = c.id
@@ -48,7 +48,7 @@ async function patchHandler(
     );
 
     if (action === 'approve') {
-      await createEnrollmentIfMissing(request.user_id, request.course_id);
+      await createEnrollmentIfMissing(request.user_id, request.course_id, request.payment_method || 'manual');
     }
 
     // Send email to student notifying about enrollment request status change

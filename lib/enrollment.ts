@@ -90,7 +90,12 @@ export async function syncUserToStudentTable(userId: number): Promise<string> {
   return insertRes.rows[0].id;
 }
 
-export async function createEnrollmentIfMissing(userId: number, courseId: number): Promise<void> {
+export async function createEnrollmentIfMissing(
+  userId: number,
+  courseId: number,
+  paymentMethod: string = 'cash',
+  paymentStatus: string = 'verified'
+): Promise<void> {
   const studentUuid = await syncUserToStudentTable(userId);
 
   // Check if enrollment already exists
@@ -119,6 +124,14 @@ export async function createEnrollmentIfMissing(userId: number, courseId: number
   if (cols.has('student_id') && studentUuid) {
     insertFields.push('student_id');
     insertValues.push(studentUuid);
+  }
+  if (cols.has('payment_method')) {
+    insertFields.push('payment_method');
+    insertValues.push(paymentMethod);
+  }
+  if (cols.has('payment_status')) {
+    insertFields.push('payment_status');
+    insertValues.push(paymentStatus);
   }
 
   const fieldPlaceholders = insertFields.map((_, idx) => `$${idx + 1}`);
