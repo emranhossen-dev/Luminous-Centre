@@ -12,6 +12,7 @@ import {
   Target,
   ChevronRight
 } from 'lucide-react';
+import CoursePlayer from './CoursePlayer';
 
 interface Course {
   id: number;
@@ -31,6 +32,8 @@ interface Course {
 export default function Dashboard() {
   const [enrolledCourses, setEnrolledCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeCourseId, setActiveCourseId] = useState<number | null>(null);
+  const [activeCourseTitle, setActiveCourseTitle] = useState<string>('');
   const [stats, setStats] = useState({
     totalCourses: 0,
     completedCourses: 0,
@@ -93,6 +96,16 @@ export default function Dashboard() {
         <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
         <p className="text-slate-500 mt-4">Loading your dashboard...</p>
       </div>
+    );
+  }
+
+  if (activeCourseId) {
+    return (
+      <CoursePlayer 
+        courseId={activeCourseId} 
+        courseTitle={activeCourseTitle} 
+        onBack={() => setActiveCourseId(null)} 
+      />
     );
   }
 
@@ -202,7 +215,11 @@ export default function Dashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-slate-900/50 rounded-2xl border border-white/5 overflow-hidden hover:border-emerald-500/30 transition-all group"
+                onClick={() => {
+                  setActiveCourseId(course.id);
+                  setActiveCourseTitle(course.title);
+                }}
+                className="bg-slate-900/50 rounded-2xl border border-white/5 overflow-hidden hover:border-emerald-500/30 transition-all group cursor-pointer"
               >
                 <div className="flex flex-col md:flex-row gap-6 p-6">
                   <div className="relative w-full md:w-40 h-24 rounded-xl overflow-hidden shrink-0">
@@ -211,7 +228,7 @@ export default function Dashboard() {
                       className="w-full h-full object-cover" 
                       alt={course.title} 
                     />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <PlayCircle className="text-white" size={32} />
                     </div>
                   </div>

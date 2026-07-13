@@ -12,6 +12,7 @@ import {
   PlayCircle,
   Award
 } from 'lucide-react';
+import CoursePlayer from './CoursePlayer';
 
 interface Course {
   id: number;
@@ -34,10 +35,13 @@ interface Course {
 
 export default function MyCourses() {
   const [courses, setCourses] = useState<Course[]>([]);
+  const [enrolledCourseIds, setEnrolledCourseIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLevel, setSelectedLevel] = useState('all');
+  const [activeCourseId, setActiveCourseId] = useState<number | null>(null);
+  const [activeCourseTitle, setActiveCourseTitle] = useState<string>('');
 
   useEffect(() => {
     fetchCourses();
@@ -46,6 +50,8 @@ export default function MyCourses() {
   async function fetchCourses() {
     try {
       const token = localStorage.getItem('token');
+      
+      // Fetch published courses
       const response = await fetch('/api/courses?status=published', {
         headers: { 'Authorization': `Bearer ${token}` },
       });
@@ -53,6 +59,18 @@ export default function MyCourses() {
       if (response.ok) {
         const data = await response.json();
         setCourses(data.courses || []);
+      }
+
+      // Fetch student enrollments
+      const enrollRes = await fetch('/api/student/enrollments', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (enrollRes.ok) {
+        const enrollData = await enrollRes.json();
+        const enrolled = enrollData.enrollments || [];
+        const enrolledIds = new Set<number>(enrolled.map((e: any) => e.id));
+        setEnrolledCourseIds(enrolledIds);
       }
     } catch (error) {
       console.error('Failed to fetch courses:', error);
@@ -114,6 +132,16 @@ export default function MyCourses() {
         <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
         <p className="text-slate-500 mt-4">Loading available courses...</p>
       </div>
+    );
+  }
+
+  if (activeCourseId) {
+    return (
+      <CoursePlayer 
+        courseId={activeCourseId} 
+        courseTitle={activeCourseTitle} 
+        onBack={() => setActiveCourseId(null)} 
+      />
     );
   }
 
@@ -253,13 +281,26 @@ export default function MyCourses() {
                       <span className="text-emerald-500 font-bold text-lg">FREE</span>
                     )}
                   </div>
-                  <button 
-                    onClick={() => enrollInCourse(course.id)}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl transition-all flex items-center gap-2"
-                  >
-                    <Award size={16} />
-                    Enroll Now
-                  </button>
+                  {enrolledCourseIds.has(course.id) ? (
+                    <button 
+                      onClick={() => {
+                        setActiveCourseId(course.id);
+                        setActiveCourseTitle(course.title);
+                      }}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl transition-all flex items-center gap-2"
+                    >
+                      <PlayCircle size={16} />
+                      Start Learning
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => enrollInCourse(course.id)}
+                      className="px-4 py-2 bg-emerald-600/10 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl transition-all flex items-center gap-2"
+                    >
+                      <Award size={16} />
+                      Enroll Now
+                    </button>
+                  )}
                 </div>
               </div>
             </motion.div>
