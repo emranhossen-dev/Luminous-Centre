@@ -228,83 +228,81 @@ export async function PATCH(
     }
 
     // Fetch details for email notification and send email
-    if (userId) {
-      const detailResult = await query(
-        `SELECT u.email, u.first_name as "firstName", u.last_name as "lastName", c.title as "courseTitle"
-         FROM users u, courses c
-         WHERE u.id = $1 AND c.id = $2`,
-        [userId, enrollmentRequest.course_id]
-      );
+    const targetEmail = (body.email || enrollmentRequest.email || '').trim().toLowerCase();
+    const targetName = (body.full_name || enrollmentRequest.full_name || 'Student').trim();
+    const targetCourse = (body.course_title || enrollmentRequest.course_title || 'Selected Course').trim();
 
-      if (detailResult.rows.length > 0) {
-        const details = detailResult.rows[0];
-        const isApproved = enrollmentRequest.enrollment_status === 'approved' || enrollmentRequest.enrollment_status === 'admitted';
-        const emailSubject = isApproved
-          ? 'Course Enrollment Approved! - Luminous Centre' 
-          : 'Course Enrollment Update - Luminous Centre';
+    if (targetEmail) {
+      const isApproved = enrollmentRequest.enrollment_status === 'approved' || enrollmentRequest.enrollment_status === 'admitted';
+      const emailSubject = isApproved
+        ? 'Course Enrollment Approved! - Luminous Centre' 
+        : 'Course Enrollment Update - Luminous Centre';
 
-        let bodyHtml = '';
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-        const loginUrl = `${appUrl}/login`;
+      let bodyHtml = '';
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const loginUrl = `${appUrl}/login`;
 
-        if (isApproved) {
-          if (isNewUserCreated) {
-            bodyHtml = `
-              <p>Hello <strong>${details.firstName} ${details.lastName}</strong>,</p>
-              <p>We are excited to inform you that your enrollment request for the course <strong>${details.courseTitle}</strong> has been approved and you have been admitted!</p>
-              <p>A student account has been created for you. You can log in using the details below:</p>
-              
-              <div style="background-color: #f8fafc; padding: 20px; border-radius: 16px; margin: 25px 0; border: 1px solid #f1f5f9; font-size: 14px;">
-                <p style="margin: 0 0 10px 0; color: #475569;"><strong>Login URL:</strong> <a href="${loginUrl}" style="color: #2563eb; text-decoration: none; font-weight: 500;">${loginUrl}</a></p>
-                <p style="margin: 0 0 10px 0; color: #475569;"><strong>Username / Email:</strong> ${details.email}</p>
-                <p style="margin: 0; color: #475569;"><strong>Temporary Password:</strong> <code style="background-color: #e2e8f0; padding: 3px 8px; border-radius: 6px; font-family: monospace; font-size: 13px; font-weight: bold; color: #0f172a;">${generatedPassword}</code></p>
-              </div>
-              
-              <p style="font-size: 13px; color: #e11d48; font-weight: 500; margin-top: 20px;">
-                * Important: Please log in and reset your password immediately for safety.
-              </p>
-            `;
-          } else {
-            bodyHtml = `
-              <p>Hello <strong>${details.firstName} ${details.lastName}</strong>,</p>
-              <p>Your enrollment status for the course <strong>${details.courseTitle}</strong> has been approved and you have been admitted! 🎉</p>
-              <p>You can now view and access your course materials directly on your student portal dashboard.</p>
-              
-              <div style="background-color: #f8fafc; padding: 20px; border-radius: 16px; margin: 25px 0; border: 1px solid #f1f5f9; font-size: 14px;">
-                <p style="margin: 0 0 10px 0; color: #475569;"><strong>Login URL:</strong> <a href="${loginUrl}" style="color: #2563eb; text-decoration: none; font-weight: 500;">${loginUrl}</a></p>
-                <p style="margin: 0; color: #475569;"><strong>Username / Email:</strong> ${details.email}</p>
-              </div>
-            `;
-          }
+      if (isApproved) {
+        if (isNewUserCreated) {
+          bodyHtml = `
+            <p>Hello <strong>${targetName}</strong>,</p>
+            <p>We are excited to inform you that your enrollment request for the course <strong>${targetCourse}</strong> has been approved and you have been admitted!</p>
+            <p>A student account has been created for you. You can log in using the details below:</p>
+            
+            <div style="background-color: #f8fafc; padding: 20px; border-radius: 16px; margin: 25px 0; border: 1px solid #f1f5f9; font-size: 14px;">
+              <p style="margin: 0 0 10px 0; color: #475569;"><strong>Login URL:</strong> <a href="${loginUrl}" style="color: #2563eb; text-decoration: none; font-weight: 500;">${loginUrl}</a></p>
+              <p style="margin: 0 0 10px 0; color: #475569;"><strong>Username / Email:</strong> ${targetEmail}</p>
+              <p style="margin: 0; color: #475569;"><strong>Temporary Password:</strong> <code style="background-color: #e2e8f0; padding: 3px 8px; border-radius: 6px; font-family: monospace; font-size: 13px; font-weight: bold; color: #0f172a;">${generatedPassword}</code></p>
+            </div>
+            
+            <p style="font-size: 13px; color: #e11d48; font-weight: 500; margin-top: 20px;">
+              * Important: Please log in and reset your password immediately for safety.
+            </p>
+          `;
         } else {
           bodyHtml = `
-            <p>Hello <strong>${details.firstName} ${details.lastName}</strong>,</p>
-            <p>Your enrollment status for the course <strong>${details.courseTitle}</strong> has been updated.</p>
+            <p>Hello <strong>${targetName}</strong>,</p>
+            <p>Your enrollment status for the course <strong>${targetCourse}</strong> has been approved and you have been admitted! 🎉</p>
+            <p>You can now view and access your course materials directly on your student portal dashboard.</p>
             
-            <div style="background-color: #fef2f2; border: 1px solid #fecaca; padding: 15px; border-radius: 12px; margin: 20px 0; color: #991b1b;">
-              <p style="margin: 0; font-size: 15px; font-weight: bold;">
-                Status: Declined / Rejected
-              </p>
-              ${enrollmentRequest.admin_note ? `<p style="margin: 10px 0 0 0; font-size: 13px; color: #475569;"><strong>Admin Remark:</strong> ${enrollmentRequest.admin_note}</p>` : ''}
+            <div style="background-color: #f8fafc; padding: 20px; border-radius: 16px; margin: 25px 0; border: 1px solid #f1f5f9; font-size: 14px;">
+              <p style="margin: 0 0 10px 0; color: #475569;"><strong>Login URL:</strong> <a href="${loginUrl}" style="color: #2563eb; text-decoration: none; font-weight: 500;">${loginUrl}</a></p>
+              <p style="margin: 0; color: #475569;"><strong>Username / Email:</strong> ${targetEmail}</p>
             </div>
-            <p>If you have any queries about this enrollment status, feel free to contact the training center administration.</p>
           `;
         }
-
-        const statusHtml = getEmailTemplate({
-          title: 'Enrollment Update - Luminous Centre',
-          heading: isApproved ? 'Congratulations! Your Enrollment is Approved' : 'Enrollment Update',
-          bodyHtml,
-          ctaText: isApproved ? 'Go to My Courses' : undefined,
-          ctaLink: isApproved ? `${appUrl}/student/my-courses` : undefined
-        });
-
-        await sendEmail({
-          to: details.email,
-          subject: emailSubject,
-          html: statusHtml
-        }).catch(err => console.error('[ENROLLMENT-UPDATE-EMAIL] Error sending status email:', err));
+      } else {
+        const displayStatus = enrollmentRequest.enrollment_status === 'rejected' ? 'Declined / Rejected' :
+                              enrollmentRequest.enrollment_status === 'waiting' ? 'Waiting for Approval / Pending' :
+                              enrollmentRequest.enrollment_status === 'applied' ? 'Applied' : enrollmentRequest.enrollment_status;
+        
+        bodyHtml = `
+          <p>Hello <strong>${targetName}</strong>,</p>
+          <p>Your enrollment status for the course <strong>${targetCourse}</strong> has been updated.</p>
+          
+          <div style="background-color: #fef2f2; border: 1px solid #fecaca; padding: 15px; border-radius: 12px; margin: 20px 0; color: #991b1b;">
+            <p style="margin: 0; font-size: 15px; font-weight: bold;">
+              Status: ${displayStatus}
+            </p>
+            ${enrollmentRequest.admin_note ? `<p style="margin: 10px 0 0 0; font-size: 13px; color: #475569;"><strong>Admin Remark:</strong> ${enrollmentRequest.admin_note}</p>` : ''}
+          </div>
+          <p>If you have any queries about this enrollment status, feel free to contact the training center administration.</p>
+        `;
       }
+
+      const statusHtml = getEmailTemplate({
+        title: 'Enrollment Update - Luminous Centre',
+        heading: isApproved ? 'Congratulations! Your Enrollment is Approved' : 'Enrollment Update',
+        bodyHtml,
+        ctaText: isApproved ? 'Go to My Courses' : undefined,
+        ctaLink: isApproved ? `${appUrl}/student/my-courses` : undefined
+      });
+
+      await sendEmail({
+        to: targetEmail,
+        subject: emailSubject,
+        html: statusHtml
+      }).catch(err => console.error('[ENROLLMENT-UPDATE-EMAIL] Error sending status email:', err));
     }
 
     return NextResponse.json({
