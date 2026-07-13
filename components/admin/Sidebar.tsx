@@ -35,17 +35,23 @@ export default function Sidebar() {
     return user.permissions?.includes(itemId);
   };
 
+  // Profile display logic
+  const isSuperAdmin = user?.roleName === 'admin';
+  const profileName = isSuperAdmin ? 'Luminous Admin' : (user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'Admin');
+  const profileRole = isSuperAdmin ? 'Super Admin' : (user?.roleName ? user.roleName.charAt(0).toUpperCase() + user.roleName.slice(1) : 'Staff');
+  const profileInitial = isSuperAdmin ? '' : (profileName?.[0] || 'A');
+
   return (
     <div className="w-72 h-screen bg-slate-900 text-slate-300 flex flex-col border-r border-white/5 relative z-50">
       {/* Sidebar Header */}
       <div className="h-20 flex items-center px-6 border-b border-white/5 mb-4">
         <div className="flex items-center gap-3 group cursor-pointer">
-          <div className="p-2 bg-blue-600 rounded-xl group-hover:rotate-12 transition-transform duration-300">
-            <Shield className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-blue-500/20 group-hover:border-blue-500/40 transition-all shrink-0">
+            <img src="/logo.jpg" alt="Luminous Logo" className="w-full h-full object-cover" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-white tracking-tight leading-none mb-1">Luminous</h1>
-            <p className="text-[10px] text-blue-400 uppercase tracking-widest font-semibold">Skill Development</p>
+            <h1 className="text-lg font-bold text-white tracking-tight leading-none mb-1">Luminous SDTC</h1>
+            <p className="text-[10px] text-blue-400 uppercase tracking-widest font-semibold">Training Centre</p>
           </div>
         </div>
       </div>
@@ -91,15 +97,21 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Sidebar Footer */}
+      {/* Sidebar Footer - Dynamic Profile */}
       <div className="p-4 border-t border-white/5">
         <div className="bg-white/5 rounded-2xl p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold">
-            A
-          </div>
+          {isSuperAdmin ? (
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-500/30 shrink-0">
+              <img src="/logo.jpg" alt="Luminous" className="w-full h-full object-cover" />
+            </div>
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shrink-0">
+              {profileInitial}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white truncate">Admin Account</p>
-            <p className="text-xs text-slate-500 truncate">Super Admin</p>
+            <p className="text-sm font-semibold text-white truncate">{profileName}</p>
+            <p className="text-xs text-slate-500 truncate">{profileRole}</p>
           </div>
         </div>
       </div>

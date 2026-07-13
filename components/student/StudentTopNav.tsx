@@ -41,21 +41,31 @@ export default function StudentTopNav({
   const profileImage = user?.profileImage || studentProfile;
 
   return (
-    <div className="h-16 bg-slate-900 border-b border-white/5 flex items-center justify-between px-6 sticky top-0 z-40">
-      {/* Left side - Hamburger toggle for mobile, empty spacer on desktop */}
-      <div className="flex-1 flex items-center">
+    <div className="h-16 bg-slate-900 border-b border-white/5 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-40 overflow-hidden">
+      {/* Left side - Hamburger + Logo for mobile */}
+      <div className="flex items-center gap-3 shrink-0">
         {onMenuToggle && (
           <button
             onClick={onMenuToggle}
-            className="lg:hidden p-2 -ml-2 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer animate-pulse-subtle"
+            className="lg:hidden p-2 -ml-1 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
           >
             <Menu className="w-6 h-6" />
           </button>
         )}
+        {/* Luminous logo visible only on mobile (when sidebar is hidden) */}
+        <div className="lg:hidden flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg overflow-hidden border border-emerald-500/20 shrink-0">
+            <img src="/logo.jpg" alt="Luminous" className="w-full h-full object-cover" />
+          </div>
+          <span className="text-sm font-bold text-white tracking-tight hidden xs:block">Luminous</span>
+        </div>
       </div>
 
+      {/* Spacer */}
+      <div className="flex-1" />
+
       {/* Right side - Profile and Notifications */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 sm:gap-4 shrink-0">
         {/* Notifications */}
         <div className="relative">
           <button
@@ -93,7 +103,7 @@ export default function StudentTopNav({
 
         {/* Profile Image */}
         <div className="relative group">
-          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-emerald-500/20 group-hover:border-emerald-500/40 transition-colors">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-emerald-500/20 group-hover:border-emerald-500/40 transition-colors">
             {profileImage ? (
               <img 
                 src={profileImage} 

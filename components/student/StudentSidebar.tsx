@@ -49,14 +49,12 @@ export default function StudentSidebar({
       {/* Institute Header */}
       <div className="h-20 flex items-center justify-between px-6 border-b border-white/5 mb-4 shrink-0">
         <div className="flex items-center gap-3 group cursor-pointer">
-          <div className="p-2 bg-emerald-600 rounded-xl group-hover:rotate-12 transition-transform duration-300">
-            <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center">
-              <span className="text-emerald-600 font-bold text-xs">LC</span>
-            </div>
+          <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-emerald-500/20 group-hover:border-emerald-500/40 transition-all shrink-0">
+            <img src="/logo.jpg" alt="Luminous Logo" className="w-full h-full object-cover" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-white tracking-tight leading-none mb-1">Luminous Centre</h1>
-            <p className="text-[10px] text-emerald-400 uppercase tracking-widest font-semibold">Skill Development</p>
+            <h1 className="text-lg font-bold text-white tracking-tight leading-none mb-1">Luminous SDTC</h1>
+            <p className="text-[10px] text-emerald-400 uppercase tracking-widest font-semibold">Training Centre</p>
           </div>
         </div>
         

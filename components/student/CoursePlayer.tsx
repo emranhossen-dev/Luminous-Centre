@@ -1,21 +1,23 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Play, 
   ChevronLeft, 
   ChevronDown, 
   ChevronUp, 
   BookOpen, 
-  Clock, 
-  Award,
   Video,
-  FileText,
-  Volume2,
-  Maximize,
   CheckCircle,
-  PlayCircle
+  PlayCircle,
+  ChevronRight,
+  StickyNote,
+  FileDown,
+  ListTodo,
+  Save,
+  Loader2,
+  X,
+  Link as LinkIcon
 } from 'lucide-react';
 
 interface VideoData {
@@ -39,6 +41,25 @@ interface ModuleData {
   topics: TopicData[];
 }
 
+interface VideoProgress {
+  lesson_video_id: number;
+  completed: boolean;
+}
+
+interface LessonResource {
+  id: number;
+  title: string;
+  url: string;
+  file_type: string;
+}
+
+interface LessonTask {
+  id: number;
+  title: string;
+  description: string;
+  due_date: string;
+}
+
 interface CoursePlayerProps {
   courseId: number;
   courseTitle: string;
@@ -53,14 +74,46 @@ export default function CoursePlayer({ courseId, courseTitle, onBack }: CoursePl
   const [expandedModules, setExpandedModules] = useState<Record<number, boolean>>({});
   const [activeVideo, setActiveVideo] = useState<VideoData | null>(null);
   const [videoToken, setVideoToken] = useState<string>('');
+  
+  // Video progress tracking
+  const [videoProgress, setVideoProgress] = useState<Record<number, boolean>>({});
+  const videoRef = useRef<HTMLVideoElement>(null);
+  
+  // Info panel state
+  const [activeInfoTab, setActiveInfoTab] = useState<'notes' | 'resources' | 'task' | null>(null);
+  const [notes, setNotes] = useState('');
+  const [notesSaving, setNotesSaving] = useState(false);
+  const [notesSaved, setNotesSaved] = useState(false);
+  const [resources, setResources] = useState<LessonResource[]>([]);
+  const [tasks, setTasks] = useState<LessonTask[]>([]);
+
+  // Build flat list of all videos for prev/next navigation
+  const allVideos: VideoData[] = [];
+  modules.forEach(mod => {
+    mod.topics.forEach(topic => {
+      if (topic.videos) {
+        topic.videos.forEach(vid => allVideos.push(vid));
+      }
+    });
+  });
+  const activeVideoIndex = activeVideo ? allVideos.findIndex(v => v.id === activeVideo.id) : -1;
 
   useEffect(() => {
-    // Set authentication token for secure stream
     if (typeof window !== 'undefined') {
       setVideoToken(localStorage.getItem('token') || '');
     }
     fetchCurriculum();
+    fetchVideoProgress();
   }, [courseId]);
+
+  // When active video changes, load its notes/resources/tasks
+  useEffect(() => {
+    if (activeVideo) {
+      fetchNotesForVideo(activeVideo.id);
+      fetchResourcesForVideo(activeVideo.id);
+      fetchTasksForVideo(activeVideo.id);
+    }
+  }, [activeVideo?.id]);
 
   async function fetchCurriculum() {
     try {
@@ -72,32 +125,27 @@ export default function CoursePlayer({ courseId, courseTitle, onBack }: CoursePl
         headers: { 'Authorization': `Bearer ${token}` },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to load course modules');
-      }
+      if (!response.ok) throw new Error('Failed to load course modules');
 
       const data = await response.json();
       const fetchedModules = data.modules || [];
       setModules(fetchedModules);
 
-      // Expand the first module by default
+      // Expand first module and select first video
       if (fetchedModules.length > 0) {
         setExpandedModules({ [fetchedModules[0].id]: true });
         
-        // Find the first available video to play by default
         let firstVideo: VideoData | null = null;
         for (const mod of fetchedModules) {
           for (const topic of mod.topics) {
-            if (topic.videos && topic.videos.length > 0) {
+            if (topic.videos?.length > 0) {
               firstVideo = topic.videos[0];
               break;
             }
           }
           if (firstVideo) break;
         }
-        if (firstVideo) {
-          setActiveVideo(firstVideo);
-        }
+        if (firstVideo) setActiveVideo(firstVideo);
       }
     } catch (err: any) {
       console.error('Failed to load curriculum:', err);
@@ -107,197 +155,500 @@ export default function CoursePlayer({ courseId, courseTitle, onBack }: CoursePl
     }
   }
 
+  async function fetchVideoProgress() {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/student/video-progress?courseId=${courseId}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const progressMap: Record<number, boolean> = {};
+        (data.progress || []).forEach((p: VideoProgress) => {
+          progressMap[p.lesson_video_id] = p.completed;
+        });
+        setVideoProgress(progressMap);
+      }
+    } catch (e) {
+      console.error('Failed to fetch video progress:', e);
+    }
+  }
+
+  async function fetchNotesForVideo(videoId: number) {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/student/lesson-notes?lessonVideoId=${videoId}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setNotes(data.content || '');
+      }
+    } catch (e) {
+      setNotes('');
+    }
+  }
+
+  async function fetchResourcesForVideo(videoId: number) {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/student/lesson-resources?lessonVideoId=${videoId}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setResources(data.resources || []);
+      }
+    } catch (e) {
+      setResources([]);
+    }
+  }
+
+  async function fetchTasksForVideo(videoId: number) {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/student/lesson-tasks?lessonVideoId=${videoId}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTasks(data.tasks || []);
+      }
+    } catch (e) {
+      setTasks([]);
+    }
+  }
+
+  const saveNotes = async () => {
+    if (!activeVideo) return;
+    setNotesSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await fetch('/api/student/lesson-notes', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lessonVideoId: activeVideo.id, content: notes })
+      });
+      setNotesSaved(true);
+      setTimeout(() => setNotesSaved(false), 2000);
+    } catch (e) {
+      console.error('Failed to save notes:', e);
+    } finally {
+      setNotesSaving(false);
+    }
+  };
+
+  const markVideoCompleted = useCallback(async (videoId: number) => {
+    if (videoProgress[videoId]) return; // Already completed
+    try {
+      const token = localStorage.getItem('token');
+      await fetch('/api/student/video-progress', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lessonVideoId: videoId, watchedSeconds: 0, totalSeconds: 0, completed: true })
+      });
+      setVideoProgress(prev => ({ ...prev, [videoId]: true }));
+    } catch (e) {
+      console.error('Failed to mark video completed:', e);
+    }
+  }, [videoProgress]);
+
+  // Auto-mark as completed when video ends
+  const handleVideoEnded = () => {
+    if (activeVideo) {
+      markVideoCompleted(activeVideo.id);
+    }
+  };
+
   const toggleModule = (moduleId: number) => {
-    setExpandedModules(prev => ({
-      ...prev,
-      [moduleId]: !prev[moduleId]
-    }));
+    setExpandedModules(prev => ({ ...prev, [moduleId]: !prev[moduleId] }));
   };
 
   const getSecureStreamUrl = (videoId: number) => {
     return `/api/videos/stream/${videoId}?token=${encodeURIComponent(videoToken)}`;
   };
 
+  const goToPrevVideo = () => {
+    if (activeVideoIndex > 0) {
+      setActiveVideo(allVideos[activeVideoIndex - 1]);
+      setActiveInfoTab(null);
+    }
+  };
+
+  const goToNextVideo = () => {
+    if (activeVideoIndex < allVideos.length - 1) {
+      setActiveVideo(allVideos[activeVideoIndex + 1]);
+      setActiveInfoTab(null);
+    }
+  };
+
+  const toggleInfoTab = (tab: 'notes' | 'resources' | 'task') => {
+    setActiveInfoTab(prev => prev === tab ? null : tab);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <div className="w-8 h-8 border-3 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
+        <p className="text-slate-500 text-sm mt-3">Loading course content...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <p className="text-rose-400 text-sm mb-4">{error}</p>
+        <button onClick={onBack} className="text-emerald-400 text-sm underline cursor-pointer">Go Back</button>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-[85vh] bg-[#020617] rounded-3xl border border-white/5 overflow-hidden flex flex-col lg:flex-row shadow-2xl">
-      {/* Sidebar Panel - Course Navigation */}
-      <div className="w-full lg:w-96 border-r border-white/5 bg-slate-950/60 flex flex-col shrink-0">
-        {/* Header */}
-        <div className="p-6 border-b border-white/5 flex items-center gap-4">
-          <button 
-            onClick={onBack}
-            className="p-2 hover:bg-white/5 rounded-xl text-slate-400 hover:text-white transition-colors cursor-pointer"
-          >
-            <ChevronLeft size={20} />
-          </button>
-          <div className="min-w-0">
-            <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-widest">COURSE PLAYER</h2>
-            <h1 className="text-base font-bold text-white truncate" title={courseTitle}>
-              {courseTitle}
-            </h1>
-          </div>
-        </div>
-
-        {/* Modules List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <div className="w-8 h-8 border-3 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
-              <p className="text-slate-500 text-xs mt-3">Loading course modules...</p>
-            </div>
-          ) : error ? (
-            <div className="p-4 text-center text-rose-500 text-sm">{error}</div>
-          ) : modules.length === 0 ? (
-            <div className="p-6 text-center text-slate-500 text-sm">
-              No lessons have been uploaded for this course yet.
-            </div>
-          ) : (
-            modules.map((mod, index) => {
-              const isExpanded = !!expandedModules[mod.id];
-              return (
-                <div key={mod.id} className="bg-slate-900/30 rounded-2xl border border-white/5 overflow-hidden">
-                  {/* Module Toggle Button */}
-                  <button 
-                    onClick={() => toggleModule(mod.id)}
-                    className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-all text-left cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3 pr-2 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                        <span className="text-xs font-black text-emerald-400">{(index + 1).toString().padStart(2, '0')}</span>
-                      </div>
-                      <span className="text-sm font-bold text-white truncate">{mod.title}</span>
-                    </div>
-                    {isExpanded ? (
-                      <ChevronUp size={16} className="text-slate-500 shrink-0" />
-                    ) : (
-                      <ChevronDown size={16} className="text-slate-500 shrink-0" />
-                    )}
-                  </button>
-
-                  {/* Topics List */}
-                  <AnimatePresence initial={false}>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden border-t border-white/5 bg-slate-950/20"
-                      >
-                        <div className="p-2 space-y-2">
-                          {mod.topics.length === 0 ? (
-                            <p className="text-xs text-slate-500 p-3 italic">No topics inside this module.</p>
-                          ) : (
-                            mod.topics.map((topic) => (
-                              <div key={topic.id} className="space-y-1">
-                                <div className="px-3 py-1.5 text-xs font-bold text-slate-500 tracking-wider flex items-center gap-1.5 uppercase">
-                                  <BookOpen size={12} />
-                                  <span>{topic.topic_name}</span>
-                                </div>
-                                <div className="space-y-1 pl-2">
-                                  {topic.videos && topic.videos.map((vid) => {
-                                    const isPlaying = activeVideo?.id === vid.id;
-                                    return (
-                                      <button
-                                        key={vid.id}
-                                        onClick={() => setActiveVideo(vid)}
-                                        className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                                          isPlaying 
-                                            ? 'bg-emerald-600/10 text-emerald-400 border border-emerald-500/20' 
-                                            : 'hover:bg-white/5 text-slate-400 hover:text-white border border-transparent'
-                                        }`}
-                                      >
-                                        <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                                          <PlayCircle size={14} className={isPlaying ? 'text-emerald-400' : 'text-slate-500'} />
-                                          <span className="text-xs font-medium truncate">{vid.title}</span>
-                                        </div>
-                                        {vid.duration && (
-                                          <span className="text-[10px] font-bold text-slate-500 shrink-0">{vid.duration}</span>
-                                        )}
-                                      </button>
-                                    );
-                                  })}
-                                  {(!topic.videos || topic.videos.length === 0) && (
-                                    <p className="text-[11px] text-slate-600 pl-6 py-1 italic">No videos uploaded.</p>
-                                  )}
-                                </div>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              );
-            })
-          )}
+    <div className="space-y-0">
+      {/* Course Header Bar */}
+      <div className="flex items-center gap-3 mb-4 px-1">
+        <button 
+          onClick={onBack}
+          className="p-2 hover:bg-white/5 rounded-xl text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0"
+        >
+          <ChevronLeft size={20} />
+        </button>
+        <div className="min-w-0">
+          <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Course Player</p>
+          <h1 className="text-sm sm:text-base font-bold text-white truncate">{courseTitle}</h1>
         </div>
       </div>
 
-      {/* Video Content Panel */}
-      <div className="flex-1 bg-slate-950 flex flex-col justify-between">
+      {/* Video Player Section */}
+      <div className="rounded-2xl overflow-hidden bg-black border border-white/5">
         {activeVideo ? (
-          <div className="flex-1 flex flex-col min-h-0">
-            {/* Player Container */}
-            <div className="aspect-video w-full bg-black relative flex items-center justify-center border-b border-white/5 overflow-hidden">
-              <video 
-                key={activeVideo.id} // Forces re-render of video tag when ID changes
-                src={getSecureStreamUrl(activeVideo.id)}
-                controls 
-                autoPlay
-                controlsList="nodownload"
-                className="w-full h-full object-contain"
-              >
-                Your browser does not support HTML5 video player.
-              </video>
-            </div>
-
-            {/* Video Details */}
-            <div className="p-6 sm:p-8 space-y-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <h1 className="text-lg sm:text-2xl font-bold text-white leading-tight">
-                    {activeVideo.title}
-                  </h1>
-                  <p className="text-xs sm:text-sm text-slate-400">
-                    Now playing in {courseTitle}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-xs font-black uppercase">
-                  <Video size={14} />
-                  <span>Secure Stream</span>
-                </div>
-              </div>
-            </div>
+          <div className="aspect-video w-full relative">
+            <video
+              ref={videoRef}
+              key={activeVideo.id}
+              src={getSecureStreamUrl(activeVideo.id)}
+              controls
+              autoPlay
+              controlsList="nodownload"
+              className="w-full h-full object-contain bg-black"
+              onEnded={handleVideoEnded}
+            >
+              Your browser does not support the HTML5 video player.
+            </video>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center py-20 px-6 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-600/15 border border-emerald-500/25 flex items-center justify-center mb-6">
-              <Play className="w-8 h-8 text-emerald-400 fill-current" />
-            </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Start Learning</h2>
-            <p className="text-slate-500 text-sm max-w-sm">
-              Select a module and lesson from the sidebar menu to start watching the uploaded curriculum lectures.
-            </p>
+          <div className="aspect-video w-full flex flex-col items-center justify-center bg-slate-950">
+            <PlayCircle className="w-12 h-12 text-slate-600 mb-3" />
+            <p className="text-slate-500 text-sm">Select a lesson to start watching</p>
           </div>
         )}
       </div>
 
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.2);
-        }
-      `}</style>
+      {/* Video Info + Navigation */}
+      {activeVideo && (
+        <div className="mt-4 space-y-4">
+          {/* Video Title & Info */}
+          <div className="flex items-start justify-between gap-3 px-1">
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg font-bold text-white leading-snug">{activeVideo.title}</h2>
+              <p className="text-xs text-slate-500 mt-1">Now playing in {courseTitle}</p>
+            </div>
+            {videoProgress[activeVideo.id] && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-[10px] font-bold uppercase shrink-0">
+                <CheckCircle size={12} />
+                <span>Completed</span>
+              </div>
+            )}
+          </div>
+
+          {/* Previous / Next Buttons */}
+          <div className="flex items-center gap-3 px-1">
+            <button
+              onClick={goToPrevVideo}
+              disabled={activeVideoIndex <= 0}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeVideoIndex <= 0
+                  ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed'
+                  : 'bg-slate-800 hover:bg-slate-700 text-white border border-white/5'
+              }`}
+            >
+              <ChevronLeft size={16} />
+              Previous
+            </button>
+            <button
+              onClick={goToNextVideo}
+              disabled={activeVideoIndex >= allVideos.length - 1}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeVideoIndex >= allVideos.length - 1
+                  ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed'
+                  : 'bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-400 border border-emerald-500/20'
+              }`}
+            >
+              Next
+              <ChevronRight size={16} />
+            </button>
+          </div>
+
+          {/* Info Toggle Buttons */}
+          <div className="flex items-center gap-2 px-1">
+            <button
+              onClick={() => toggleInfoTab('notes')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeInfoTab === 'notes'
+                  ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
+                  : 'bg-slate-800/60 text-slate-400 hover:text-white border border-white/5 hover:border-white/10'
+              }`}
+            >
+              <StickyNote size={14} />
+              Notes
+            </button>
+            <button
+              onClick={() => toggleInfoTab('resources')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeInfoTab === 'resources'
+                  ? 'bg-purple-500/15 text-purple-400 border border-purple-500/30'
+                  : 'bg-slate-800/60 text-slate-400 hover:text-white border border-white/5 hover:border-white/10'
+              }`}
+            >
+              <FileDown size={14} />
+              Resources
+            </button>
+            <button
+              onClick={() => toggleInfoTab('task')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeInfoTab === 'task'
+                  ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                  : 'bg-slate-800/60 text-slate-400 hover:text-white border border-white/5 hover:border-white/10'
+              }`}
+            >
+              <ListTodo size={14} />
+              Task
+            </button>
+          </div>
+
+          {/* Collapsible Info Panel */}
+          <AnimatePresence>
+            {activeInfoTab && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="bg-slate-900/50 rounded-2xl border border-white/5 p-4 sm:p-5">
+                  {/* Notes Panel */}
+                  {activeInfoTab === 'notes' && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                          <StickyNote size={16} className="text-blue-400" />
+                          My Notes
+                        </h3>
+                        <button
+                          onClick={saveNotes}
+                          disabled={notesSaving}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/20 text-blue-400 rounded-lg text-[11px] font-bold transition-all cursor-pointer"
+                        >
+                          {notesSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+                          {notesSaved ? 'Saved!' : 'Save Notes'}
+                        </button>
+                      </div>
+                      <textarea
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder="Type your notes here... These notes are private and saved to your account."
+                        className="w-full h-32 sm:h-40 bg-slate-800/50 border border-white/5 rounded-xl p-3 text-sm text-slate-300 placeholder-slate-600 resize-none focus:outline-none focus:border-blue-500/30 transition-colors"
+                      />
+                    </div>
+                  )}
+
+                  {/* Resources Panel */}
+                  {activeInfoTab === 'resources' && (
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <FileDown size={16} className="text-purple-400" />
+                        Resources
+                      </h3>
+                      {resources.length === 0 ? (
+                        <div className="text-center py-8">
+                          <FileDown className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                          <p className="text-xs text-slate-500">No resources added for this lesson yet.</p>
+                          <p className="text-[10px] text-slate-600 mt-1">Your mentor will add downloadable resources here.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {resources.map(resource => (
+                            <a
+                              key={resource.id}
+                              href={resource.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-3 p-3 bg-slate-800/40 rounded-xl border border-white/5 hover:border-purple-500/20 transition-colors group"
+                            >
+                              <LinkIcon size={14} className="text-purple-400 shrink-0" />
+                              <div className="min-w-0">
+                                <p className="text-xs font-medium text-white group-hover:text-purple-400 transition-colors truncate">{resource.title}</p>
+                                {resource.file_type && <p className="text-[10px] text-slate-500 uppercase">{resource.file_type}</p>}
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Task Panel */}
+                  {activeInfoTab === 'task' && (
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <ListTodo size={16} className="text-amber-400" />
+                        Tasks
+                      </h3>
+                      {tasks.length === 0 ? (
+                        <div className="text-center py-8">
+                          <ListTodo className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                          <p className="text-xs text-slate-500">No tasks assigned for this lesson yet.</p>
+                          <p className="text-[10px] text-slate-600 mt-1">Your mentor will assign practice tasks here.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {tasks.map(task => (
+                            <div
+                              key={task.id}
+                              className="p-3 bg-slate-800/40 rounded-xl border border-white/5"
+                            >
+                              <p className="text-xs font-bold text-white mb-1">{task.title}</p>
+                              {task.description && <p className="text-[11px] text-slate-400 leading-relaxed">{task.description}</p>}
+                              {task.due_date && (
+                                <p className="text-[10px] text-amber-400 mt-2 font-medium">
+                                  Due: {new Date(task.due_date).toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* All Modules List (Accordion) */}
+      <div className="mt-6 space-y-2">
+        <h3 className="text-sm font-bold text-white px-1 mb-3 flex items-center gap-2">
+          <BookOpen size={16} className="text-emerald-400" />
+          Course Modules
+        </h3>
+        
+        {modules.length === 0 ? (
+          <div className="text-center py-10 bg-slate-900/30 rounded-2xl border border-white/5">
+            <p className="text-xs text-slate-500">No modules have been added to this course yet.</p>
+          </div>
+        ) : (
+          modules.map((mod, index) => {
+            const isExpanded = !!expandedModules[mod.id];
+            const totalVids = mod.topics.reduce((sum, t) => sum + (t.videos?.length || 0), 0);
+            const completedVids = mod.topics.reduce((sum, t) => 
+              sum + (t.videos?.filter(v => videoProgress[v.id])?.length || 0), 0);
+            
+            return (
+              <div key={mod.id} className="bg-slate-900/40 rounded-2xl border border-white/5 overflow-hidden">
+                {/* Module Header */}
+                <button 
+                  onClick={() => toggleModule(mod.id)}
+                  className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-white/5 transition-all text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-3 pr-2 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                      <span className="text-xs font-black text-emerald-400">{(index + 1).toString().padStart(2, '0')}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-sm font-bold text-white truncate block">{mod.title}</span>
+                      {totalVids > 0 && (
+                        <span className="text-[10px] text-slate-500">{completedVids}/{totalVids} lessons completed</span>
+                      )}
+                    </div>
+                  </div>
+                  {isExpanded ? (
+                    <ChevronUp size={16} className="text-slate-500 shrink-0" />
+                  ) : (
+                    <ChevronDown size={16} className="text-slate-500 shrink-0" />
+                  )}
+                </button>
+
+                {/* Topics & Videos */}
+                <AnimatePresence initial={false}>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden border-t border-white/5 bg-slate-950/20"
+                    >
+                      <div className="p-2 space-y-1">
+                        {mod.topics.length === 0 ? (
+                          <p className="text-[11px] text-slate-500 p-3 italic">No topics in this module.</p>
+                        ) : (
+                          mod.topics.map((topic) => (
+                            <div key={topic.id} className="space-y-1">
+                              <div className="px-3 py-1.5 text-[10px] font-bold text-slate-500 tracking-wider flex items-center gap-1.5 uppercase">
+                                <BookOpen size={10} />
+                                <span>{topic.topic_name}</span>
+                              </div>
+                              <div className="space-y-0.5 pl-1">
+                                {topic.videos?.map((vid) => {
+                                  const isPlaying = activeVideo?.id === vid.id;
+                                  const isCompleted = videoProgress[vid.id];
+                                  return (
+                                    <button
+                                      key={vid.id}
+                                      onClick={() => {
+                                        setActiveVideo(vid);
+                                        setActiveInfoTab(null);
+                                      }}
+                                      className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                                        isPlaying 
+                                          ? 'bg-emerald-600/10 text-emerald-400 border border-emerald-500/20' 
+                                          : 'hover:bg-white/5 text-slate-400 hover:text-white border border-transparent'
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                                        {isCompleted ? (
+                                          <CheckCircle size={14} className="text-emerald-400 shrink-0" />
+                                        ) : isPlaying ? (
+                                          <PlayCircle size={14} className="text-emerald-400 shrink-0" />
+                                        ) : (
+                                          <PlayCircle size={14} className="text-slate-600 shrink-0" />
+                                        )}
+                                        <span className="text-xs font-medium truncate">{vid.title}</span>
+                                      </div>
+                                      {vid.duration && (
+                                        <span className="text-[10px] font-bold text-slate-500 shrink-0">{vid.duration}</span>
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                                {(!topic.videos || topic.videos.length === 0) && (
+                                  <p className="text-[11px] text-slate-600 pl-6 py-1 italic">No videos uploaded.</p>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }

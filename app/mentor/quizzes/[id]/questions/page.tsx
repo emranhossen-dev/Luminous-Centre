@@ -277,11 +277,11 @@ export default function QuizQuestionsBuilderPage() {
       {/* Header */}
       <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-40">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20">
-            L
+          <div className="w-9 h-9 rounded-xl overflow-hidden border border-blue-500/20 shrink-0">
+            <img src="/logo.jpg" alt="Luminous" className="w-full h-full object-cover" />
           </div>
           <span className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-transparent dark:bg-gradient-to-r dark:from-white dark:to-slate-400 dark:bg-clip-text">
-            Luminous LMS
+            Luminous SDTC
           </span>
         </div>
         <div className="flex items-center gap-4">

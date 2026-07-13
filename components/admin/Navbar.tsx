@@ -24,6 +24,7 @@ export default function Navbar() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotifyOpen, setIsNotifyOpen] = useState(false);
   const [isThemeOpen, setIsThemeOpen] = useState(false);
+  const [adminUser, setAdminUser] = useState<any>(null);
   const [notifications, setNotifications] = useState([
     { id: 1, text: 'New student enrolled in MERN Stack', time: '2 mins ago', unread: true },
     { id: 2, text: 'Admin login detected from new IP', time: '1 hour ago', unread: true },
@@ -33,6 +34,18 @@ export default function Navbar() {
   const { theme, setTheme } = useAdminTheme();
   const { logout } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('adminUser');
+    if (userStr) {
+      try { setAdminUser(JSON.parse(userStr)); } catch (e) {}
+    }
+  }, []);
+
+  const isSuperAdmin = adminUser?.roleName === 'admin';
+  const profileDisplayName = isSuperAdmin ? 'Luminous Admin' : (adminUser ? `${adminUser.firstName || ''} ${adminUser.lastName || ''}`.trim() || 'Admin' : 'Admin User');
+  const profileDisplayRole = isSuperAdmin ? 'Super Admin' : (adminUser?.roleName ? adminUser.roleName.charAt(0).toUpperCase() + adminUser.roleName.slice(1) : 'Staff');
+  const profileInitial = isSuperAdmin ? '' : (profileDisplayName?.[0] || 'A');
 
   const handleLogout = () => {
     logout();
@@ -231,12 +244,18 @@ export default function Navbar() {
             onClick={() => setIsProfileOpen(!isProfileOpen)}
             className={`flex items-center gap-3 pl-1 pr-3 py-1 ${themeClasses.profile.container} rounded-2xl transition-all group`}
           >
-            <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-600/20">
-              A
-            </div>
+            {isSuperAdmin ? (
+              <div className="w-8 h-8 rounded-xl overflow-hidden border border-blue-500/30 shrink-0">
+                <img src="/logo.jpg" alt="Luminous" className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-600/20">
+                {profileInitial}
+              </div>
+            )}
             <div className="text-left hidden md:block">
-              <p className={`text-xs font-bold ${themeClasses.profile.name} leading-none mb-1`}>Admin User</p>
-              <p className={`text-[10px] ${themeClasses.profile.role} font-medium`}>Super Admin</p>
+              <p className={`text-xs font-bold ${themeClasses.profile.name} leading-none mb-1`}>{profileDisplayName}</p>
+              <p className={`text-[10px] ${themeClasses.profile.role} font-medium`}>{profileDisplayRole}</p>
             </div>
             <ChevronDown className={`w-4 h-4 ${themeClasses.text.secondary} transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -252,8 +271,8 @@ export default function Navbar() {
                   className={`absolute right-0 mt-3 w-56 ${themeClasses.dropdown} rounded-2xl p-2 overflow-hidden transition-all duration-300`}
                 >
                   <div className={`px-3 py-2 mb-2 ${themeClasses.dropdownBorder} pb-3`}>
-                    <p className={`text-sm font-bold ${themeClasses.text.primary}`}>Admin User</p>
-                    <p className={`text-xs ${themeClasses.text.muted}`}>admin@luminous.com</p>
+                    <p className={`text-sm font-bold ${themeClasses.text.primary}`}>{profileDisplayName}</p>
+                    <p className={`text-xs ${themeClasses.text.muted}`}>{adminUser?.email || 'admin@luminous.com'}</p>
                   </div>
                   <Link href="/admin/profile" onClick={() => setIsProfileOpen(false)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl ${themeClasses.dropdownItem} text-sm transition-colors`}>
                     <User className={`w-4 h-4 ${themeClasses.text.secondary}`} /> My Profile
