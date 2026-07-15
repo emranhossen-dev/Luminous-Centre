@@ -304,6 +304,99 @@ export default function CoursePlayer({ courseId, courseTitle, onBack }: CoursePl
     );
   }
 
+  // Modules sidebar content (shared between mobile and desktop)
+  const ModulesList = () => (
+    <div className="space-y-2">
+      <h3 className="text-sm font-bold text-white px-1 mb-3 flex items-center gap-2">
+        <BookOpen size={16} className="text-emerald-400" />
+        Course Modules
+      </h3>
+      {modules.length === 0 ? (
+        <div className="text-center py-10 bg-slate-900/30 rounded-2xl border border-white/5">
+          <p className="text-xs text-slate-500">No modules have been added to this course yet.</p>
+        </div>
+      ) : (
+        modules.map((mod, index) => {
+          const isExpanded = !!expandedModules[mod.id];
+          const totalVids = mod.topics.reduce((sum, t) => sum + (t.videos?.length || 0), 0);
+          const completedVids = mod.topics.reduce((sum, t) => 
+            sum + (t.videos?.filter(v => videoProgress[v.id])?.length || 0), 0);
+          return (
+            <div key={mod.id} className="bg-slate-900/40 rounded-2xl border border-white/5 overflow-hidden">
+              <button 
+                onClick={() => toggleModule(mod.id)}
+                className="w-full flex items-center justify-between p-3.5 hover:bg-white/5 transition-all text-left cursor-pointer"
+              >
+                <div className="flex items-center gap-3 pr-2 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                    <span className="text-xs font-black text-emerald-400">{(index + 1).toString().padStart(2, '0')}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-sm font-bold text-white truncate block">{mod.title}</span>
+                    {totalVids > 0 && (
+                      <span className="text-[10px] text-slate-500">{completedVids}/{totalVids} lessons</span>
+                    )}
+                  </div>
+                </div>
+                {isExpanded ? <ChevronUp size={16} className="text-slate-500 shrink-0" /> : <ChevronDown size={16} className="text-slate-500 shrink-0" />}
+              </button>
+              <AnimatePresence initial={false}>
+                {isExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden border-t border-white/5 bg-slate-950/20"
+                  >
+                    <div className="p-2 space-y-1">
+                      {mod.topics.length === 0 ? (
+                        <p className="text-[11px] text-slate-500 p-3 italic">No topics in this module.</p>
+                      ) : (
+                        mod.topics.map((topic) => (
+                          <div key={topic.id} className="space-y-1">
+                            <div className="px-3 py-1.5 text-[10px] font-bold text-slate-500 tracking-wider flex items-center gap-1.5 uppercase">
+                              <BookOpen size={10} /><span>{topic.topic_name}</span>
+                            </div>
+                            <div className="space-y-0.5 pl-1">
+                              {topic.videos?.map((vid) => {
+                                const isPlaying = activeVideo?.id === vid.id;
+                                const isCompleted = videoProgress[vid.id];
+                                return (
+                                  <button
+                                    key={vid.id}
+                                    onClick={() => { setActiveVideo(vid); setActiveInfoTab(null); }}
+                                    className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                                      isPlaying ? 'bg-emerald-600/10 text-emerald-400 border border-emerald-500/20' : 'hover:bg-white/5 text-slate-400 hover:text-white border border-transparent'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                                      {isCompleted ? <CheckCircle size={14} className="text-emerald-400 shrink-0" />
+                                        : isPlaying ? <PlayCircle size={14} className="text-emerald-400 shrink-0" />
+                                        : <PlayCircle size={14} className="text-slate-600 shrink-0" />}
+                                      <span className="text-xs font-medium truncate">{vid.title}</span>
+                                    </div>
+                                    {vid.duration && <span className="text-[10px] font-bold text-slate-500 shrink-0">{vid.duration}</span>}
+                                  </button>
+                                );
+                              })}
+                              {(!topic.videos || topic.videos.length === 0) && (
+                                <p className="text-[11px] text-slate-600 pl-6 py-1 italic">No videos uploaded.</p>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-0">
       {/* Course Header Bar */}
@@ -320,334 +413,251 @@ export default function CoursePlayer({ courseId, courseTitle, onBack }: CoursePl
         </div>
       </div>
 
-      {/* Video Player Section */}
-      <div className="rounded-2xl overflow-hidden bg-black border border-white/5">
-        {activeVideo ? (
-          <div className="aspect-video w-full relative">
-            <video
-              ref={videoRef}
-              key={activeVideo.id}
-              src={getSecureStreamUrl(activeVideo.id)}
-              controls
-              autoPlay
-              controlsList="nodownload"
-              className="w-full h-full object-contain bg-black"
-              onEnded={handleVideoEnded}
-            >
-              Your browser does not support the HTML5 video player.
-            </video>
+      {/* ── DESKTOP TWO-COLUMN LAYOUT (lg+) ── */}
+      <div className="hidden lg:grid lg:grid-cols-[1fr_360px] lg:gap-6 lg:items-start">
+        {/* LEFT: Video + controls */}
+        <div className="space-y-4">
+          {/* Video Player */}
+          <div className="rounded-2xl overflow-hidden bg-black border border-white/5">
+            {activeVideo ? (
+              <div className="aspect-video w-full relative">
+                <video
+                  ref={videoRef}
+                  key={activeVideo.id}
+                  src={getSecureStreamUrl(activeVideo.id)}
+                  controls autoPlay controlsList="nodownload"
+                  className="w-full h-full object-contain bg-black"
+                  onEnded={handleVideoEnded}
+                >Your browser does not support the HTML5 video player.</video>
+              </div>
+            ) : (
+              <div className="aspect-video w-full flex flex-col items-center justify-center bg-slate-950">
+                <PlayCircle className="w-12 h-12 text-slate-600 mb-3" />
+                <p className="text-slate-500 text-sm">Select a lesson to start watching</p>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="aspect-video w-full flex flex-col items-center justify-center bg-slate-950">
-            <PlayCircle className="w-12 h-12 text-slate-600 mb-3" />
-            <p className="text-slate-500 text-sm">Select a lesson to start watching</p>
-          </div>
-        )}
+
+          {activeVideo && (
+            <div className="space-y-4">
+              {/* Title */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="text-lg font-bold text-white leading-snug">{activeVideo.title}</h2>
+                  <p className="text-xs text-slate-500 mt-1">Now playing in {courseTitle}</p>
+                </div>
+                {videoProgress[activeVideo.id] && (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-[10px] font-bold uppercase shrink-0">
+                    <CheckCircle size={12} /><span>Completed</span>
+                  </div>
+                )}
+              </div>
+              {/* Prev / Next */}
+              <div className="flex items-center gap-3">
+                <button onClick={goToPrevVideo} disabled={activeVideoIndex <= 0}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeVideoIndex <= 0 ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed' : 'bg-slate-800 hover:bg-slate-700 text-white border border-white/5'
+                  }`}>
+                  <ChevronLeft size={16} /> Previous
+                </button>
+                <button onClick={goToNextVideo} disabled={activeVideoIndex >= allVideos.length - 1}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeVideoIndex >= allVideos.length - 1 ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed' : 'bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-400 border border-emerald-500/20'
+                  }`}>
+                  Next <ChevronRight size={16} />
+                </button>
+              </div>
+              {/* Info Tabs */}
+              <div className="flex flex-wrap items-center gap-2">
+                {(['notes', 'resources', 'task'] as const).map(tab => (
+                  <button key={tab} onClick={() => toggleInfoTab(tab)}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer capitalize ${
+                      activeInfoTab === tab
+                        ? tab === 'notes' ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
+                          : tab === 'resources' ? 'bg-purple-500/15 text-purple-400 border border-purple-500/30'
+                          : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                        : 'bg-slate-800/60 text-slate-400 hover:text-white border border-white/5 hover:border-white/10'
+                    }`}>
+                    {tab === 'notes' ? <StickyNote size={14} /> : tab === 'resources' ? <FileDown size={14} /> : <ListTodo size={14} />}
+                    {tab === 'notes' ? 'Notes' : tab === 'resources' ? 'Resources' : 'Homework'}
+                  </button>
+                ))}
+              </div>
+              {/* Info Panel */}
+              <AnimatePresence>
+                {activeInfoTab && (
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                    <div className="bg-slate-900/50 rounded-2xl border border-white/5 p-5">
+                      {activeInfoTab === 'notes' && (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-bold text-white flex items-center gap-2"><StickyNote size={16} className="text-blue-400" />My Notes</h3>
+                            <button onClick={saveNotes} disabled={notesSaving} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/20 text-blue-400 rounded-lg text-[11px] font-bold transition-all cursor-pointer">
+                              {notesSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+                              {notesSaved ? 'Saved!' : 'Save Notes'}
+                            </button>
+                          </div>
+                          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Type your notes here..." className="w-full h-40 bg-slate-800/50 border border-white/5 rounded-xl p-3 text-sm text-slate-300 placeholder-slate-600 resize-none focus:outline-none focus:border-blue-500/30 transition-colors" />
+                        </div>
+                      )}
+                      {activeInfoTab === 'resources' && (
+                        <div className="space-y-3">
+                          <h3 className="text-sm font-bold text-white flex items-center gap-2"><FileDown size={16} className="text-purple-400" />Resources</h3>
+                          {resources.length === 0 ? (
+                            <div className="text-center py-6"><FileDown className="w-8 h-8 text-slate-600 mx-auto mb-2" /><p className="text-xs text-slate-500">No resources for this lesson yet.</p></div>
+                          ) : (
+                            <div className="space-y-2">
+                              {resources.map(r => (
+                                <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-slate-800/40 rounded-xl border border-white/5 hover:border-purple-500/20 transition-colors group">
+                                  <LinkIcon size={14} className="text-purple-400 shrink-0" />
+                                  <div className="min-w-0"><p className="text-xs font-medium text-white group-hover:text-purple-400 transition-colors truncate">{r.title}</p>{r.file_type && <p className="text-[10px] text-slate-500 uppercase">{r.file_type}</p>}</div>
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {activeInfoTab === 'task' && (
+                        <div className="space-y-3">
+                          <h3 className="text-sm font-bold text-white flex items-center gap-2"><ListTodo size={16} className="text-amber-400" />Homework</h3>
+                          {tasks.length === 0 ? (
+                            <div className="text-center py-6"><ListTodo className="w-8 h-8 text-slate-600 mx-auto mb-2" /><p className="text-xs text-slate-500">No homework assigned for this lesson yet.</p></div>
+                          ) : (
+                            <div className="space-y-2">
+                              {tasks.map(task => (
+                                <div key={task.id} className="p-3 bg-slate-800/40 rounded-xl border border-white/5">
+                                  <p className="text-xs font-bold text-white mb-1">{task.title}</p>
+                                  {task.description && <p className="text-[11px] text-slate-400 leading-relaxed">{task.description}</p>}
+                                  {task.due_date && <p className="text-[10px] text-amber-400 mt-2 font-medium">Due: {new Date(task.due_date).toLocaleDateString()}</p>}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT: Module list (sticky scrollable) */}
+        <div className="sticky top-4 max-h-[calc(100vh-6rem)] overflow-y-auto pr-1 space-y-2">
+          <ModulesList />
+        </div>
       </div>
 
-      {/* Video Info + Navigation */}
-      {activeVideo && (
-        <div className="mt-4 space-y-4">
-          {/* Video Title & Info */}
-          <div className="flex items-start justify-between gap-3 px-1">
-            <div className="min-w-0">
-              <h2 className="text-base sm:text-lg font-bold text-white leading-snug">{activeVideo.title}</h2>
-              <p className="text-xs text-slate-500 mt-1">Now playing in {courseTitle}</p>
+      {/* ── MOBILE SINGLE-COLUMN LAYOUT (< lg) ── */}
+      <div className="lg:hidden space-y-4">
+        {/* Video Player */}
+        <div className="rounded-2xl overflow-hidden bg-black border border-white/5">
+          {activeVideo ? (
+            <div className="aspect-video w-full relative">
+              <video
+                ref={videoRef}
+                key={activeVideo.id}
+                src={getSecureStreamUrl(activeVideo.id)}
+                controls autoPlay controlsList="nodownload"
+                className="w-full h-full object-contain bg-black"
+                onEnded={handleVideoEnded}
+              >Your browser does not support the HTML5 video player.</video>
             </div>
-            {videoProgress[activeVideo.id] && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-[10px] font-bold uppercase shrink-0">
-                <CheckCircle size={12} />
-                <span>Completed</span>
-              </div>
-            )}
-          </div>
-
-          {/* Previous / Next Buttons */}
-          <div className="flex items-center gap-3 px-1">
-            <button
-              onClick={goToPrevVideo}
-              disabled={activeVideoIndex <= 0}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeVideoIndex <= 0
-                  ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed'
-                  : 'bg-slate-800 hover:bg-slate-700 text-white border border-white/5'
-              }`}
-            >
-              <ChevronLeft size={16} />
-              Previous
-            </button>
-            <button
-              onClick={goToNextVideo}
-              disabled={activeVideoIndex >= allVideos.length - 1}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeVideoIndex >= allVideos.length - 1
-                  ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed'
-                  : 'bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-400 border border-emerald-500/20'
-              }`}
-            >
-              Next
-              <ChevronRight size={16} />
-            </button>
-          </div>
-
-          {/* Info Toggle Buttons */}
-          <div className="flex flex-wrap items-center gap-2 px-1">
-            <button
-              onClick={() => toggleInfoTab('notes')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeInfoTab === 'notes'
-                  ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
-                  : 'bg-slate-800/60 text-slate-400 hover:text-white border border-white/5 hover:border-white/10'
-              }`}
-            >
-              <StickyNote size={14} />
-              Notes
-            </button>
-            <button
-              onClick={() => toggleInfoTab('resources')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeInfoTab === 'resources'
-                  ? 'bg-purple-500/15 text-purple-400 border border-purple-500/30'
-                  : 'bg-slate-800/60 text-slate-400 hover:text-white border border-white/5 hover:border-white/10'
-              }`}
-            >
-              <FileDown size={14} />
-              Resources
-            </button>
-            <button
-              onClick={() => toggleInfoTab('task')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeInfoTab === 'task'
-                  ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
-                  : 'bg-slate-800/60 text-slate-400 hover:text-white border border-white/5 hover:border-white/10'
-              }`}
-            >
-              <ListTodo size={14} />
-              Task
-            </button>
-          </div>
-
-          {/* Collapsible Info Panel */}
-          <AnimatePresence>
-            {activeInfoTab && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="bg-slate-900/50 rounded-2xl border border-white/5 p-4 sm:p-5">
-                  {/* Notes Panel */}
-                  {activeInfoTab === 'notes' && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                          <StickyNote size={16} className="text-blue-400" />
-                          My Notes
-                        </h3>
-                        <button
-                          onClick={saveNotes}
-                          disabled={notesSaving}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/20 text-blue-400 rounded-lg text-[11px] font-bold transition-all cursor-pointer"
-                        >
-                          {notesSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
-                          {notesSaved ? 'Saved!' : 'Save Notes'}
-                        </button>
-                      </div>
-                      <textarea
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Type your notes here... These notes are private and saved to your account."
-                        className="w-full h-32 sm:h-40 bg-slate-800/50 border border-white/5 rounded-xl p-3 text-sm text-slate-300 placeholder-slate-600 resize-none focus:outline-none focus:border-blue-500/30 transition-colors"
-                      />
-                    </div>
-                  )}
-
-                  {/* Resources Panel */}
-                  {activeInfoTab === 'resources' && (
-                    <div className="space-y-3">
-                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                        <FileDown size={16} className="text-purple-400" />
-                        Resources
-                      </h3>
-                      {resources.length === 0 ? (
-                        <div className="text-center py-8">
-                          <FileDown className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-                          <p className="text-xs text-slate-500">No resources added for this lesson yet.</p>
-                          <p className="text-[10px] text-slate-600 mt-1">Your mentor will add downloadable resources here.</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          {resources.map(resource => (
-                            <a
-                              key={resource.id}
-                              href={resource.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-3 p-3 bg-slate-800/40 rounded-xl border border-white/5 hover:border-purple-500/20 transition-colors group"
-                            >
-                              <LinkIcon size={14} className="text-purple-400 shrink-0" />
-                              <div className="min-w-0">
-                                <p className="text-xs font-medium text-white group-hover:text-purple-400 transition-colors truncate">{resource.title}</p>
-                                {resource.file_type && <p className="text-[10px] text-slate-500 uppercase">{resource.file_type}</p>}
-                              </div>
-                            </a>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Task Panel */}
-                  {activeInfoTab === 'task' && (
-                    <div className="space-y-3">
-                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                        <ListTodo size={16} className="text-amber-400" />
-                        Tasks
-                      </h3>
-                      {tasks.length === 0 ? (
-                        <div className="text-center py-8">
-                          <ListTodo className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-                          <p className="text-xs text-slate-500">No tasks assigned for this lesson yet.</p>
-                          <p className="text-[10px] text-slate-600 mt-1">Your mentor will assign practice tasks here.</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          {tasks.map(task => (
-                            <div
-                              key={task.id}
-                              className="p-3 bg-slate-800/40 rounded-xl border border-white/5"
-                            >
-                              <p className="text-xs font-bold text-white mb-1">{task.title}</p>
-                              {task.description && <p className="text-[11px] text-slate-400 leading-relaxed">{task.description}</p>}
-                              {task.due_date && (
-                                <p className="text-[10px] text-amber-400 mt-2 font-medium">
-                                  Due: {new Date(task.due_date).toLocaleDateString()}
-                                </p>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          ) : (
+            <div className="aspect-video w-full flex flex-col items-center justify-center bg-slate-950">
+              <PlayCircle className="w-12 h-12 text-slate-600 mb-3" />
+              <p className="text-slate-500 text-sm">Select a lesson to start watching</p>
+            </div>
+          )}
         </div>
-      )}
 
-      {/* All Modules List (Accordion) */}
-      <div className="mt-6 space-y-2">
-        <h3 className="text-sm font-bold text-white px-1 mb-3 flex items-center gap-2">
-          <BookOpen size={16} className="text-emerald-400" />
-          Course Modules
-        </h3>
-        
-        {modules.length === 0 ? (
-          <div className="text-center py-10 bg-slate-900/30 rounded-2xl border border-white/5">
-            <p className="text-xs text-slate-500">No modules have been added to this course yet.</p>
-          </div>
-        ) : (
-          modules.map((mod, index) => {
-            const isExpanded = !!expandedModules[mod.id];
-            const totalVids = mod.topics.reduce((sum, t) => sum + (t.videos?.length || 0), 0);
-            const completedVids = mod.topics.reduce((sum, t) => 
-              sum + (t.videos?.filter(v => videoProgress[v.id])?.length || 0), 0);
-            
-            return (
-              <div key={mod.id} className="bg-slate-900/40 rounded-2xl border border-white/5 overflow-hidden">
-                {/* Module Header */}
-                <button 
-                  onClick={() => toggleModule(mod.id)}
-                  className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-white/5 transition-all text-left cursor-pointer"
-                >
-                  <div className="flex items-center gap-3 pr-2 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                      <span className="text-xs font-black text-emerald-400">{(index + 1).toString().padStart(2, '0')}</span>
-                    </div>
-                    <div className="min-w-0">
-                      <span className="text-sm font-bold text-white truncate block">{mod.title}</span>
-                      {totalVids > 0 && (
-                        <span className="text-[10px] text-slate-500">{completedVids}/{totalVids} lessons completed</span>
-                      )}
-                    </div>
-                  </div>
-                  {isExpanded ? (
-                    <ChevronUp size={16} className="text-slate-500 shrink-0" />
-                  ) : (
-                    <ChevronDown size={16} className="text-slate-500 shrink-0" />
-                  )}
-                </button>
-
-                {/* Topics & Videos */}
-                <AnimatePresence initial={false}>
-                  {isExpanded && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden border-t border-white/5 bg-slate-950/20"
-                    >
-                      <div className="p-2 space-y-1">
-                        {mod.topics.length === 0 ? (
-                          <p className="text-[11px] text-slate-500 p-3 italic">No topics in this module.</p>
-                        ) : (
-                          mod.topics.map((topic) => (
-                            <div key={topic.id} className="space-y-1">
-                              <div className="px-3 py-1.5 text-[10px] font-bold text-slate-500 tracking-wider flex items-center gap-1.5 uppercase">
-                                <BookOpen size={10} />
-                                <span>{topic.topic_name}</span>
-                              </div>
-                              <div className="space-y-0.5 pl-1">
-                                {topic.videos?.map((vid) => {
-                                  const isPlaying = activeVideo?.id === vid.id;
-                                  const isCompleted = videoProgress[vid.id];
-                                  return (
-                                    <button
-                                      key={vid.id}
-                                      onClick={() => {
-                                        setActiveVideo(vid);
-                                        setActiveInfoTab(null);
-                                      }}
-                                      className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                                        isPlaying 
-                                          ? 'bg-emerald-600/10 text-emerald-400 border border-emerald-500/20' 
-                                          : 'hover:bg-white/5 text-slate-400 hover:text-white border border-transparent'
-                                      }`}
-                                    >
-                                      <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                                        {isCompleted ? (
-                                          <CheckCircle size={14} className="text-emerald-400 shrink-0" />
-                                        ) : isPlaying ? (
-                                          <PlayCircle size={14} className="text-emerald-400 shrink-0" />
-                                        ) : (
-                                          <PlayCircle size={14} className="text-slate-600 shrink-0" />
-                                        )}
-                                        <span className="text-xs font-medium truncate">{vid.title}</span>
-                                      </div>
-                                      {vid.duration && (
-                                        <span className="text-[10px] font-bold text-slate-500 shrink-0">{vid.duration}</span>
-                                      )}
-                                    </button>
-                                  );
-                                })}
-                                {(!topic.videos || topic.videos.length === 0) && (
-                                  <p className="text-[11px] text-slate-600 pl-6 py-1 italic">No videos uploaded.</p>
-                                )}
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+        {activeVideo && (
+          <div className="space-y-4">
+            <div className="flex items-start justify-between gap-3 px-1">
+              <div className="min-w-0">
+                <h2 className="text-base font-bold text-white leading-snug">{activeVideo.title}</h2>
+                <p className="text-xs text-slate-500 mt-1">Now playing in {courseTitle}</p>
               </div>
-            );
-          })
+              {videoProgress[activeVideo.id] && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-[10px] font-bold uppercase shrink-0">
+                  <CheckCircle size={12} /><span>Completed</span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-3 px-1">
+              <button onClick={goToPrevVideo} disabled={activeVideoIndex <= 0}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeVideoIndex <= 0 ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed' : 'bg-slate-800 hover:bg-slate-700 text-white border border-white/5'
+                }`}><ChevronLeft size={16} />Previous</button>
+              <button onClick={goToNextVideo} disabled={activeVideoIndex >= allVideos.length - 1}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeVideoIndex >= allVideos.length - 1 ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed' : 'bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-400 border border-emerald-500/20'
+                }`}>Next<ChevronRight size={16} /></button>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 px-1">
+              {(['notes', 'resources', 'task'] as const).map(tab => (
+                <button key={tab} onClick={() => toggleInfoTab(tab)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeInfoTab === tab
+                      ? tab === 'notes' ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
+                        : tab === 'resources' ? 'bg-purple-500/15 text-purple-400 border border-purple-500/30'
+                        : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                      : 'bg-slate-800/60 text-slate-400 hover:text-white border border-white/5 hover:border-white/10'
+                  }`}>
+                  {tab === 'notes' ? <StickyNote size={14} /> : tab === 'resources' ? <FileDown size={14} /> : <ListTodo size={14} />}
+                  {tab === 'notes' ? 'Notes' : tab === 'resources' ? 'Resources' : 'Homework'}
+                </button>
+              ))}
+            </div>
+            <AnimatePresence>
+              {activeInfoTab && (
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden px-1">
+                  <div className="bg-slate-900/50 rounded-2xl border border-white/5 p-4">
+                    {activeInfoTab === 'notes' && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-bold text-white flex items-center gap-2"><StickyNote size={16} className="text-blue-400" />My Notes</h3>
+                          <button onClick={saveNotes} disabled={notesSaving} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/15 border border-blue-500/20 text-blue-400 rounded-lg text-[11px] font-bold cursor-pointer">
+                            {notesSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}{notesSaved ? 'Saved!' : 'Save'}
+                          </button>
+                        </div>
+                        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Type your notes..." className="w-full h-32 bg-slate-800/50 border border-white/5 rounded-xl p-3 text-sm text-slate-300 placeholder-slate-600 resize-none focus:outline-none" />
+                      </div>
+                    )}
+                    {activeInfoTab === 'resources' && (
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-bold text-white flex items-center gap-2"><FileDown size={16} className="text-purple-400" />Resources</h3>
+                        {resources.length === 0 ? <p className="text-xs text-slate-500 text-center py-4">No resources yet.</p> : resources.map(r => (
+                          <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-slate-800/40 rounded-xl border border-white/5 hover:border-purple-500/20 transition-colors group">
+                            <LinkIcon size={14} className="text-purple-400 shrink-0" /><p className="text-xs font-medium text-white group-hover:text-purple-400 truncate">{r.title}</p>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    {activeInfoTab === 'task' && (
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-bold text-white flex items-center gap-2"><ListTodo size={16} className="text-amber-400" />Homework</h3>
+                        {tasks.length === 0 ? <p className="text-xs text-slate-500 text-center py-4">No homework yet.</p> : tasks.map(task => (
+                          <div key={task.id} className="p-3 bg-slate-800/40 rounded-xl border border-white/5">
+                            <p className="text-xs font-bold text-white mb-1">{task.title}</p>
+                            {task.description && <p className="text-[11px] text-slate-400">{task.description}</p>}
+                            {task.due_date && <p className="text-[10px] text-amber-400 mt-1">Due: {new Date(task.due_date).toLocaleDateString()}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         )}
+
+        {/* Mobile modules list */}
+        <div className="mt-6">
+          <ModulesList />
+        </div>
       </div>
     </div>
   );

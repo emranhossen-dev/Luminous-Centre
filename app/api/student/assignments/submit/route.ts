@@ -65,6 +65,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Find the mentor's user ID and details of the assignment/course to send a notification
+    try {
+      const mentorQuery = await query(`
+        SELECT u.id as mentor_user_id, a.title as assignment_title, c.title as course_title
+        FROM assignments a
+        JOIN courses c ON a.course_id = c.id
+        JOIN mentors m ON c.mentor_id = m.id
+        JOIN users u ON m.email = u.email
+        WHERE a.id = $1
+      `, [assignmentId]);
+
+      if (mentorQuery.rows.length > 0) {
+        const { mentor_user_id, assignment_title, course_title } = mentorQuery.rows[0];
+        const studentName = `${user.firstName} ${user.lastName}`;
+        const notifTitle = 'New Assignment Submission';
+        const notifMessage = `${studentName} has submitted assignment "${assignment_title}" in "${course_title}" for review.`;
+
+        await query(`
+          INSERT INTO notifications (title, message, recipient_id)
+          VALUES ($1, $2, $3)
+        `, [notifTitle, notifMessage, mentor_user_id]);
+      }
+    } catch (notifErr) {
+      console.error('Failed to create mentor notification for assignment submission:', notifErr);
+    }
+
     return NextResponse.json({ success: true, message: 'Assignment submitted successfully', submissionId: result.rows[0].id });
   } catch (error: any) {
     console.error('Submit assignment error:', error);

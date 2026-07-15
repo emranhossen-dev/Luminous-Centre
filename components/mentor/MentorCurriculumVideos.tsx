@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PlayCircle, Trash2, ArrowLeft, Loader2, Upload, FileVideo, Play, X, Plus, Save } from 'lucide-react';
+import { PlayCircle, Trash2, ArrowLeft, Loader2, Upload, FileVideo, Play, X, Plus, Save, BookOpen, Link, ListTodo } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 interface Course {
@@ -47,6 +47,15 @@ export default function MentorCurriculumVideos({ course, onBack }: MentorCurricu
   const [activeVideoTitle, setActiveVideoTitle] = useState<string>('');
   const [selectedClassKeys, setSelectedClassKeys] = useState<string[]>([]);
 
+  // Homework & Resource panel state
+  const [activePanel, setActivePanel] = useState<{ key: string; type: 'homework' | 'resource'; videoId: number } | null>(null);
+  const [panelLoading, setPanelLoading] = useState(false);
+  const [hwTitle, setHwTitle] = useState('');
+  const [hwDesc, setHwDesc] = useState('');
+  const [hwDue, setHwDue] = useState('');
+  const [rsTitle, setRsTitle] = useState('');
+  const [rsUrl, setRsUrl] = useState('');
+
   const isAllMilestoneClassesSelected = (mIndex: number) => {
     const milestone = modules[mIndex];
     if (!milestone?.topics || milestone.topics.length === 0) return false;
@@ -91,6 +100,58 @@ export default function MentorCurriculumVideos({ course, onBack }: MentorCurricu
     setModules(updated);
     setSelectedClassKeys([]);
     toast.success(`Removed ${selectedClassKeys.length} classes locally. Click "Save Curriculum Changes" to save.`);
+  };
+
+  const openPanel = (key: string, type: 'homework' | 'resource', videoId: number) => {
+    if (activePanel?.key === key && activePanel?.type === type) {
+      setActivePanel(null);
+    } else {
+      setActivePanel({ key, type, videoId });
+      setHwTitle(''); setHwDesc(''); setHwDue('');
+      setRsTitle(''); setRsUrl('');
+    }
+  };
+
+  const handleSaveHomework = async () => {
+    if (!activePanel || !hwTitle.trim()) { toast.error('Please enter a homework title.'); return; }
+    setPanelLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/student/lesson-tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ videoId: activePanel.videoId, title: hwTitle.trim(), description: hwDesc.trim(), dueDate: hwDue || null })
+      });
+      if (res.ok) {
+        toast.success('Homework added successfully! ✅');
+        setActivePanel(null);
+        setHwTitle(''); setHwDesc(''); setHwDue('');
+      } else {
+        const d = await res.json();
+        toast.error(d.error || 'Failed to save homework');
+      }
+    } catch { toast.error('An error occurred.'); } finally { setPanelLoading(false); }
+  };
+
+  const handleSaveResource = async () => {
+    if (!activePanel || !rsTitle.trim() || !rsUrl.trim()) { toast.error('Please fill in title and URL.'); return; }
+    setPanelLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/student/lesson-resources', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ videoId: activePanel.videoId, title: rsTitle.trim(), url: rsUrl.trim(), fileType: 'link' })
+      });
+      if (res.ok) {
+        toast.success('Resource added successfully! ✅');
+        setActivePanel(null);
+        setRsTitle(''); setRsUrl('');
+      } else {
+        const d = await res.json();
+        toast.error(d.error || 'Failed to save resource');
+      }
+    } catch { toast.error('An error occurred.'); } finally { setPanelLoading(false); }
   };
 
   useEffect(() => {
@@ -465,8 +526,10 @@ export default function MentorCurriculumVideos({ course, onBack }: MentorCurricu
                     return (
                       <div
                         key={topic.id || `temp-t-${mIndex}-${tIndex}`}
-                        className="bg-slate-950/40 border border-slate-800/60 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                        className="bg-slate-950/40 border border-slate-800/60 rounded-xl p-4 flex flex-col gap-3"
                       >
+                        {/* Class row */}
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex-1 flex items-start gap-3 min-w-0">
                           <input
                             type="checkbox"
@@ -503,7 +566,8 @@ export default function MentorCurriculumVideos({ course, onBack }: MentorCurricu
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 shrink-0">
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-2 shrink-0 flex-wrap">
                           {video ? (
                             <>
                               <button
@@ -511,6 +575,27 @@ export default function MentorCurriculumVideos({ course, onBack }: MentorCurricu
                                 className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/20 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
                               >
                                 <Play className="w-3.5 h-3.5 fill-blue-400" /> Play
+                              </button>
+                              {/* Homework & Resource Buttons */}
+                              <button
+                                onClick={() => openPanel(`${mIndex}-${tIndex}`, 'homework', video.id)}
+                                className={`px-3 py-1.5 border rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition active:scale-95 cursor-pointer ${
+                                  activePanel?.key === `${mIndex}-${tIndex}` && activePanel?.type === 'homework'
+                                    ? 'bg-amber-500/20 border-amber-500/30 text-amber-400'
+                                    : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-amber-400 hover:border-amber-500/30'
+                                }`}
+                              >
+                                <ListTodo className="w-3.5 h-3.5" /> Homework
+                              </button>
+                              <button
+                                onClick={() => openPanel(`${mIndex}-${tIndex}`, 'resource', video.id)}
+                                className={`px-3 py-1.5 border rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition active:scale-95 cursor-pointer ${
+                                  activePanel?.key === `${mIndex}-${tIndex}` && activePanel?.type === 'resource'
+                                    ? 'bg-purple-500/20 border-purple-500/30 text-purple-400'
+                                    : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-purple-400 hover:border-purple-500/30'
+                                }`}
+                              >
+                                <Link className="w-3.5 h-3.5" /> Resource
                               </button>
                               <button
                                 onClick={() => handleDeleteVideo(mIndex, tIndex, video.id)}
@@ -552,6 +637,43 @@ export default function MentorCurriculumVideos({ course, onBack }: MentorCurricu
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
+                        </div>
+
+                        {/* Inline Homework / Resource Panel */}
+                        {activePanel?.key === `${mIndex}-${tIndex}` && (
+                          <div className={`p-4 rounded-xl border space-y-3 ${
+                            activePanel.type === 'homework'
+                              ? 'bg-amber-950/10 border-amber-500/20'
+                              : 'bg-purple-950/10 border-purple-500/20'
+                          }`}>
+                            {activePanel.type === 'homework' ? (
+                              <>
+                                <h5 className="text-xs font-black text-amber-400 flex items-center gap-1.5"><ListTodo className="w-3.5 h-3.5" /> Add Homework Task</h5>
+                                <input value={hwTitle} onChange={e => setHwTitle(e.target.value)} placeholder="Task title *" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-500/50" />
+                                <textarea value={hwDesc} onChange={e => setHwDesc(e.target.value)} placeholder="Description (optional)" rows={2} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-500/50 resize-none" />
+                                <input type="date" value={hwDue} onChange={e => setHwDue(e.target.value)} className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500/50" />
+                                <div className="flex items-center gap-2">
+                                  <button onClick={handleSaveHomework} disabled={panelLoading} className="px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white rounded-lg text-xs font-bold cursor-pointer flex items-center gap-1.5">
+                                    {panelLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} Save Homework
+                                  </button>
+                                  <button onClick={() => setActivePanel(null)} className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-lg text-xs font-bold cursor-pointer">Cancel</button>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <h5 className="text-xs font-black text-purple-400 flex items-center gap-1.5"><Link className="w-3.5 h-3.5" /> Add Resource</h5>
+                                <input value={rsTitle} onChange={e => setRsTitle(e.target.value)} placeholder="Resource title *" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500/50" />
+                                <input value={rsUrl} onChange={e => setRsUrl(e.target.value)} placeholder="URL or link *" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500/50" />
+                                <div className="flex items-center gap-2">
+                                  <button onClick={handleSaveResource} disabled={panelLoading} className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white rounded-lg text-xs font-bold cursor-pointer flex items-center gap-1.5">
+                                    {panelLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} Save Resource
+                                  </button>
+                                  <button onClick={() => setActivePanel(null)} className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-lg text-xs font-bold cursor-pointer">Cancel</button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })

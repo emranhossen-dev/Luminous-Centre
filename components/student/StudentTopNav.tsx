@@ -21,6 +21,8 @@ export default function StudentTopNav({
   const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationsList, setNotificationsList] = useState<any[]>([]);
 
   useEffect(() => {
     // Get user data from localStorage
@@ -29,7 +31,24 @@ export default function StudentTopNav({
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
     }
+    fetchNotifications();
   }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/notifications', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadCount(data.unreadCount || 0);
+        setNotificationsList(data.notifications || []);
+      }
+    } catch (e) {
+      console.error('Failed to fetch notifications:', e);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -73,23 +92,70 @@ export default function StudentTopNav({
             className="relative p-2 rounded-lg hover:bg-white/5 transition-colors group"
           >
             <Bell className="w-5 h-5 text-slate-400 group-hover:text-white transition-colors" />
-            {notifications > 0 && (
+            {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                {notifications > 99 ? '99+' : notifications}
+                {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
           </button>
 
           {/* Notifications Dropdown */}
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 bg-slate-800 border border-white/10 rounded-xl shadow-xl z-50">
-              <div className="p-4 border-b border-white/5">
+            <div className="absolute right-0 mt-2 w-80 bg-slate-800 border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden">
+              <div className="p-4 border-b border-white/5 flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-white">Notifications</h3>
+                {unreadCount > 0 && (
+                  <button 
+                    onClick={async () => {
+                      try {
+                        const token = localStorage.getItem('token');
+                        await fetch('/api/notifications', {
+                          method: 'POST',
+                          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ markAllRead: true })
+                        });
+                        fetchNotifications();
+                      } catch {}
+                    }}
+                    className="text-[10px] font-bold text-emerald-400 hover:underline cursor-pointer"
+                  >
+                    Mark all as read
+                  </button>
+                )}
               </div>
-              <div className="max-h-96 overflow-y-auto">
-                <div className="p-4 text-center text-slate-500 text-sm">
-                  No new notifications
-                </div>
+              <div className="max-h-72 overflow-y-auto divide-y divide-white/5">
+                {notificationsList.length === 0 ? (
+                  <div className="p-4 text-center text-slate-500 text-sm">
+                    No new notifications
+                  </div>
+                ) : (
+                  notificationsList.map((notif: any) => (
+                    <div 
+                      key={notif.id}
+                      onClick={async () => {
+                        if (notif.readStatus) return;
+                        try {
+                          const token = localStorage.getItem('token');
+                          await fetch('/api/notifications', {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ notificationId: notif.id })
+                          });
+                          fetchNotifications();
+                        } catch {}
+                      }}
+                      className={`p-3 text-left transition-colors cursor-pointer ${
+                        notif.readStatus 
+                          ? 'hover:bg-white/5 bg-slate-800 text-slate-400' 
+                          : 'bg-emerald-500/5 hover:bg-emerald-500/10 font-bold text-white'
+                      }`}
+                    >
+                      <p className="text-xs">{notif.title}</p>
+                      <p className="text-[10px] font-medium text-slate-400 mt-0.5 leading-snug">{notif.message}</p>
+                      <p className="text-[9px] text-slate-500 mt-1">{new Date(notif.createdAt).toLocaleString()}</p>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}

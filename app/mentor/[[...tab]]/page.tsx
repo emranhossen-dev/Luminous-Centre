@@ -7,7 +7,7 @@ import { notFound, useRouter } from 'next/navigation';
 import { 
   BookOpen, Users, Award, FileText, Plus, CheckCircle, XCircle, 
   Search, Eye, Settings, HelpCircle, ChevronRight, LogOut, Loader2, Save,
-  PlayCircle, Sun, Moon, User, Menu, X
+  PlayCircle, Sun, Moon, User, Menu, X, Bell, Sparkles, Copy, Download
 } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -80,6 +80,10 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
   const tabParam = resolvedParams.tab?.[0] || 'overview';
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [mentorUser, setMentorUser] = useState<{ firstName?: string; lastName?: string; email?: string } | null>(null);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+  const [notificationsList, setNotificationsList] = useState<any[]>([]);
 
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
@@ -90,7 +94,27 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
       document.documentElement.classList.toggle("light", savedTheme === "light");
       document.documentElement.classList.toggle("dark", savedTheme === "dark");
     }
+    // Load mentor info
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try { setMentorUser(JSON.parse(userStr)); } catch {}
+    }
   }, []);
+
+  const fetchUnreadNotifications = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/notifications', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadNotifications(data.unreadCount || 0);
+        setNotificationsList(data.notifications || []);
+      }
+    } catch {}
+  };
+
 
   const toggleTheme = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
@@ -316,6 +340,7 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
     } else {
       setIsAuthorized(true);
       fetchMentorData();
+      fetchUnreadNotifications();
     }
   }, [router]);
 
@@ -553,7 +578,7 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setIsMobileSidebarOpen(true)}
-            className="md:hidden p-1.5 hover:bg-slate-105 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350 transition cursor-pointer"
+            className="md:hidden p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 transition cursor-pointer"
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -564,24 +589,102 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
             Luminous SDTC
           </span>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 px-3 py-1.5 rounded-xl">
-            <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white text-xs">
-              M
+        <div className="flex items-center gap-3">
+          {/* Notification Bell */}
+          <div className="relative">
+            <button
+              onClick={() => setShowNotifDropdown(!showNotifDropdown)}
+              className="relative p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 rounded-xl transition border border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 cursor-pointer"
+              title="Notifications"
+            >
+              <Bell size={16} />
+              {unreadNotifications > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] rounded-full flex items-center justify-center font-black">
+                  {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                </span>
+              )}
+            </button>
+            {showNotifDropdown && (
+              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-800 dark:text-white">Notifications</h3>
+                  {unreadNotifications > 0 && (
+                    <button 
+                      onClick={async () => {
+                        try {
+                          const token = localStorage.getItem('token');
+                          await fetch('/api/notifications', {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ markAllRead: true })
+                          });
+                          fetchUnreadNotifications();
+                        } catch {}
+                      }}
+                      className="text-[10px] font-bold text-blue-500 hover:underline cursor-pointer"
+                    >
+                      Mark all as read
+                    </button>
+                  )}
+                </div>
+                <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-850">
+                  {notificationsList.length === 0 ? (
+                    <div className="py-6 px-4 text-xs text-slate-500 text-center">
+                      No notifications
+                    </div>
+                  ) : (
+                    notificationsList.map((notif: any) => (
+                      <div 
+                        key={notif.id} 
+                        onClick={async () => {
+                          if (notif.readStatus) return;
+                          try {
+                            const token = localStorage.getItem('token');
+                            await fetch('/api/notifications', {
+                              method: 'POST',
+                              headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ notificationId: notif.id })
+                            });
+                            fetchUnreadNotifications();
+                          } catch {}
+                        }}
+                        className={`p-3 text-left transition-colors cursor-pointer ${
+                          notif.readStatus 
+                            ? 'hover:bg-slate-50 dark:hover:bg-slate-800/40 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400' 
+                            : 'bg-blue-500/5 dark:bg-blue-500/5 hover:bg-blue-500/10 dark:hover:bg-blue-500/10 font-bold text-slate-800 dark:text-slate-200'
+                        }`}
+                      >
+                        <p className="text-xs">{notif.title}</p>
+                        <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">{notif.message}</p>
+                        <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-1">{new Date(notif.createdAt).toLocaleString()}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Mentor Profile Card */}
+          <div className="flex items-center gap-2.5 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 px-3 py-1.5 rounded-xl">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white text-xs shrink-0">
+              {mentorUser?.firstName ? mentorUser.firstName.charAt(0).toUpperCase() : 'M'}
             </div>
             <div className="text-left hidden md:block">
-              <p className="text-xs font-bold leading-none text-slate-700 dark:text-slate-200">Mentor Portal</p>
+              <p className="text-xs font-bold leading-none text-slate-800 dark:text-slate-100">{mentorUser ? `${mentorUser.firstName || ''} ${mentorUser.lastName || ''}`.trim() : 'Mentor'}</p>
+              <p className="text-[10px] leading-none text-slate-500 dark:text-slate-400 mt-0.5">Mentor</p>
             </div>
           </div>
+
           <button
             onClick={toggleTheme}
             type="button"
-            className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 rounded-xl transition border border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-350 cursor-pointer"
+            className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 rounded-xl transition border border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 cursor-pointer"
             title="Toggle theme"
           >
             {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
           </button>
-          <Link href="/login" className="p-2 bg-slate-105 hover:bg-red-500/10 hover:text-red-650 dark:bg-slate-800/80 dark:hover:bg-red-950/30 dark:hover:text-red-400 rounded-xl transition border border-slate-200 dark:border-slate-700/50 flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-400">
+          <Link href="/login" className="p-2 hover:bg-red-500/10 hover:text-red-600 dark:bg-slate-800/80 dark:hover:bg-red-950/30 dark:hover:text-red-400 rounded-xl transition border border-slate-200 dark:border-slate-700/50 flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-400">
             <LogOut className="w-4 h-4" /> Sign Out
           </Link>
         </div>
@@ -591,8 +694,8 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
       <div className="flex-1 flex overflow-hidden min-w-0 flex-col md:flex-row relative">
         
         {/* Desktop Sidebar Nav */}
-        <aside className="hidden md:flex flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 p-4 gap-2 overflow-y-auto h-full shrink-0">
-          <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-500 px-3 mb-2">Main Menu</p>
+        <aside className="hidden md:flex flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 p-4 gap-1.5 overflow-y-auto h-full shrink-0">
+          <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 dark:text-slate-500 px-3 mb-2">Main Menu</p>
           {sidebarLinks.map(link => (
             <button 
               key={link.tab}
@@ -600,7 +703,7 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all cursor-pointer ${
                 activeTab === link.tab 
                   ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10' 
-                  : 'text-slate-700 dark:text-slate-350 hover:bg-slate-200 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <link.icon className="w-5 h-5 shrink-0" />
@@ -650,7 +753,7 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all cursor-pointer ${
                       activeTab === link.tab
                         ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/10'
-                        : 'text-slate-700 dark:text-slate-350 hover:bg-slate-200 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white'
+                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     <link.icon className="w-5 h-5 shrink-0" />
@@ -976,8 +1079,8 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
                 >
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div>
-                      <h2 className="text-3xl font-black text-white tracking-tight">Quiz Management</h2>
-                      <p className="text-slate-400 font-medium">Create and manage multiple-choice quizzes for your courses.</p>
+                      <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Quiz Management</h2>
+                      <p className="text-slate-500 dark:text-slate-400 font-medium">Create quizzes and add questions manually or via bulk JSON import.</p>
                     </div>
                     <button 
                       onClick={() => setIsQuizModalOpen(true)}
@@ -989,37 +1092,32 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
 
                   <div className="grid grid-cols-1 gap-4">
                     {quizzes.length === 0 ? (
-                      <div className="py-20 border-2 border-dashed border-slate-800 rounded-2xl text-center text-slate-500 uppercase tracking-widest font-bold">
-                        No quizzes created yet. Click "Create New Quiz" to start.
+                      <div className="py-20 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-center">
+                        <HelpCircle className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
+                        <p className="text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest text-xs">No quizzes yet.</p>
+                        <p className="text-slate-400 dark:text-slate-600 text-xs mt-1">Click "Create New Quiz" to get started.</p>
                       </div>
                     ) : (
                       quizzes.map(quiz => (
-                        <div key={quiz.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-slate-700 transition duration-200">
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-3">
-                              <h4 className="text-lg font-extrabold text-white leading-snug">{quiz.title}</h4>
-                              <span className="bg-green-950/40 text-green-400 text-[10px] font-bold px-2 py-0.5 rounded border border-green-900/30 uppercase">
-                                {quiz.status}
-                              </span>
+                        <div key={quiz.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-blue-300 dark:hover:border-slate-700 transition duration-200 shadow-sm">
+                          <div className="space-y-2 flex-1 min-w-0">
+                            <div className="flex items-center gap-2.5 flex-wrap">
+                              <h4 className="text-base font-extrabold text-slate-900 dark:text-white leading-snug">{quiz.title}</h4>
+                              <span className="bg-emerald-100 dark:bg-green-950/40 text-emerald-700 dark:text-green-400 text-[10px] font-bold px-2 py-0.5 rounded-lg border border-emerald-200 dark:border-green-900/30 uppercase">{quiz.status}</span>
                             </div>
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-bold text-slate-500">
-                              <span>COURSE: <span className="text-slate-300">{quiz.courseTitle}</span></span>
-                              <span>•</span>
-                              <span>DURATION: <span className="text-slate-300">{quiz.duration} Mins</span></span>
-                              <span>•</span>
-                              <span>PASS SCORE: <span className="text-slate-300">{quiz.passingScore}%</span></span>
-                              <span>•</span>
-                              <span>QUESTIONS: <span className="text-blue-400">{quiz.questionsCount}</span></span>
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-semibold text-slate-400">
+                              <span className="flex items-center gap-1"><BookOpen className="w-3 h-3" /> {quiz.courseTitle}</span>
+                              <span>• ⏱ {quiz.duration} min</span>
+                              <span>• 🎯 Pass: {quiz.passingScore}%</span>
+                              <span className="text-blue-600 dark:text-blue-400 font-bold">• {quiz.questionsCount} Questions</span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3 self-end md:self-center">
-                            <Link
-                              href={`/mentor/quizzes/${quiz.id}/questions`}
-                              className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-slate-700/50 cursor-pointer"
-                            >
-                              <Plus className="w-3.5 h-3.5" /> Add Question
-                            </Link>
-                          </div>
+                          <button
+                            onClick={() => openQuestionModal(quiz)}
+                            className="shrink-0 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-md shadow-blue-500/20 cursor-pointer"
+                          >
+                            <Settings className="w-3.5 h-3.5" /> Manage Questions
+                          </button>
                         </div>
                       ))
                     )}
@@ -1146,74 +1244,74 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
 
       {/* MODAL 1: CREATE QUIZ */}
       {isQuizModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl"
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl"
           >
-            <div className="p-6 border-b border-slate-800">
-              <h3 className="text-xl font-extrabold text-white">Create New Quiz</h3>
-              <p className="text-xs text-slate-400 mt-1">Configure quiz settings for one of your courses.</p>
+            <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-blue-600/5 to-indigo-600/5">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-600/10 rounded-xl">
+                  <HelpCircle className="w-5 h-5 text-blue-500" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">Create New Quiz</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Configure quiz settings for one of your courses.</p>
+                </div>
+              </div>
             </div>
             
-            <form onSubmit={handleCreateQuiz} className="p-6 space-y-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Quiz Title *</label>
+            <form onSubmit={handleCreateQuiz} className="p-6 space-y-5">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Quiz Title *</label>
                 <input 
                   type="text"
                   required
-                  placeholder="e.g., HTML & CSS Midterm"
+                  placeholder="e.g., HTML & CSS Midterm Exam"
                   value={newQuiz.title}
                   onChange={e => setNewQuiz(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 placeholder:text-slate-700 transition"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 placeholder:text-slate-400 dark:placeholder:text-slate-700 transition"
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Description</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Description</label>
                 <textarea 
-                  placeholder="Provide instruction details for students..."
+                  placeholder="Instructions for students taking this quiz..."
                   value={newQuiz.description}
                   onChange={e => setNewQuiz(prev => ({ ...prev, description: e.target.value }))}
-                  rows={3}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 placeholder:text-slate-700 transition"
+                  rows={2}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 placeholder:text-slate-400 dark:placeholder:text-slate-700 transition resize-none"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2 md:col-span-1">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Duration (Mins) *</label>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Duration (min)</label>
                   <input 
-                    type="number"
-                    required
-                    min={1}
+                    type="number" required min={1}
                     value={newQuiz.duration}
                     onChange={e => setNewQuiz(prev => ({ ...prev, duration: e.target.value }))}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition text-center"
                   />
                 </div>
-
-                <div className="space-y-2 md:col-span-1">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Passing Score (%) *</label>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pass Score (%)</label>
                   <input 
-                    type="number"
-                    required
-                    min={1}
-                    max={100}
+                    type="number" required min={1} max={100}
                     value={newQuiz.passingScore}
                     onChange={e => setNewQuiz(prev => ({ ...prev, passingScore: e.target.value }))}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition text-center"
                   />
                 </div>
-
-                <div className="space-y-2 md:col-span-1">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Select Course *</label>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Course *</label>
                   <select
                     required
                     value={newQuiz.courseId}
                     onChange={e => setNewQuiz(prev => ({ ...prev, courseId: e.target.value }))}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-3 text-sm text-white outline-none focus:border-blue-500 transition"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-3 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500 transition"
                   >
                     <option value="">Select...</option>
                     {courses.map(c => (
@@ -1223,22 +1321,264 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800/60">
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-200 dark:border-slate-800">
                 <button 
                   type="button"
                   onClick={() => setIsQuizModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-xl text-xs font-bold transition border border-slate-700/30 cursor-pointer"
+                  className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-xl text-xs font-bold transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
-                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-blue-500/20 cursor-pointer"
+                  className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-blue-500/20 cursor-pointer"
                 >
                   Create Quiz
                 </button>
               </div>
             </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* MODAL 2: MANAGE QUESTIONS */}
+      {isQuestionModalOpen && selectedQuiz && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-3">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.96, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-4xl max-h-[92vh] overflow-hidden shadow-2xl flex flex-col"
+          >
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-blue-600/5 via-indigo-600/5 to-purple-600/5 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-600/10 rounded-xl">
+                  <HelpCircle className="w-5 h-5 text-blue-500" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">{selectedQuiz.title}</h3>
+                  <p className="text-xs text-slate-500">{selectedQuiz.courseTitle} • {selectedQuiz.questionsCount} existing questions</p>
+                </div>
+              </div>
+              <button onClick={() => setIsQuestionModalOpen(false)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white transition cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Tab Switcher */}
+            <div className="px-6 pt-4 shrink-0">
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 rounded-xl p-1 w-fit">
+                <button
+                  onClick={() => setIsBulkMode(false)}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    !isBulkMode ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                  }`}
+                >
+                  ✏️ Manual Add
+                </button>
+                <button
+                  onClick={() => setIsBulkMode(true)}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    isBulkMode ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                  }`}
+                >
+                  📋 Bulk Import (JSON)
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-5">
+              {isBulkMode ? (
+                /* BULK IMPORT TAB */
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800/40 rounded-2xl p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h4 className="text-sm font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1.5"><Sparkles className="w-4 h-4" /> JSON Bulk Import</h4>
+                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 leading-relaxed">Paste a JSON array of questions below. Each question must have: <code className="bg-blue-100 dark:bg-blue-900/50 px-1 rounded">question</code>, <code className="bg-blue-100 dark:bg-blue-900/50 px-1 rounded">options</code> (array), <code className="bg-blue-100 dark:bg-blue-900/50 px-1 rounded">marks</code>, and <code className="bg-blue-100 dark:bg-blue-900/50 px-1 rounded">explanation</code>.</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const sample = JSON.stringify([
+                            {
+                              "question": "What does HTML stand for?",
+                              "questionType": "mcq",
+                              "marks": 1,
+                              "explanation": "HTML stands for HyperText Markup Language, the standard language for creating web pages.",
+                              "options": [
+                                { "optionText": "HyperText Markup Language", "isCorrect": true },
+                                { "optionText": "High Tech Modern Language", "isCorrect": false },
+                                { "optionText": "Home Tool Markup Language", "isCorrect": false },
+                                { "optionText": "Hyperlink and Text Markup Language", "isCorrect": false }
+                              ]
+                            },
+                            {
+                              "question": "Which CSS property is used to change text color?",
+                              "questionType": "mcq",
+                              "marks": 1,
+                              "explanation": "The 'color' property in CSS is used to set the text color of an element.",
+                              "options": [
+                                { "optionText": "font-color", "isCorrect": false },
+                                { "optionText": "text-color", "isCorrect": false },
+                                { "optionText": "color", "isCorrect": true },
+                                { "optionText": "foreground-color", "isCorrect": false }
+                              ]
+                            }
+                          ], null, 2);
+                          navigator.clipboard.writeText(sample).then(() => toast.success('Sample JSON copied to clipboard! 📋'));
+                        }}
+                        className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[11px] font-bold transition cursor-pointer"
+                      >
+                        <Copy className="w-3.5 h-3.5" /> Sample JSON
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Paste JSON Array Below</label>
+                      {bulkText && (
+                        <button onClick={() => setBulkText('')} className="text-[10px] text-slate-400 hover:text-red-400 transition cursor-pointer">Clear</button>
+                      )}
+                    </div>
+                    <textarea
+                      value={bulkText}
+                      onChange={e => setBulkText(e.target.value)}
+                      placeholder={`Paste your JSON array here...\n\nExample:\n[\n  {\n    "question": "Your question here?",\n    "marks": 1,\n    "explanation": "Explanation...",\n    "options": [\n      { "optionText": "Option A", "isCorrect": true },\n      { "optionText": "Option B", "isCorrect": false }\n    ]\n  }\n]`}
+                      rows={12}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3.5 text-xs text-slate-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 placeholder:text-slate-700 transition font-mono resize-none"
+                    />
+                  </div>
+                  <button
+                    onClick={handleParseAndLoad}
+                    className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-sm font-bold transition shadow-lg shadow-emerald-500/20 cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle className="w-4 h-4" /> Parse & Load into Editor
+                  </button>
+                </div>
+              ) : (
+                /* MANUAL ADD TAB */
+                <div className="space-y-5">
+                  {questionsList.length === 0 && (
+                    <div className="text-center py-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+                      <HelpCircle className="w-8 h-8 text-slate-300 dark:text-slate-700 mx-auto mb-2" />
+                      <p className="text-xs text-slate-400">No questions yet. Add your first question below.</p>
+                    </div>
+                  )}
+                  {questionsList.map((q, qIdx) => (
+                    <div key={qIdx} className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black text-blue-500 uppercase tracking-wider bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/30 px-2.5 py-1 rounded-lg">Question {qIdx + 1}</span>
+                        <button
+                          onClick={() => setQuestionsList(prev => prev.filter((_, i) => i !== qIdx))}
+                          className="p-1 hover:bg-red-50 dark:hover:bg-red-950/20 text-slate-400 hover:text-red-500 rounded-lg transition cursor-pointer"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <textarea
+                        value={q.question}
+                        onChange={e => setQuestionsList(prev => prev.map((item, i) => i === qIdx ? { ...item, question: e.target.value } : item))}
+                        placeholder="Enter your question here..."
+                        rows={2}
+                        className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 placeholder:text-slate-400 dark:placeholder:text-slate-600 transition resize-none"
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        {q.options.map((opt: any, oIdx: number) => (
+                          <div key={oIdx} className={`flex items-center gap-2 p-2.5 rounded-xl border transition cursor-pointer ${
+                            opt.isCorrect 
+                              ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-700/50' 
+                              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                          }`}
+                            onClick={() => setQuestionsList(prev => prev.map((item, i) => i === qIdx ? {
+                              ...item,
+                              options: item.options.map((o: any, oi: number) => ({ ...o, isCorrect: oi === oIdx }))
+                            } : item))}
+                          >
+                            <div className={`w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center ${
+                              opt.isCorrect ? 'border-emerald-500 bg-emerald-500' : 'border-slate-300 dark:border-slate-600'
+                            }`}>
+                              {opt.isCorrect && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            </div>
+                            <input
+                              value={opt.optionText}
+                              onChange={e => {
+                                e.stopPropagation();
+                                setQuestionsList(prev => prev.map((item, i) => i === qIdx ? {
+                                  ...item,
+                                  options: item.options.map((o: any, oi: number) => oi === oIdx ? { ...o, optionText: e.target.value } : o)
+                                } : item));
+                              }}
+                              onClick={e => e.stopPropagation()}
+                              placeholder={`Option ${String.fromCharCode(65 + oIdx)}`}
+                              className="flex-1 bg-transparent text-xs text-slate-700 dark:text-slate-200 focus:outline-none placeholder:text-slate-400"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 space-y-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Explanation</label>
+                          <input
+                            value={q.explanation}
+                            onChange={e => setQuestionsList(prev => prev.map((item, i) => i === qIdx ? { ...item, explanation: e.target.value } : item))}
+                            placeholder="Explain the correct answer..."
+                            className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-blue-500 placeholder:text-slate-400 transition"
+                          />
+                        </div>
+                        <div className="w-20 space-y-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Marks</label>
+                          <input
+                            type="number" min={0.5} step={0.5}
+                            value={q.marks}
+                            onChange={e => setQuestionsList(prev => prev.map((item, i) => i === qIdx ? { ...item, marks: parseFloat(e.target.value) || 1 } : item))}
+                            className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-blue-500 text-center"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => setQuestionsList(prev => [...prev, {
+                      question: '', questionType: 'mcq', marks: 1, explanation: '',
+                      options: [
+                        { optionText: '', isCorrect: true },
+                        { optionText: '', isCorrect: false },
+                        { optionText: '', isCorrect: false },
+                        { optionText: '', isCorrect: false }
+                      ]
+                    }])}
+                    className="w-full py-3 border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-600 text-slate-400 dark:text-slate-500 hover:text-blue-500 rounded-2xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" /> Add Another Question
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between shrink-0">
+              <div className="text-xs text-slate-500 dark:text-slate-400">
+                <span className="font-bold text-slate-700 dark:text-slate-200">{questionsList.length}</span> question{questionsList.length !== 1 ? 's' : ''} ready to save
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setIsQuestionModalOpen(false)}
+                  className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-xl text-xs font-bold transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddQuestion as any}
+                  disabled={loading || questionsList.length === 0}
+                  className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-blue-500/20 cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                >
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  Save All Questions
+                </button>
+              </div>
+            </div>
           </motion.div>
         </div>
       )}

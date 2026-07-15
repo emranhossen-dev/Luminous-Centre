@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
 
     // Query details for student notification email
     const detailsResult = await query(
-      `SELECT u.email, u.first_name as "firstName", u.last_name as "lastName", a.title as "assignmentTitle", a.max_marks as "maxMarks"
+      `SELECT u.id as "studentUserId", u.email, u.first_name as "firstName", u.last_name as "lastName", a.title as "assignmentTitle", a.max_marks as "maxMarks"
        FROM assignment_submissions s
        JOIN users u ON s.user_id = u.id
        JOIN assignments a ON s.assignment_id = a.id
@@ -152,6 +152,21 @@ export async function POST(req: NextRequest) {
 
     if (detailsResult.rows.length > 0) {
       const details = detailsResult.rows[0];
+
+      // Insert student notification
+      try {
+        const studentUserId = details.studentUserId;
+        const notifTitle = 'Assignment Graded';
+        const notifMessage = `Your submission for assignment "${details.assignmentTitle}" has been graded. Marks: ${marksObtained}/${details.maxMarks}.`;
+
+        await query(`
+          INSERT INTO notifications (title, message, recipient_id)
+          VALUES ($1, $2, $3)
+        `, [notifTitle, notifMessage, studentUserId]);
+      } catch (notifErr) {
+        console.error('Failed to create student notification for assignment grading:', notifErr);
+      }
+
       
       const gradedHtml = `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); color: #1e293b;">
