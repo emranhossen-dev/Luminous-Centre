@@ -114,6 +114,10 @@ export class MTProtoStorageProvider implements VideoStorageProvider {
 
     const chunkSize = end - start + 1;
 
+    // Align start offset to nearest multiple of 4096 bytes (required by Telegram API)
+    const alignedStart = Math.floor(start / 4096) * 4096;
+    const skipBytes = start - alignedStart;
+
     const inputLocation = new Api.InputDocumentFileLocation({
       id: doc.id,
       accessHash: doc.accessHash,
@@ -121,25 +125,44 @@ export class MTProtoStorageProvider implements VideoStorageProvider {
       thumbSize: '',
     });
 
-    // Stream in chunks using iterDownload
+    // Stream in chunks using iterDownload.
+    // Omit limit/chunkSize parameters to prevent GramJS from buffering the entire file range in memory.
     const CHUNK = 512 * 1024; // 512 KB per request
     const readableStream = new ReadableStream({
       async start(controller) {
         try {
           let downloaded = 0;
+          let skipped = 0;
+
           for await (const chunk of client.iterDownload({
             file: inputLocation,
-            offset: bigInt(start),
-            limit: chunkSize,
+            offset: bigInt(alignedStart),
             requestSize: CHUNK,
           })) {
-            if (downloaded + chunk.length > chunkSize) {
-              controller.enqueue(chunk.slice(0, chunkSize - downloaded));
+            let chunkToProcess = chunk;
+
+            // Discard the alignment padding bytes from the beginning of the stream
+            if (skipped < skipBytes) {
+              const neededSkip = skipBytes - skipped;
+              if (chunkToProcess.length <= neededSkip) {
+                skipped += chunkToProcess.length;
+                continue;
+              } else {
+                chunkToProcess = chunkToProcess.slice(neededSkip);
+                skipped = skipBytes;
+              }
+            }
+
+            // Slice chunk if it exceeds the remaining requested bytes
+            const remainingToDownload = chunkSize - downloaded;
+            if (chunkToProcess.length > remainingToDownload) {
+              controller.enqueue(chunkToProcess.slice(0, remainingToDownload));
               downloaded = chunkSize;
               break;
             }
-            controller.enqueue(chunk);
-            downloaded += chunk.length;
+
+            controller.enqueue(chunkToProcess);
+            downloaded += chunkToProcess.length;
             if (downloaded >= chunkSize) break;
           }
         } catch (err) {
