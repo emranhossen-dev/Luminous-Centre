@@ -165,7 +165,11 @@ html.light .bg-\[\#0b0c17\],
 html.light .bg-\[\#020617\],
 html.light .bg-\[\#121821\],
 html.light .bg-\[\#1a1c3d\],
-html.light .bg-\[\#0c0e1f\] {
+html.light .bg-\[\#0c0e1f\],
+html.light .bg-\[\#0a0f18\],
+html.light .bg-\[\#0a0f1a\],
+html.light .bg-\[\#030014\],
+html.light .bg-\[\#0c0d21\] {
   background-color: #ffffff !important;
   background-image: none !important;
   color: #0f172a !important;
@@ -274,5 +278,23 @@ html.light .bg-purple-600\/10,
 html.light .bg-blue-600\/10,
 html.light .bg-blue-600\/12 {
   display: none !important;
+}
+
+/* Light mode accent text and contrast overrides */
+html.light .text-emerald-400 {
+  color: #047857 !important;
+}
+html.light .text-blue-400 {
+  color: #1d4ed8 !important;
+}
+html.light .text-indigo-400 {
+  color: #4338ca !important;
+}
+html.light .text-amber-400 {
+  color: #b45309 !important;
+}
+html.light .text-red-400,
+html.light .text-rose-400 {
+  color: #b91c1c !important;
 }
 
