@@ -239,7 +239,7 @@ export async function PATCH(
         : 'Course Enrollment Update - Luminous Centre';
 
       let bodyHtml = '';
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://luminouscentre.org';
       const loginUrl = `${appUrl}/login`;
 
       if (isApproved) {

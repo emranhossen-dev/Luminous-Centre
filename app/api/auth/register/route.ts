@@ -97,8 +97,15 @@ export async function POST(req: NextRequest) {
 
     const newUser = result.rows[0];
 
-    // If role is student, send a welcome email
+    // If role is student, sync them to the students table immediately and send a welcome email
     if (role === 'student') {
+      try {
+        const { syncUserToStudentTable } = await import('@/lib/enrollment');
+        await syncUserToStudentTable(newUser.id);
+      } catch (syncError) {
+        console.error('[REGISTER-SYNC] Error syncing student user to students table:', syncError);
+      }
+
       const welcomeHtml = `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); color: #1e293b;">
           <div style="text-align: center; margin-bottom: 25px;">
@@ -110,7 +117,7 @@ export async function POST(req: NextRequest) {
           <p style="font-size: 14px; line-height: 1.6; color: #475569;">Your account has been successfully created. You can now log in to enroll in our premium courses, access learning materials, and track your educational progress.</p>
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login" style="background-color: #2563eb; color: white; padding: 12px 24px; border-radius: 12px; font-weight: bold; font-size: 14px; text-decoration: none; display: inline-block; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
+            <a href="${process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://luminouscentre.org'}/login" style="background-color: #2563eb; color: white; padding: 12px 24px; border-radius: 12px; font-weight: bold; font-size: 14px; text-decoration: none; display: inline-block; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
               Login to Your Dashboard
             </a>
           </div>

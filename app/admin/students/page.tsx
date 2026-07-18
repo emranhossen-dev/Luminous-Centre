@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Search, Download, Trash2, Eye, Edit, UserCheck, UserX } from 'lucide-react';
 import pool from '@/lib/database';
+import AssignCourseButton from '@/components/admin/AssignCourseButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,9 +20,10 @@ export default async function StudentsPage({
 
   // Build query
   let queryStr = `
-    SELECT s.*, m.name as mentor_name 
+    SELECT s.*, m.name as mentor_name, u.id as user_id
     FROM students s
     LEFT JOIN mentors m ON s.mentor_id = m.id
+    LEFT JOIN users u ON LOWER(u.email) = LOWER(s.email)
     WHERE s.deleted_at IS NULL
   `;
   const queryParams: any[] = [];
@@ -150,6 +152,15 @@ export default async function StudentsPage({
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      {student.user_id && (
+                        <AssignCourseButton 
+                          userId={student.user_id} 
+                          studentName={student.name}
+                          showIcon={true}
+                          buttonText="Assign Course"
+                          className="p-2 text-slate-500 hover:text-emerald-500 hover:bg-slate-800 rounded-md transition-colors"
+                        />
+                      )}
                       <Link href={`/admin/students/${student.id}`} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="View">
                         <Eye className="w-4 h-4" />
                       </Link>

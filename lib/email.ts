@@ -71,7 +71,7 @@ export interface EmailTemplateParams {
 }
 
 export function getEmailTemplate({ title, heading, bodyHtml, ctaText, ctaLink }: EmailTemplateParams): string {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.luminouscentre.org';
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://luminouscentre.org';
   const logoUrl = appUrl.includes('localhost')
     ? 'https://raw.githubusercontent.com/emranhossen-dev/Luminous-Centre/main/public/logo.jpg'
     : `${appUrl}/logo.jpg`;

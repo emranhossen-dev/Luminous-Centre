@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
   BookOpen, Users, Award, FileText, Plus, HelpCircle, ChevronRight, LogOut, Loader2, Save,
-  PlayCircle, Sun, Moon, Trash2, ArrowLeft, Settings
+  PlayCircle, Sun, Moon, Trash2, ArrowLeft, Settings, LayoutDashboard, Menu, X
 } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -32,21 +32,12 @@ export default function QuizQuestionsBuilderPage() {
   const [theme, setTheme] = useState("dark");
   const [loading, setLoading] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
   const [quizTitle, setQuizTitle] = useState('Quiz');
   const [questionsList, setQuestionsList] = useState<Question[]>([]);
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [bulkText, setBulkText] = useState('');
-
-  useEffect(() => {
-    // Theme sync
-    const savedTheme = localStorage.getItem("theme") || "dark";
-    setTheme(savedTheme);
-    document.documentElement.classList.toggle("light", savedTheme === "light");
-    document.documentElement.classList.toggle("dark", savedTheme === "dark");
-
-    fetchQuizAndQuestions();
-  }, [quizId]);
 
   const toggleTheme = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
@@ -103,6 +94,16 @@ export default function QuizQuestionsBuilderPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Theme sync
+    const savedTheme = localStorage.getItem("theme") || "dark";
+    setTheme(savedTheme);
+    document.documentElement.classList.toggle("light", savedTheme === "light");
+    document.documentElement.classList.toggle("dark", savedTheme === "dark");
+
+    fetchQuizAndQuestions();
+  }, [quizId]);
 
   const handleSidebarClick = (tab: string) => {
     localStorage.setItem('mentorActiveTab', tab);
@@ -271,12 +272,18 @@ export default function QuizQuestionsBuilderPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 flex flex-col font-sans">
+    <div className="h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 flex flex-col font-sans">
       <ToastContainer position="top-right" autoClose={3000} theme="dark" />
       
       {/* Header */}
-      <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-40">
+      <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-40 shrink-0">
         <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="md:hidden p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 transition cursor-pointer"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
           <div className="w-9 h-9 rounded-xl overflow-hidden border border-blue-500/20 shrink-0">
             <img src="/logo.jpg" alt="Luminous" className="w-full h-full object-cover" />
           </div>
@@ -307,56 +314,133 @@ export default function QuizQuestionsBuilderPage() {
       </header>
 
       {/* Main Body */}
-      <div className="flex-1 flex flex-col md:flex-row">
-        {/* Sidebar Nav */}
-        <aside className="w-full md:w-64 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 p-4 flex flex-col gap-2">
-          <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-500 px-3 mb-2">Main Menu</p>
+      <div className="flex-1 flex overflow-hidden min-w-0 flex-col md:flex-row relative">
+        {/* Desktop Sidebar Nav */}
+        <aside className="hidden md:flex flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 p-4 gap-1.5 overflow-y-auto overscroll-contain h-full shrink-0">
+          <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 dark:text-slate-500 px-3 mb-2">Main Menu</p>
           <button 
             onClick={() => handleSidebarClick('overview')} 
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-100"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white cursor-pointer"
           >
             <Settings className="w-5 h-5" /> Dashboard
           </button>
           <button 
             onClick={() => handleSidebarClick('courses')} 
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-slate-650 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800/50 hover:text-slate-100"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white cursor-pointer"
           >
             <BookOpen className="w-5 h-5" /> My Courses
           </button>
           <button 
             onClick={() => handleSidebarClick('students')} 
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-slate-655 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800/50 hover:text-slate-100"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white cursor-pointer"
           >
             <Users className="w-5 h-5" /> My Students
           </button>
           <button 
             onClick={() => handleSidebarClick('quizzes')} 
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all bg-blue-600 text-white shadow-lg shadow-blue-500/10"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all bg-blue-600 text-white shadow-lg shadow-blue-500/10 cursor-pointer"
           >
             <HelpCircle className="w-5 h-5" /> Quizzes
           </button>
           <button 
             onClick={() => handleSidebarClick('attempts')} 
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-slate-650 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800/50 hover:text-slate-100"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white cursor-pointer"
           >
             <Award className="w-5 h-5" /> Quiz Attempts
           </button>
           <button 
             onClick={() => handleSidebarClick('recordings')} 
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-slate-650 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800/50 hover:text-slate-100"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white cursor-pointer"
           >
             <PlayCircle className="w-5 h-5" /> Class Recordings
           </button>
           <button 
             onClick={() => handleSidebarClick('assignments')} 
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-slate-650 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800/50 hover:text-slate-100"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white cursor-pointer"
           >
             <FileText className="w-5 h-5" /> Assignments
           </button>
         </aside>
 
+        {/* Mobile Sidebar Slide-Over Drawer */}
+        <AnimatePresence>
+          {isMobileSidebarOpen && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsMobileSidebarOpen(false)}
+                className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs md:hidden"
+              />
+              
+              {/* Drawer Panel */}
+              <motion.aside
+                initial={{ x: '-100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '-100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="fixed inset-y-0 left-0 z-50 w-64 bg-slate-50 dark:bg-slate-950 p-4 border-r border-slate-200 dark:border-slate-800 flex flex-col gap-2 md:hidden shadow-2xl h-full"
+              >
+                <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <span className="font-extrabold text-xs text-slate-500 uppercase tracking-wider">Main Menu</span>
+                  <button 
+                    onClick={() => setIsMobileSidebarOpen(false)}
+                    className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-900 rounded-xl text-slate-450 hover:text-slate-100 transition cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <button 
+                  onClick={() => { handleSidebarClick('overview'); setIsMobileSidebarOpen(false); }} 
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+                >
+                  <Settings className="w-5 h-5" /> Dashboard
+                </button>
+                <button 
+                  onClick={() => { handleSidebarClick('courses'); setIsMobileSidebarOpen(false); }} 
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+                >
+                  <BookOpen className="w-5 h-5" /> My Courses
+                </button>
+                <button 
+                  onClick={() => { handleSidebarClick('students'); setIsMobileSidebarOpen(false); }} 
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+                >
+                  <Users className="w-5 h-5" /> My Students
+                </button>
+                <button 
+                  onClick={() => { handleSidebarClick('quizzes'); setIsMobileSidebarOpen(false); }} 
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all bg-blue-600 text-white shadow-lg shadow-blue-500/10 cursor-pointer"
+                >
+                  <HelpCircle className="w-5 h-5" /> Quizzes
+                </button>
+                <button 
+                  onClick={() => { handleSidebarClick('attempts'); setIsMobileSidebarOpen(false); }} 
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+                >
+                  <Award className="w-5 h-5" /> Quiz Attempts
+                </button>
+                <button 
+                  onClick={() => { handleSidebarClick('recordings'); setIsMobileSidebarOpen(false); }} 
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+                >
+                  <PlayCircle className="w-5 h-5" /> Class Recordings
+                </button>
+                <button 
+                  onClick={() => { handleSidebarClick('assignments'); setIsMobileSidebarOpen(false); }} 
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+                >
+                  <FileText className="w-5 h-5" /> Assignments
+                </button>
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>
+
         {/* Content Panel */}
-        <main className="flex-1 p-6 md:p-8 space-y-8 bg-slate-100/50 dark:bg-slate-900/10 overflow-y-auto">
+        <main className="flex-1 p-6 md:p-8 space-y-8 bg-slate-100/50 dark:bg-slate-900/10 overflow-y-auto overscroll-contain">
           {/* Header Panel */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="space-y-1">

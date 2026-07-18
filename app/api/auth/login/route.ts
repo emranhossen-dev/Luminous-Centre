@@ -65,6 +65,16 @@ export async function POST(req: NextRequest) {
     // Update last login
     await updateLastLogin(user.id);
 
+    // If role is student, sync them to the students table
+    if (user.roleName === 'student') {
+      try {
+        const { syncUserToStudentTable } = await import('@/lib/enrollment');
+        await syncUserToStudentTable(user.id);
+      } catch (syncError) {
+        console.error('[LOGIN-SYNC] Error syncing student user to students table:', syncError);
+      }
+    }
+
     // Merge permissions
     const userPermissions = user.userPermissions;
     const rolePermissions = user.rolePermissions || [];

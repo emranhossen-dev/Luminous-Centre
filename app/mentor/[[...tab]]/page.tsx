@@ -694,7 +694,7 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
       <div className="flex-1 flex overflow-hidden min-w-0 flex-col md:flex-row relative">
         
         {/* Desktop Sidebar Nav */}
-        <aside className="hidden md:flex flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 p-4 gap-1.5 overflow-y-auto h-full shrink-0">
+        <aside className="hidden md:flex flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 p-4 gap-1.5 overflow-y-auto overscroll-contain h-full shrink-0">
           <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 dark:text-slate-500 px-3 mb-2">Main Menu</p>
           {sidebarLinks.map(link => (
             <button 
@@ -766,7 +766,7 @@ export default function MentorDashboard({ params }: { params: Promise<{ tab?: st
         </AnimatePresence>
 
         {/* Dashboard Content */}
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto overscroll-contain max-w-7xl mx-auto w-full">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-40 gap-4">
               <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />

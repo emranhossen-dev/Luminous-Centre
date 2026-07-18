@@ -31,6 +31,16 @@ function NavLink({
   );
 }
 
+const getDashboardUrl = (roleName?: string) => {
+  if (!roleName) return "/student";
+  const role = roleName.toLowerCase();
+  if (role === "admin") return "/admin/dashboard";
+  if (role === "employee" || role === "staff") return "/employee";
+  if (role === "mentor") return "/mentor";
+  if (role === "student" || role === "user") return "/student";
+  return `/${role}`;
+};
+
 export default function Navbar() {
   const [sidebar, setSidebar] = useState(false);
   const [coursesOpen, setCoursesOpen] = useState(false);
@@ -175,46 +185,56 @@ export default function Navbar() {
 
             {user ? (
               // Logged in user menu
-              <div className="relative">
-                <div
-                  className="relative py-4"
-                  onMouseEnter={() => setProfileOpen(true)}
-                  onMouseLeave={() => setProfileOpen(false)}
+              <div className="flex items-center gap-3">
+                {/* Dashboard button left of profile */}
+                <Link
+                  href={getDashboardUrl(user.roleName)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                    theme === 'dark'
+                      ? 'border-blue-500/25 bg-blue-600/10 text-blue-400 hover:bg-blue-600/20 hover:border-blue-500/40'
+                      : 'border-blue-100 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:border-blue-200'
+                  }`}
                 >
-                  <button className="flex items-center gap-2 text-sm cursor-pointer">
-                    <span className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'
-                      }`}>
-                      {user.firstName || user.email?.split('@')[0]}
-                    </span>
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#2F2FE4] to-[#60a5fa] flex items-center justify-center text-white font-semibold">
-                      {user.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
-                    </div>
-                  </button>
+                  <LayoutDashboard size={14} />
+                  <span>Dashboard</span>
+                </Link>
 
+                <div className="relative">
                   <div
-                    className={`absolute top-full right-0 w-56 p-2 rounded-xl transition-all duration-300 z-[100] ${profileOpen
-                        ? "opacity-100 visible translate-y-0"
-                        : "opacity-0 invisible translate-y-2"
-                      } ${theme === 'dark'
-                        ? 'bg-[#1a1c3d] border border-white/10'
-                        : 'bg-white border border-gray-200 shadow-lg'
-                      }`}
+                    className="relative py-4"
+                    onMouseEnter={() => setProfileOpen(true)}
+                    onMouseLeave={() => setProfileOpen(false)}
                   >
-                    <div className="flex flex-col gap-1 text-sm">
-                      <div className={`px-3 py-2 text-xs font-semibold ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                        }`}>
-                        Signed in as
+                    <button className="flex items-center gap-2 text-sm cursor-pointer">
+                      <span className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                        {user.firstName || user.email?.split('@')[0]}
+                      </span>
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#2F2FE4] to-[#60a5fa] flex items-center justify-center text-white font-semibold">
+                        {user.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
                       </div>
-                      <div className={`px-3 py-2 font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'
-                        }`}>
-                        {user.email}
-                      </div>
-                      <div className={`h-px my-1 ${theme === 'dark' ? 'bg-white/10' : 'bg-gray-200'
-                        }`} />
+                    </button>
 
-                      {/* Dashboard button */}
-                      <Link
-                        href={`/${user.roleName}`}
+                    <div
+                      className={`absolute top-full right-0 w-56 p-2 rounded-xl transition-all duration-300 z-[100] ${profileOpen
+                          ? "opacity-100 visible translate-y-0"
+                          : "opacity-0 invisible translate-y-2"
+                        } ${theme === 'dark'
+                          ? 'bg-[#1a1c3d] border border-white/10'
+                          : 'bg-white border border-gray-200 shadow-lg'
+                        }`}
+                    >
+                      <div className="flex flex-col gap-1 text-sm">
+                        <div className={`px-3 py-2 text-xs font-semibold ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Signed in as
+                        </div>
+                        <div className={`px-3 py-2 font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                          {user.email}
+                        </div>
+                        <div className={`h-px my-1 ${theme === 'dark' ? 'bg-white/10' : 'bg-gray-200'}`} />
+
+                        {/* Dashboard button */}
+                        <Link
+                          href={getDashboardUrl(user.roleName)}
                         className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors ${theme === 'dark'
                             ? 'text-gray-300 hover:text-white hover:bg-white/10'
                             : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
@@ -255,7 +275,8 @@ export default function Navbar() {
                   </div>
                 </div>
               </div>
-            ) : (
+            </div>
+          ) : (
               // Logged out user - show login and enroll buttons
               <div className="flex items-center gap-3">
                 <Link
@@ -309,10 +330,11 @@ export default function Navbar() {
             <>
               <div className="text-white font-semibold">Hello, {user.firstName || 'User'}</div>
               <Link 
-                href={`/${user.roleName}`} 
-                className="hover:text-[#2e31e1] transition-colors text-white font-medium" 
+                href={getDashboardUrl(user.roleName)} 
+                className="hover:text-[#2e31e1] transition-colors text-white font-medium flex items-center gap-2" 
                 onClick={() => setSidebar(false)}
               >
+                <LayoutDashboard size={16} />
                 Dashboard
               </Link>
               <button 

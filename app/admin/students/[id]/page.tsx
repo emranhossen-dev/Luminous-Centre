@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, BookOpen, GraduationCap, Clock, CheckCircle2, Award, Mail, Phone, MapPin } from 'lucide-react';
 import pool from '@/lib/database';
 import { notFound } from 'next/navigation';
+import AssignCourseButton from '@/components/admin/AssignCourseButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,9 +19,10 @@ export default async function StudentDetailsPage({
   
   try {
     const res = await pool.query(`
-      SELECT s.*, m.name as mentor_name 
+      SELECT s.*, m.name as mentor_name, u.id as user_id
       FROM students s
       LEFT JOIN mentors m ON s.mentor_id = m.id
+      LEFT JOIN users u ON LOWER(u.email) = LOWER(s.email)
       WHERE s.id = $1 AND s.deleted_at IS NULL
     `, [id]);
     
@@ -44,8 +46,17 @@ export default async function StudentDetailsPage({
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Student Details</h1>
+        {student.user_id && (
+          <AssignCourseButton 
+            userId={student.user_id} 
+            studentName={student.name}
+            showIcon={true}
+            buttonText="Assign New Course"
+            className="bg-blue-600 hover:bg-blue-700 text-white inline-flex items-center justify-center rounded-lg text-sm font-medium h-10 px-4 transition-colors shadow-sm"
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

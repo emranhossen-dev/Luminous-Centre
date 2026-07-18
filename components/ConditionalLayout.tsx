@@ -15,6 +15,10 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
                   pathname.startsWith('/mentor') || 
                   pathname.startsWith('/employee');
 
+  if (isPanel) {
+    return <main className="h-screen overflow-hidden flex flex-col">{children}</main>;
+  }
+
   if (isPanel || hideNavbarAndFooter) {
     return <main className="min-h-screen">{children}</main>;
   }

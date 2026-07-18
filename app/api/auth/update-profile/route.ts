@@ -87,6 +87,27 @@ export async function POST(req: NextRequest) {
         skillsArray
       ]);
     }
+    
+    if (userCheck.rows.length > 0 && userCheck.rows[0].roleName === 'student') {
+      const email = userCheck.rows[0].email;
+      await query(`
+        INSERT INTO students (
+          name, email, phone, avatar, designation, status, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, 'active', CURRENT_TIMESTAMP)
+        ON CONFLICT (email) DO UPDATE SET
+          name = EXCLUDED.name,
+          phone = EXCLUDED.phone,
+          avatar = EXCLUDED.avatar,
+          designation = EXCLUDED.designation,
+          updated_at = CURRENT_TIMESTAMP
+      `, [
+        `${firstName} ${lastName}`.trim(),
+        email.toLowerCase(),
+        phone || null,
+        avatarUrl || null,
+        designation || null
+      ]);
+    }
 
     // Insert activity log
     await query(`
