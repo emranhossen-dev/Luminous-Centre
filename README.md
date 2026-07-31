@@ -1,36 +1,24 @@
-# 🎓 Luminous Skills Development Training Center
+# 🎓 Luminous Centre
 
-A comprehensive full-stack institutional web platform developed for the **Luminous Skills Development Training Center**. The platform manages course registrations, training workflows, and user management efficiently with modern web technologies.
+A modern, full-stack web application developed for the **Luminous Skills Development Training Center**. Designed to showcase programs, streamline user engagement, and manage operational data efficiently.
 
 ## 🚀 Live Demo
-🔗 **Live Site:** [https://luminouscentre.org](https://luminouscentre.org)
+🔗 **Website:** [https://luminouscentre.org](https://luminouscentre.org)
 
 ## 🛠️ Tech Stack
-- **Frontend Framework:** Next.js (React)
-- **Database & Authentication:** Supabase
+- **Frontend Framework:** Next.js
+- **Backend & Database:** Supabase
 - **Styling:** Tailwind CSS
-- **Deployment:** Vercel
 
-## ✨ Key Features
-- 📚 Course showcase and management
-- 🔐 Secure user authentication & authorization via Supabase
-- 📱 Fully responsive layout for all devices
-- ⚡ Server-side rendering (SSR) for optimal performance & SEO
+## ✨ Features
+- 📚 Comprehensive course directory & showcase
+- 🔐 Secure authentication powered by Supabase
+- 📱 Responsive layout designed for mobile and desktop screens
+- ⚡ Fast performance & SSR via Next.js
 
-## 🛠️ Local Setup Instructions
+## 🛠️ Local Setup
 ```bash
-# Clone the repository
-git clone [https://github.com/emranhossen-dev/luminous-skills.git](https://github.com/emranhossen-dev/luminous-skills.git)
-
-# Navigate to the project directory
-cd luminous-skills
-
-# Install dependencies
+git clone [https://github.com/emranhossen-dev/Luminous-Centre.git](https://github.com/emranhossen-dev/Luminous-Centre.git)
+cd Luminous-Centre
 npm install
-
-# Set up environment variables (.env.local)
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# Run the development server
 npm run dev
