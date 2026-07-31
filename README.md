@@ -2,8 +2,6 @@
 
 An institutional full-stack web application designed for the **Luminous Skills Development Training Center** to manage courses, student enrollments, and organizational workflows.
 
-<!-- 📸 Project Screenshot (Replace image URL with your screenshot link) -->
-![Luminous Centre Screenshot](https://raw.githubusercontent.com/emranhossen-dev/Luminous-Centre/main/public/screenshot.png)
 
 ## 🌐 Relevant Links
 - **Live Website:** [https://luminouscentre.org](https://luminouscentre.org)
