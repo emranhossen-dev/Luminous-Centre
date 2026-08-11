@@ -191,7 +191,7 @@ export async function POST(req: NextRequest) {
           
           <p style="font-size: 14px; line-height: 1.6; color: #475569;">You can log in to your student dashboard to view complete details of your assignment grades and performance.</p>
           <div style="text-align: center; margin: 25px 0;">
-            <a href="${process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://luminouscentre.org'}/student" style="background-color: #2563eb; color: white; padding: 12px 24px; border-radius: 12px; font-weight: bold; font-size: 14px; text-decoration: none; display: inline-block;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/student" style="background-color: #2563eb; color: white; padding: 12px 24px; border-radius: 12px; font-weight: bold; font-size: 14px; text-decoration: none; display: inline-block;">
               View Dashboard
             </a>
           </div>

@@ -214,16 +214,6 @@ export async function GET(request: NextRequest) {
       permissions: roleInfo.rows[0].permissions || []
     };
 
-    // If role is student, sync them to the students table immediately
-    if (userWithRole.roleName === 'student') {
-      try {
-        const { syncUserToStudentTable } = await import('@/lib/enrollment');
-        await syncUserToStudentTable(userWithRole.id);
-      } catch (syncError) {
-        console.error('[GOOGLE-CALLBACK-SYNC] Error syncing student user to students table:', syncError);
-      }
-    }
-
     // Generate JWT token
     const token = jwt.sign(
       {

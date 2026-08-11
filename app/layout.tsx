@@ -10,11 +10,12 @@ import LoadingOverlay from "@/components/LoadingOverlay";
 // Font for English and general UI
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
-// High-quality Bengali font
+// High-quality Bengali font — Hind Siliguri
 const hindSiliguri = Hind_Siliguri({
-  subsets: ["bengali"],
+  subsets: ["bengali", "latin"],
   weight: ["300", "400", "500", "600", "700"],
   variable: "--font-hind-siliguri",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -36,8 +37,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="bn" className={`${inter.variable} ${hindSiliguri.variable}`}>
-      <body className="font-sans antialiased selection:bg-[#2e31e1] selection:text-white transition-colors duration-300">
+    // suppressHydrationWarning on <html> prevents mismatch from browser extensions (e.g., Grammarly)
+    <html lang="bn" className={`${inter.variable} ${hindSiliguri.variable} light`} suppressHydrationWarning>
+      {/* suppressHydrationWarning on body prevents cz-shortcut-listen attribute mismatch */}
+      <body
+        className={`${hindSiliguri.className} antialiased selection:bg-[#2e31e1] selection:text-white transition-colors duration-300`}
+        suppressHydrationWarning
+      >
         <LoadingProvider>
           <AuthProvider>
             <LayoutProvider>
@@ -51,4 +57,4 @@ export default function RootLayout({
       </body>
     </html>
   );
-}
+}

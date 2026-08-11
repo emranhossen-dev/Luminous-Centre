@@ -41,12 +41,12 @@ export async function POST(request: NextRequest) {
     // If no auth header, allow guest user (userId remains null)
 
     // Parse request body
-    const body: CourseEnrollmentData & { paymentMethod?: string } = await request.json();
+    const body: CourseEnrollmentData = await request.json();
     
     // Validate required fields (paymentScreenshotUrl is optional)
     const requiredFields = [
       'courseId', 'fullName', 'mobileNumber', 'email', 
-      'amount', 
+      'transactionId', 'amount', 
       'courseTitle', 'courseCategory', 'coursePrice', 'batchName'
     ];
 
@@ -56,15 +56,6 @@ export async function POST(request: NextRequest) {
           error: `Missing required field: ${field}` 
         }, { status: 400 });
       }
-    }
-
-    const paymentMethod = body.paymentMethod || 'manual';
-
-    // If not cash, transactionId is required
-    if (paymentMethod !== 'cash' && !body.transactionId) {
-      return NextResponse.json({ 
-        error: 'Missing required field: transactionId' 
-      }, { status: 400 });
     }
 
     // Set default value for optional paymentScreenshotUrl
@@ -121,12 +112,12 @@ export async function POST(request: NextRequest) {
         body.fullName,
         body.mobileNumber,
         body.email,
-        paymentMethod, // payment method
+        'manual', // payment method
         'pending', // payment status
         'applied', // enrollment status
         body.amount,
         'BDT',
-        paymentMethod === 'cash' ? (body.transactionId || 'CASH_' + Date.now()) : body.transactionId,
+        body.transactionId,
         paymentScreenshotUrl, // Use the optional field with default value
         body.courseTitle,
         body.courseCategory,

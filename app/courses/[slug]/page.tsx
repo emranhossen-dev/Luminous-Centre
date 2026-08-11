@@ -1,23 +1,20 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import CourseBanner from '@/components/CourseBanner';
 import BestSpinner from '@/components/BestSpinner';
 import { useLoading } from '@/contexts/LoadingContext';
 import { CourseData } from '@/types/course';
 import CourseCurriculum from '../components/CourseCurriculum';
-import EnrollModal from '@/components/EnrollModal';
 
 export default function CourseDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const slug = params.slug as string;
   const [course, setCourse] = useState<CourseData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchCourseDetails = async () => {
@@ -42,23 +39,6 @@ export default function CourseDetailsPage() {
       fetchCourseDetails();
     }
   }, [slug, course]);
-
-  // Open modal if ?enroll=true is in the URL query params
-  useEffect(() => {
-    if (searchParams.get('enroll') === 'true') {
-      setIsEnrollModalOpen(true);
-    }
-  }, [searchParams]);
-
-  const handleCloseModal = () => {
-    setIsEnrollModalOpen(false);
-    // Remove the ?enroll=true param from the URL history
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('enroll');
-      window.history.replaceState({}, '', url.pathname + url.search);
-    }
-  };
 
   if (loading) {
     return (
@@ -88,22 +68,12 @@ export default function CourseDetailsPage() {
   return (
     <div className="min-h-screen bg-[#020617]">
       {/* Course Banner */}
-      <CourseBanner 
-        course={course} 
-        onEnrollClick={() => setIsEnrollModalOpen(true)} 
-      />
+      <CourseBanner course={course} />
       
       {/* Course Curriculum Section */}
       <CourseCurriculum 
         curriculum={course.curriculum || []} 
         subtitle={course.curriculum_subtitle} 
-      />
-
-      {/* Enrollment Modal */}
-      <EnrollModal 
-        course={course}
-        isOpen={isEnrollModalOpen}
-        onClose={handleCloseModal}
       />
     </div>
   );

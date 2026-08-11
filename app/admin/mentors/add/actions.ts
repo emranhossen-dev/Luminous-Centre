@@ -114,7 +114,7 @@ export async function createMentor(data: any) {
       await client.query('COMMIT');
 
       // Send email invitation to newly created mentor
-      const loginUrl = `${process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://luminouscentre.org'}/login`;
+      const loginUrl = 'https://www.luminouscentre.org/login';
       
       const inviteHtml = getEmailTemplate({
         title: 'Mentor Invitation - Luminous Centre',

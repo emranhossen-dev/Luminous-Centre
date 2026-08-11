@@ -30,12 +30,79 @@ interface Course {
   course_outline_url?: string;
 }
 
+const DEFAULT_COURSES: Course[] = [
+  {
+    id: 101,
+    title: "Web Application Development (MERN Stack)",
+    slug: "web-development-mern",
+    category: "recorded",
+    price: 8000,
+    old_price: 12000,
+    status: "published",
+    level: "Beginner to Advanced",
+    duration_weeks: 20,
+    total_hours: 75,
+    enrollmentCount: 142,
+    featured: true,
+    thumbnail_url: "https://images.unsplash.com/photo-1593720213428-28a5b9e94613?q=80&w=800&auto=format&fit=crop",
+    short_description: "HTML, CSS, JavaScript, React.js, Next.js, Node.js & PostgreSQL/MongoDB."
+  },
+  {
+    id: 102,
+    title: "Creative Graphic & UI/UX Design",
+    slug: "graphic-design-uiux",
+    category: "online",
+    price: 6000,
+    old_price: 9000,
+    status: "published",
+    level: "Beginner to Professional",
+    duration_weeks: 16,
+    total_hours: 48,
+    enrollmentCount: 98,
+    featured: true,
+    thumbnail_url: "https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=800&auto=format&fit=crop",
+    short_description: "Photoshop, Illustrator, Figma, Brand Identity & UI Layouts."
+  },
+  {
+    id: 103,
+    title: "Digital Marketing & Social Media Strategy",
+    slug: "digital-marketing-seo",
+    category: "offline",
+    price: 5000,
+    old_price: 8000,
+    status: "published",
+    level: "All Levels",
+    duration_weeks: 12,
+    total_hours: 36,
+    enrollmentCount: 115,
+    featured: true,
+    thumbnail_url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=800&auto=format&fit=crop",
+    short_description: "SEO, Meta Facebook Ads, Google Ads, Copywriting & Web Analytics."
+  },
+  {
+    id: 104,
+    title: "NSDA / ASSETS IT Skills Training",
+    slug: "nsda-assets-govt-project",
+    category: "govt",
+    price: 0,
+    old_price: 0,
+    status: "published",
+    level: "Beginner",
+    duration_weeks: 12,
+    total_hours: 45,
+    enrollmentCount: 320,
+    featured: true,
+    thumbnail_url: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=800&auto=format&fit=crop",
+    short_description: "Government Free IT Skills Training with Official NSDA Certification."
+  }
+];
+
 interface DynamicCoursesProps {
   category?: string;
 }
 
 export default function DynamicCourses({ category }: DynamicCoursesProps) {
-  const [courses, setCourses] = useState<Course[]>([]);
+  const [courses, setCourses] = useState<Course[]>(DEFAULT_COURSES);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -54,27 +121,26 @@ export default function DynamicCourses({ category }: DynamicCoursesProps) {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('DynamicCourses - Fetched courses:', {
-          category,
-          url,
-          count: data.courses?.length || 0,
-          total: data.pagination?.total || 0,
-          courses: data.courses?.slice(0, 5).map(c => ({
-            id: c.id,
-            title: c.title,
-            category: c.category,
-            status: c.status
-          }))
-        });
-        setCourses(data.courses || []);
+        if (data.courses && data.courses.length > 0) {
+          setCourses(data.courses);
+        } else {
+          setCourses(filterDefaultCourses(category));
+        }
       } else {
-        console.error('Failed to fetch courses:', response.status);
+        setCourses(filterDefaultCourses(category));
       }
     } catch (error) {
       console.error('Error fetching courses:', error);
+      setCourses(filterDefaultCourses(category));
     } finally {
       setLoading(false);
     }
+  };
+
+  const filterDefaultCourses = (cat?: string) => {
+    if (!cat || cat === 'all') return DEFAULT_COURSES;
+    const filtered = DEFAULT_COURSES.filter(c => c.category === cat);
+    return filtered.length > 0 ? filtered : DEFAULT_COURSES;
   };
 
   if (loading) {
@@ -85,24 +151,16 @@ export default function DynamicCourses({ category }: DynamicCoursesProps) {
     );
   }
 
-  if (courses.length === 0) {
-    return (
-      <div className="text-center py-20 text-gray-400">
-        <h3 className="text-xl font-semibold mb-2">No courses available</h3>
-        <p>Check back later for new courses!</p>
-      </div>
-    );
-  }
+  const displayCourses = courses.length > 0 ? courses : filterDefaultCourses(category);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 lg:gap-10">
-      {courses
-        .map((course) => (
-          <UserCourseCard 
-            key={course.id} 
-            course={course} 
-          />
-        ))}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+      {displayCourses.map((course) => (
+        <UserCourseCard 
+          key={course.id} 
+          course={course} 
+        />
+      ))}
     </div>
   );
 }

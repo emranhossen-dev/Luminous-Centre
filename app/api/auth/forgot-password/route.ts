@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     `, [token, expires, user.id]);
 
     // Send email with reset link
-    const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://luminouscentre.org';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const resetUrl = `${appUrl}/auth/reset-password?token=${token}`;
 
     const resetHtml = getEmailTemplate({

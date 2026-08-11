@@ -43,7 +43,7 @@ export default function StudentSidebar({
   const pathname = usePathname();
 
   return (
-    <div className={`w-72 h-screen bg-slate-900 text-slate-300 flex flex-col border-r border-white/5 fixed lg:relative lg:translate-x-0 top-0 left-0 z-50 transition-transform duration-300 ${
+    <div className={`w-72 h-screen bg-slate-900 text-slate-300 flex flex-col border-r border-white/5 fixed lg:sticky top-0 left-0 z-50 transition-transform duration-300 ${
       isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
     }`}>
       {/* Institute Header */}
@@ -70,7 +70,7 @@ export default function StudentSidebar({
       </div>
 
       {/* Sidebar Navigation */}
-      <nav className="flex-1 px-4 space-y-1 overflow-y-auto overscroll-contain custom-scrollbar pb-6">
+      <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar pb-6">
         {menuItems.map((item) => {
           const isActive = pathname === item.href || (pathname === '/student' && item.id === 'dashboard');
           const Icon = item.icon;

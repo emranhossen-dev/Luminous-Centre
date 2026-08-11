@@ -9,11 +9,12 @@ import {
 
 export default function AboutPage() {
   const stats = [
-    { label: "Students Trained", value: "1,500+" },
-    { label: "Success Rate", value: "93%" },
+    { label: "Students Trained", value: "200+" },
+    { label: "Success Rate", value: "98%" },
     { label: "Courses Available", value: "12+" },
     { label: "Expert Mentors", value: "10+" }
   ];
+
 
   const milestones = [
     { year: "2024", title: "LSDTC Founded", desc: "Started with a single computer lab and 2 basic IT training courses to support local youths." },
@@ -48,7 +49,8 @@ export default function AboutPage() {
         <div className="absolute bottom-[10%] left-1/3 w-[30%] h-[30%] bg-purple-600/5 rounded-full blur-[100px] animate-blob animation-delay-4000"></div>
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="w-full px-4 md:px-8 lg:px-12 xl:px-16 relative z-10">
+
         
         {/* Hero Section */}
         <div className="text-center max-w-4xl mx-auto mb-20 space-y-6">

@@ -18,7 +18,7 @@ export default function StudentLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="h-screen bg-[#0a0f18] flex relative overflow-hidden">
+    <div className="min-h-screen bg-[#0a0f18] flex relative overflow-hidden">
       {/* Mobile Drawer Overlay Backdrop */}
       {sidebarOpen && (
         <div 
@@ -34,7 +34,7 @@ export default function StudentLayout({
       />
       
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-hidden">
         {/* Top Navigation */}
         <StudentTopNav 
           notifications={notificationsCount}
@@ -42,7 +42,7 @@ export default function StudentLayout({
         />
         
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto overscroll-contain">
+        <main className="flex-1 overflow-y-auto">
           <div className="p-4 sm:p-6 max-w-7xl mx-auto w-full">
             {children}
           </div>

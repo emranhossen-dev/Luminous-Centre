@@ -6,7 +6,7 @@ import { CourseData } from '@/types/course';
 
 const iconMap: Record<string, LucideIcon> = { TrendingUp, CheckSquare, Users, Award, Download };
 
-export default function CourseBanner({ course, onEnrollClick }: { course: CourseData, onEnrollClick?: () => void }) {
+export default function CourseBanner({ course }: { course: CourseData }) {
   const [daysLeft, setDaysLeft] = useState(0);
 
   useEffect(() => {
@@ -108,21 +108,12 @@ export default function CourseBanner({ course, onEnrollClick }: { course: Course
 
           {/* Buttons Section */}
           <div className="flex flex-col sm:flex-row gap-4">
-            {onEnrollClick ? (
-              <button
-                onClick={onEnrollClick}
-                className="flex-[1.5] bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-2xl font-black text-lg transition-all hover:shadow-[0_0_30px_rgba(37,99,235,0.4)] active:scale-95 flex items-center justify-center gap-3 cursor-pointer"
-              >
-                Enroll Now <span>→</span>
-              </button>
-            ) : (
-              <Link
-                href={`/courses/${course.slug}/enroll`}
-                className="flex-[1.5] bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-2xl font-black text-lg transition-all hover:shadow-[0_0_30px_rgba(37,99,235,0.4)] active:scale-95 flex items-center justify-center gap-3"
-              >
-                Enroll Now <span>→</span>
-              </Link>
-            )}
+            <Link
+              href={`/courses/${course.slug}/enroll`}
+              className="flex-[1.5] bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-2xl font-black text-lg transition-all hover:shadow-[0_0_30px_rgba(37,99,235,0.4)] active:scale-95 flex items-center justify-center gap-3"
+            >
+              Enroll Now <span>→</span>
+            </Link>
 
             {course.course_outline_url ? (
               <a

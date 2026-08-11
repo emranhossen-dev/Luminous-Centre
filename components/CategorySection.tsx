@@ -64,7 +64,7 @@ const CATEGORIES = [
 
 export default function CategorySection() {
   return (
-    <section className="relative w-full overflow-hidden py-16 lg:py-24">
+    <section className="relative w-full overflow-hidden py-10 lg:py-14">
       
       {/* Mixed Gradient Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#0b0c17] via-[#080616] to-[#05060f] z-0"></div>
@@ -82,7 +82,8 @@ export default function CategorySection() {
       <div className="w-full px-4 md:px-8 lg:px-12 xl:px-16 relative z-10">
         
         {/* Header Area */}
-        <div className="text-center mb-16 space-y-4">
+        <div className="text-center mb-8 space-y-2">
+
           <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
             Explore <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2F2FE4] to-[#60a5fa]">Categories</span>
           </h2>

@@ -98,17 +98,6 @@ export async function createEnrollmentIfMissing(
 ): Promise<void> {
   const studentUuid = await syncUserToStudentTable(userId);
 
-  // Auto-assign the course's mentor to the student if the course has a mentor
-  try {
-    const courseRes = await query('SELECT mentor_id FROM courses WHERE id = $1', [courseId]);
-    const mentorId = courseRes.rows[0]?.mentor_id;
-    if (mentorId && studentUuid) {
-      await query('UPDATE students SET mentor_id = $1 WHERE id = $2', [mentorId, studentUuid]);
-    }
-  } catch (mentorError) {
-    console.error('[AUTO-MENTOR-ASSIGN] Error auto-assigning mentor:', mentorError);
-  }
-
   // Check if enrollment already exists
   const existing = await query(
     `SELECT id FROM enrollments WHERE user_id = $1 AND course_id = $2`,

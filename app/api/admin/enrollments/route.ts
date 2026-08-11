@@ -120,44 +120,6 @@ async function postHandler(req: NextRequest, context: any, adminUser: any) {
       { studentUserId: userId, courseId, amount: payAmount, requestId: requestResult.rows[0]?.id }
     );
 
-    // 7. Send email notification
-    try {
-      const { sendEmail, getEmailTemplate } = await import('@/lib/email');
-      const targetEmail = studentUser.email.trim().toLowerCase();
-      const targetName = `${studentUser.first_name || ''} ${studentUser.last_name || ''}`.trim();
-      const targetCourse = course.title;
-      
-      const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://luminouscentre.org';
-      const loginUrl = `${appUrl}/login`;
-
-      const bodyHtml = `
-        <p>Hello <strong>${targetName}</strong>,</p>
-        <p>You have been enrolled in the course <strong>${targetCourse}</strong> by the administration! 🎉</p>
-        <p>You can now view and access your course materials directly on your student portal dashboard.</p>
-        
-        <div style="background-color: #f8fafc; padding: 20px; border-radius: 16px; margin: 25px 0; border: 1px solid #f1f5f9; font-size: 14px;">
-          <p style="margin: 0 0 10px 0; color: #475569;"><strong>Login URL:</strong> <a href="${loginUrl}" style="color: #2563eb; text-decoration: none; font-weight: 500;">${loginUrl}</a></p>
-          <p style="margin: 0; color: #475569;"><strong>Username / Email:</strong> ${targetEmail}</p>
-        </div>
-      `;
-
-      const emailHtml = getEmailTemplate({
-        title: 'Course Enrollment Success - Luminous Centre',
-        heading: 'Course Assigned Successfully!',
-        bodyHtml,
-        ctaText: 'Go to My Dashboard',
-        ctaLink: `${appUrl}/student/my-courses`
-      });
-
-      await sendEmail({
-        to: targetEmail,
-        subject: `Enrolled in ${targetCourse} - Luminous Centre`,
-        html: emailHtml
-      });
-    } catch (emailError) {
-      console.error('[MANUAL-ENROLL-EMAIL] Error sending enrollment email:', emailError);
-    }
-
     return NextResponse.json({
       success: true,
       message: 'Student enrolled in course successfully! 🚀',

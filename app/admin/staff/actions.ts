@@ -124,7 +124,7 @@ export async function createStaff(data: StaffData) {
 
     // Send welcome email with login details
     try {
-      const loginUrl = `${process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://luminouscentre.org'}/login`;
+      const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login`;
       const welcomeHtml = getEmailTemplate({
         title: 'Staff Account Created - Luminous Centre',
         heading: 'Welcome to Luminous Centre!',

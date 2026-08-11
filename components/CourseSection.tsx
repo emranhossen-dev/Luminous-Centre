@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import Link from 'next/link'; // [REQUIRED] Import Link for navigation
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Star, Users, Radio, MoveRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,35 +31,100 @@ interface Course {
   course_outline_url?: string;
 }
 
+const DEFAULT_COURSES: Course[] = [
+  {
+    id: 101,
+    title: "Web Application Development (MERN Stack)",
+    slug: "web-development-mern",
+    category: "Web Development",
+    price: 8000,
+    old_price: 12000,
+    status: "published",
+    level: "Beginner to Advanced",
+    duration_weeks: 20,
+    total_hours: 75,
+    enrollmentCount: 142,
+    featured: true,
+    thumbnail_url: "https://images.unsplash.com/photo-1593720213428-28a5b9e94613?q=80&w=800&auto=format&fit=crop",
+    short_description: "HTML, CSS, JavaScript, React.js, Next.js, Node.js & PostgreSQL/MongoDB."
+  },
+  {
+    id: 102,
+    title: "Creative Graphic & UI/UX Design",
+    slug: "graphic-design-uiux",
+    category: "Graphic Design",
+    price: 6000,
+    old_price: 9000,
+    status: "published",
+    level: "Beginner to Professional",
+    duration_weeks: 16,
+    total_hours: 48,
+    enrollmentCount: 98,
+    featured: true,
+    thumbnail_url: "https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=800&auto=format&fit=crop",
+    short_description: "Photoshop, Illustrator, Figma, Brand Identity & UI Layouts."
+  },
+  {
+    id: 103,
+    title: "Digital Marketing & Social Media Strategy",
+    slug: "digital-marketing-seo",
+    category: "Digital Marketing",
+    price: 5000,
+    old_price: 8000,
+    status: "published",
+    level: "All Levels",
+    duration_weeks: 12,
+    total_hours: 36,
+    enrollmentCount: 115,
+    featured: true,
+    thumbnail_url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=800&auto=format&fit=crop",
+    short_description: "SEO, Meta Facebook Ads, Google Ads, Copywriting & Web Analytics."
+  },
+  {
+    id: 104,
+    title: "NSDA / ASSETS IT Skills Training (Government Project)",
+    slug: "nsda-assets-govt-project",
+    category: "Govt Project",
+    price: 0,
+    old_price: 0,
+    status: "published",
+    level: "Beginner",
+    duration_weeks: 12,
+    total_hours: 45,
+    enrollmentCount: 320,
+    featured: true,
+    thumbnail_url: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=800&auto=format&fit=crop",
+    short_description: "Government Free IT Skills Training with Official NSDA Certification."
+  }
+];
+
 interface CourseSectionProps {
   initialCourses?: Course[];
 }
 
 const CourseSection = ({ initialCourses = [] }: CourseSectionProps) => {
-  const { user, openModal } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
-  const [courses, setCourses] = React.useState<Course[]>(initialCourses);
+  const [courses, setCourses] = React.useState<Course[]>(initialCourses.length > 0 ? initialCourses : DEFAULT_COURSES);
   const [loading, setLoading] = React.useState(initialCourses.length === 0);
 
   React.useEffect(() => {
-    // If we already have courses from SSR, don't show loading and don't re-fetch unless empty
-    if (initialCourses.length > 0) {
-        setLoading(false);
-        return;
-    }
-
     const fetchCourses = async () => {
       try {
         const response = await fetch('/api/courses?limit=8');
         if (response.ok) {
           const data = await response.json();
-          console.log('Courses fetched:', data);
-          setCourses(data.courses || []);
+          if (data.courses && data.courses.length > 0) {
+            setCourses(data.courses);
+          } else {
+            setCourses(DEFAULT_COURSES);
+          }
         } else {
-          console.error('API response not ok:', response.status);
+          setCourses(DEFAULT_COURSES);
         }
       } catch (error) {
         console.error('Failed to fetch courses:', error);
+        setCourses(DEFAULT_COURSES);
       } finally {
         setLoading(false);
       }
@@ -69,16 +134,13 @@ const CourseSection = ({ initialCourses = [] }: CourseSectionProps) => {
   }, []);
 
   const handleEnrollmentClick = () => {
-    // Allow both logged-in and unlogged-in users to access courses
     router.push('/courses');
   };
 
-  const handleCourseViewClick = (courseSlug: string) => {
-    router.push(`/courses/${courseSlug}`);
-  };
+  const displayCourses = courses.length > 0 ? courses : DEFAULT_COURSES;
 
   return (
-    <section className="relative w-full overflow-hidden py-16 lg:py-24">
+    <section className="relative w-full overflow-hidden py-10 lg:py-14">
       {/* Mixed Gradient Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#05060f] via-[#080616] to-[#0b0c17] z-0"></div>
       
@@ -91,45 +153,36 @@ const CourseSection = ({ initialCourses = [] }: CourseSectionProps) => {
 
       <div className="w-full px-4 md:px-8 lg:px-12 xl:px-16 relative z-10">
         {/* Header */}
-        <div className="text-center mb-16 space-y-4">
+        <div className="text-center mb-8 space-y-2">
           <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
             Popular <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2F2FE4] to-[#60a5fa]">Courses</span>
           </h2>
-          <p className="text-gray-500 font-medium text-base md:text-lg">Invest in yourself with our most in-demand programs</p>
+          <p className="text-gray-400 font-medium text-sm md:text-base" style={{ fontFamily: 'var(--font-hind-siliguri)' }}>
+            দক্ষতা অর্জন করুন আমাদের সর্বাধিক চাহিদাসম্পন্ন প্রোগ্রামগুলোর সাথে
+          </p>
         </div>
 
         {/* Courses Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 lg:gap-10 mb-16 px-4">
-          {loading ? (
-            <div className="col-span-full py-20 flex flex-col items-center justify-center text-gray-500 gap-4">
-              <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
-              <p className="font-bold uppercase tracking-widest text-sm">Syncing latest courses...</p>
-            </div>
-          ) : courses.length === 0 ? (
-            <div className="col-span-full py-20 text-center text-gray-500 border border-dashed border-white/10 rounded-3xl">
-              <p className="font-bold">No courses available at the moment.</p>
-              <p className="text-sm mt-2">Please check back later or contact support.</p>
-            </div>
-          ) : (
-            courses.map((course) => (
-              <UserCourseCard key={course.id} course={course} />
-            ))
-          )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8 mb-12">
+          {displayCourses.map((course) => (
+            <UserCourseCard key={course.id} course={course} />
+          ))}
         </div>
 
         {/* View All button */}
         <div className="flex justify-center">
           <button 
             onClick={handleEnrollmentClick}
-            className="group flex items-center gap-2 w-full sm:w-auto px-8 py-3.5 bg-[#2F2FE4] text-white rounded-xl text-sm font-bold hover:bg-[#162E93] transition-all transform hover:-translate-y-0.5 active:scale-95"
+            className="group flex items-center gap-2 w-full sm:w-auto px-8 py-3.5 bg-[#2F2FE4] text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-[#162E93] transition-all transform hover:-translate-y-0.5 active:scale-95 cursor-pointer shadow-lg shadow-blue-900/30"
+            style={{ fontFamily: 'var(--font-hind-siliguri)' }}
           >
-            কোর্সগুলো দেখুন
+            সকল কোর্স দেখুন
             <MoveRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
       </div>
     </section>
   );
-}
+};
 
 export default CourseSection;

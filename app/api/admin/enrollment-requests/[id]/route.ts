@@ -77,7 +77,7 @@ async function patchHandler(
         `}
       `,
       ctaText: action === 'approve' ? 'Go to My Courses' : undefined,
-      ctaLink: action === 'approve' ? `${process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://luminouscentre.org'}/student/my-courses` : undefined
+      ctaLink: action === 'approve' ? `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/student/my-courses` : undefined
     });
 
     if (request.email) {

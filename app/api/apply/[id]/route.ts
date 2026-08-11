@@ -94,7 +94,7 @@ export async function PATCH(
       // Check if user already exists
       const userCheck = await query(`SELECT id FROM users WHERE email = $1`, [emailLower]);
       
-      const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://luminouscentre.org';
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
       const loginUrl = `${appUrl}/login`;
 
       if (userCheck.rows.length === 0) {
